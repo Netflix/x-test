@@ -1,9 +1,9 @@
 {
-  "name": "x-test",
+  "name": "x-test-js",
   "version": "1.0.0-rc.1",
   "description": "a simple, tap-compliant test runner for the browser",
   "main": "x-test.js",
-  "repository": "netflix/x-test",
+  "repository": "https://github.com/Netflix/x-test",
   "author": "Andrew Seier",
   "license": "SEE LICENSE IN LICENSE",
   "config": {
