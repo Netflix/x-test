@@ -25,12 +25,12 @@
     "/test"
   ],
   "devDependencies": {
-    "node-static": "0.7.11",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.2.0",
     "eslint-plugin-prettier": "^3.0.1",
-    "prettier": "^1.17.0",
     "faucet": "^0.0.1",
+    "node-static": "0.7.11",
+    "prettier": "^1.17.0",
     "puppeteer": "^1.11.0",
     "tap-parser": "^9.0.0"
   }
