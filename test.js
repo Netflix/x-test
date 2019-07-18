@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const server = require('./server');
 
 (async () => {
   try {
@@ -32,7 +31,6 @@ const server = require('./server');
     });
 
     await browser.close();
-    server.close();
   } catch (err) {
     // Ensure we exit with a non-zero code if anything fails (e.g., timeout).
     console.error(err);
