@@ -22,4 +22,4 @@ todo('foo', 'demonstrate passing "todo"', () => {
 
 test('./test-basic.html');
 test('./test-sibling.html');
-test('./nested');
+test('./nested/');
