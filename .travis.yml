@@ -1,9 +1,11 @@
 language: node_js
 cache: yarn
 node_js:
- - "node"
+- node
 deploy:
   provider: npm
-  email: "npm@netflix.com"
+  email: npm@netflix.com
   on:
     tags: true
+  api_key:
+    secure: KxjW44NPYqJJgRFNYRc6zDdcClO7AWT1VoPk8RcWPqjL9z9BTY/VUGY3QpIP4K2YXUbnD+QNA3/1/3aPiff1eJClWGuEAbagxx8U0tRaxDfYz9RvWapZz6+AXKrT0GVGihIECd7lL9aen1w15ZCYj1izRunTOdo7Dhl2o01aU/bi1hka8Uz+r87EJI4GFK4s00BNnDUWfbtaB/pxx2p0iakBHleQ/dz4ymhvOkk3zaTh4efCefnDpyC5rnbvjn0EWUZboLkF6NfmiO3Tkii9h7hUg4iLQ9qypOsXfhYKKUJDDJOqqt3SQkDR5hzbQvWCb8DuIrz6wmRnZpDhrae/iVgeDoMbo+84MpwOJ/+pdWKkzfAgXTlMljEAKah5+sD0dqW2C6Rafac2y1dbU/pthck2t5ZrI9JDqUK+1jLYK3NyOMfnpEuwtrIRi1ng2oLNxajYV7JxG8gVcAlZMPO8kReBa4IyJCdwv74RYRQ3PjEv6EYctNWXRA0raIXA+w0+yyXHPKjn9AuflEle0HYV7auhihfCf8glawd5fHhtbzgGjqOqUtbmdZVv18Qb7uchFjA6Cc4WmRx/MM4fjUDYFYszGyvnahpMWY45OzTuaz66ym6R75B64D7Opj9nZUc55YeVsQ/66SRQjNSL+uVHM0UMfsHTHWGnSOMzl+/70BU=
