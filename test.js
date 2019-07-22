@@ -9,7 +9,7 @@ const puppeteer = require('puppeteer');
     page.on('console', message => console.log(message.text()));
 
     // Visit our test page.
-    await page.goto('http://localhost:8080/?x-test-no-reporter');
+    await page.goto('http://127.0.0.1:8080/?x-test-no-reporter');
 
     // Wait to be signaled about the end of the test. Because the test may have
     // not started, already started, or already ended, ping for status.
