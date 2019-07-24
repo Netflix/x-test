@@ -1,11 +1,11 @@
 language: node_js
 cache: yarn
 node_js:
-- node
+- '6.7'
 script: yarn start & yarn test
 deploy:
   provider: npm
-  email: npm@netflix.com
+  email: "npm@netflix.com"
   on:
     tags: true
   api_key:
