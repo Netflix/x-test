@@ -9,17 +9,13 @@
   },
   "author": "Andrew Seier",
   "license": "SEE LICENSE IN LICENSE",
-  "config": {
-    "port": 8080,
-    "host": "127.0.0.1"
-  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "start": "echo View at: http://$npm_package_config_host:$npm_package_config_port && static ./ --cache 1 --host-address $npm_package_config_host --port $npm_package_config_port > /dev/null 2>&1",
+    "start": "element-server",
     "lint": "eslint --quiet .",
-    "lint-strict": "eslint .",
+    "lint-strict": "eslint --max-warnings=0 .",
     "test": "node test.js | tap-parser -l"
   },
   "files": [
@@ -31,13 +27,9 @@
     "/test"
   ],
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.2.0",
-    "eslint-plugin-prettier": "^3.0.1",
-    "faucet": "^0.0.1",
-    "node-static": "0.7.11",
-    "prettier": "^1.17.0",
-    "puppeteer": "^1.11.0",
-    "tap-parser": "^9.0.0"
+    "@netflix/element-server": "^1.0.12",
+    "eslint": "^6.5.1",
+    "puppeteer": "^1.20.0",
+    "tap-parser": "^10.0.0"
   }
 }

@@ -1,38 +1,29 @@
-/* eslint-env node */
+// We should periodically check in on the "recommended" rules we're extending
+// and remove redundancies:
+// https://github.com/eslint/eslint/blob/master/conf/eslint-recommended.js
 module.exports = {
   root: true,
-  plugins: ['prettier'],
-  extends: ['prettier'],
+  extends: 'eslint:recommended',
   rules: {
-    'prettier/prettier': [
-      'warn',
-      {
-        singleQuote: true,
-        trailingComma: 'es5',
-      },
-    ],
-    eqeqeq: ['error', 'allow-null'],
+    eqeqeq: 'error',
+    'comma-dangle': ['warn', 'always-multiline'],
     'no-console': 'warn',
-    'no-redeclare': ['error', { builtinGlobals: true }],
-    'no-shadow': [
-      'warn',
-      { builtinGlobals: true, hoist: 'functions', allow: [] },
-    ],
-    'no-undef': 'error',
+    'no-prototype-builtins': 'warn',
+    'no-shadow': 'warn',
     'no-undef-init': 'error',
     'no-unused-vars': 'warn',
     'no-var': 'error',
     'prefer-arrow-callback': ['error', { allowNamedFunctions: true }],
     'prefer-const': 'error',
-    'require-yield': 1,
-    'sort-imports': 'warn',
+    'quotes': ['warn', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
+    'semi': 'warn',
   },
   env: {
-    browser: true,
     es6: true,
+    browser: true,
   },
   parserOptions: {
-    ecmaVersion: 2018,
+    ecmaVersion: 2020,
     sourceType: 'module',
   },
 };
