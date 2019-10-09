@@ -358,6 +358,9 @@ class Test {
       target.lastItId = itId;
       this.waitFor(target, this.promiseIt(target, itId));
       if (
+        // TODO: This seems like a potential eslint bug? It's not clear why
+        //  this would would be a constant condition.
+        // eslint-disable-next-line no-constant-condition
         lastItId === null ||
         target.doneItIds.includes(lastItId) ||
         ((await this.promiseIt(target, lastItId)) || true)
@@ -464,6 +467,7 @@ class RootTest extends Test {
 
   static output(target, string) {
     target.outputs = [...target.outputs, string];
+    // eslint-disable-next-line no-console
     console.log(string);
     if (target.reporter) {
       target.reporter.outputs = target.outputs;
