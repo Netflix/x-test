@@ -10,6 +10,8 @@ a simple, tap-compliant test runner for the browser
 - is interoperable with TAP Version 13
 - nested sub-tests run in an iframe
 - has a recognizable testing interface
+- can be used for automated testing
+- can be used to assert coverage goals
 
 ## Interface
 
@@ -23,11 +25,14 @@ The following are exposed in the testing interface:
 - `todo`: An `it` whose callback _is_ run and is expected to fail.
 - `waitFor`: Ensures the test does not exit until given promise settles.
 - `assert`: Simple assertion call that expects a boolean.
+- `cover`: Sets a coverage goal for the given url.
 
 ### Events
 
 - `x-test-ping`: root responds ('x-test-pong', { status: 'started'|'ended' })
 - `x-test-ended`: all tests have completed or we bailed out
+- `x-test-cover-start`: root responds ('x-test-cover-ended')
+- `x-test-cover`: [internal] signal to test for coverage on a particular file
 - `x-test-bail`: [internal] signal to quit test early
 - `x-test-queue`: [internal] queues a new test
 - `x-test-next`: [internal] destroy current test and create a new one
@@ -39,6 +44,11 @@ The following are exposed in the testing interface:
 The following parameters can be passed in via a url `search`:
 
 - `x-test-no-reporter`: turns off custom reporting tool ui
+- `x-test-cover`: turns on coverage reporting**
+
+**See `test.js` for an example of how to capture coverage information in
+puppeteer and send it to your test to allow your automated test to fail due to
+unmet coverage goals.
 
 ## Execution
 

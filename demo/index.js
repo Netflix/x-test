@@ -28,5 +28,3 @@ todo('foo', 'demonstrate passing "todo"', () => {
 test('./test-basic.html');
 test('./test-sibling.html');
 test('./nested/');
-test('./test-coverage.html');
-test('./test-tap.html');

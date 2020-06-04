@@ -3,7 +3,10 @@
  */
 
 // Export interface.
-export { test, it, skip, todo, waitFor, assert };
+export { test, it, skip, todo, waitFor, assert, cover };
+
+// Export "private" testing handles.
+export { XTestReporter as __XTestReporter__, Tap as __Tap__, Test as __Test__, RootTest as __RootTest__ };
 
 class XTestReporter extends HTMLElement {
   set outputs(value) {
@@ -233,6 +236,9 @@ class XTestReporter extends HTMLElement {
           } else if (output.match(/^1\.\.\d*/)) {
             element.setAttribute('plan', '');
             this.removeAttribute('testing');
+          } else if (output.match(/Bail out!.*/)) {
+            this.removeAttribute('ok');
+            element.setAttribute('bail', '');
           }
           items.push(element);
         }
@@ -351,6 +357,10 @@ class Test {
     });
   }
 
+  static cover(target, url, goal) {
+    this.post('x-test-cover', { url, goal });
+  }
+
   static async it(target, directive, reason, description, callback, interval) {
     if (!target.bailed) {
       const itId = this.uuidv4();
@@ -456,6 +466,8 @@ class RootTest extends Test {
     target.index = 0;
     target.itIds = [];
     target.its = {};
+    target.coverageGoals = [];
+    target.coveragePromise = new Promise(resolve => target.resolveCoveragePromise = resolve);
     target.status = 'started';
     target.outputs = [];
     const url = new URL(location);
@@ -463,6 +475,7 @@ class RootTest extends Test {
       url.searchParams.get('x-test-no-reporter') !== ''
         ? document.createElement('x-test-reporter')
         : null;
+    target.cover = url.searchParams.get('x-test-cover') === '';
   }
 
   static output(target, string) {
@@ -496,7 +509,7 @@ class RootTest extends Test {
           this.output(target, Tap.diagnostic(data.error.stack));
         }
         this.output(target, Tap.bailOut(data.href));
-        this.post('x-test-ended');
+        this.end(target);
         break;
       }
       case 'x-test-queue':
@@ -510,6 +523,13 @@ class RootTest extends Test {
         break;
       case 'x-test-it-ended':
         this.onItEnded(target, data);
+        break;
+      case 'x-test-cover':
+        target.coverageGoals.push(data);
+        break;
+      case 'x-test-cover-start':
+        target.resolveCoveragePromise(data);
+        break;
     }
   }
 
@@ -552,6 +572,54 @@ class RootTest extends Test {
     }
   }
 
+  static analyzeUrlCoverage(coverage, url, goal) {
+    const set = new Set();
+    let text = '';
+    for (const item of coverage) {
+      if (item.url === url) {
+        text = item.text;
+        for (const range of item.ranges) {
+          for (let i = range.start; i < range.end; i++) {
+            set.add(i);
+          }
+        }
+      }
+    }
+    const ranges = [];
+    const state = { saw: set.has(0), start: 0 };
+    for (let index = 0; index < text.length; index++) {
+      const saw = set.has(index);
+      if (saw !== state.saw) {
+        ranges.push({ saw: state.saw, start: state.start, end: index });
+        Object.assign(state, { saw, start: index });
+      }
+    }
+    ranges.push({ saw: state.saw, start: state.start, end: text.length });
+    const used = set.size;
+    const total = text.length;
+    const percent = used / total * 100;
+    let output = '';
+    let lineNumber = 1;
+    for (const range of ranges) {
+      let lines = text
+        .slice(range.start, range.end)
+        .split('\n')
+        .map((line, iii) => lineNumber === 1 || iii > 0 ? `${String(lineNumber++ + (range.saw ? '' : ' !')).padEnd(8, ' ')}|  ${line}` : line);
+      if (range.saw) {
+        if (lines.length > 3) {
+          lines = [...lines.slice(0, 1), '\u2026', ...lines.slice(-1)];
+        }
+      } else {
+        if (lines.length > 5) {
+          lines = [...lines.slice(0, 2), '\u2026', ...lines.slice(-2)];
+        }
+      }
+      output += range.saw ? `${lines.join('\n')}` : `${lines.join('\n')}`;
+    }
+    const ok = percent >= goal;
+    return { ok, percent, output };
+  }
+
   static next(target) {
     if (!target.bailed && target.status !== 'ended') {
       // Destroy current test.
@@ -583,12 +651,49 @@ class RootTest extends Test {
         document.body.appendChild(el);
         Object.assign(target.tests[testId], { status: 'started' });
       } else {
-        target.status = 'ended';
-        this.output(target, Tap.plan(target.itIds.length));
-        this.post('x-test-ended');
+        this.end(target);
       }
     }
   }
+
+  static end(target) {
+    target.status = 'ended';
+    if (!target.cover) {
+      for (const { url, goal } of target.coverageGoals) {
+        this.output(target, Tap.diagnostic(`Not checking "${url}" for ${goal}% coverage (no "x-test-cover" query param).`));
+      }
+      this.output(target, Tap.plan(target.itIds.length));
+    } else {
+      this.startCoverageReport(target);
+    }
+    this.post('x-test-ended');
+  }
+
+  static async startCoverageReport(target) {
+    const coverageTimeout = new Promise((resolve, reject) =>
+      setTimeout(() => reject(new Error(`Timed out awaiting coverage from puppeteer.`)), 5000)
+    );
+    try {
+      const { js } = await Promise.race([target.coveragePromise, coverageTimeout]);
+      for (const { url, goal } of target.coverageGoals) {
+        const analysis = this.analyzeUrlCoverage(js, url, goal);
+        if (analysis.ok) {
+          this.output(target, Tap.diagnostic(`Coverage goal of ${goal}% for ${url} met (got ${analysis.percent.toFixed(2)}%).`));
+        } else {
+          this.output(target, Tap.diagnostic(analysis.output));
+          this.output(target, Tap.bailOut(`Coverage goal of ${goal}% for ${url} not met (got ${analysis.percent.toFixed(2)}%).`));
+        }
+      }
+      this.output(target, Tap.plan(target.itIds.length));
+      this.post('x-test-cover-ended');
+    } catch (error) {
+      this.bail(target, error);
+    }
+  }
+}
+
+function cover(relativePath, goal) {
+  Test.cover(_test, relativePath, goal);
 }
 
 function assert(assertion, message) {
