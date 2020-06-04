@@ -1,3 +1,5 @@
-import { test } from './x-test.js';
+import { it, assert } from './x-test.js';
 
-test('./test/index.html');
+it('start testing!', () => {
+  assert(true);
+});

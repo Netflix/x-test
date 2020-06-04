@@ -22,10 +22,12 @@
   "files": [
     "LICENSE",
     "/index.html",
+    "/index.css",
     "/index.js",
     "/test.js",
     "/x-test.js",
-    "/test"
+    "/demo/**",
+    "/test/**"
   ],
   "devDependencies": {
     "@netflix/element-server": "^1.0.12",
