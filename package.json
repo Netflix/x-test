@@ -3,6 +3,7 @@
   "version": "1.0.0-rc.12",
   "description": "a simple, tap-compliant test runner for the browser",
   "main": "x-test.js",
+  "module": "x-element.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/Netflix/x-test.git"
@@ -28,8 +29,8 @@
   ],
   "devDependencies": {
     "@netflix/element-server": "^1.0.12",
-    "eslint": "^6.5.1",
-    "puppeteer": "^1.20.0",
-    "tap-parser": "^10.0.0"
+    "eslint": "^7.1.0",
+    "puppeteer": "^3.3.0",
+    "tap-parser": "^10.0.1"
   }
 }
