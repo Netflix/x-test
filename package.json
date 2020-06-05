@@ -3,7 +3,7 @@
   "version": "1.0.0-rc.13",
   "description": "a simple, tap-compliant test runner for the browser",
   "main": "x-test.js",
-  "module": "x-element.js",
+  "module": "x-test.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/Netflix/x-test.git"
