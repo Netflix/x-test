@@ -1,6 +1,6 @@
 import { it, skip, test, waitFor } from '../x-test.js';
 
-skip('takes too long', 'loooong test', async () => {
+skip('loooong test', async () => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   throw new Error(`i'm broken.`);
 });

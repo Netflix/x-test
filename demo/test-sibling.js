@@ -10,6 +10,6 @@ it('dom test', () => {
   assert(document.getElementById('dom-test'));
 });
 
-todo('make false true', 'do the impossible', () => {
+todo('do the impossible', () => {
   assert(false);
 });

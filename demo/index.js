@@ -10,10 +10,7 @@ it('truthy things pass assertion tests', async () => {
   assert(1);
 });
 
-todo(
-  `is
-handled...`,
-  `multi
+todo(`multi
 line
 test`,
   () => {
@@ -21,7 +18,7 @@ test`,
   }
 );
 
-todo('foo', 'demonstrate passing "todo"', () => {
+todo('demonstrate passing "todo"', () => {
   assert(1);
 });
 

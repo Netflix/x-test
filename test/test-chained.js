@@ -4,6 +4,6 @@ it('objects pass assertion checks', () => {
   assert({});
 });
 
-skip('false is still not true', 'do the impossible', () => {
+skip('do the impossible', () => {
   assert(false);
 });

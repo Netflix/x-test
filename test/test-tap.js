@@ -11,7 +11,7 @@ it('diagnostic works', () => {
 it('testLine works', () => {
   assert(__Tap__.testLine(true, 1, 'first test') === 'ok - 1 first test');
   assert(__Tap__.testLine(false, 1, 'first test') === 'not ok - 1 first test');
-  assert(__Tap__.testLine(false, 1, 'first test', 'todo', 'because') === 'not ok - 1 first test # todo because');
+  assert(__Tap__.testLine(false, 1, 'first test', 'TODO') === 'not ok - 1 first test # TODO');
 });
 
 it('yaml works', () => {
