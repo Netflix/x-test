@@ -1,57 +1,70 @@
-/**
- * x-test - a simple, tap-compliant test runner for the browser.
- */
+const TAG_LINE = 'x-test - a simple, tap-compliant test runner for the browser.';
 
-// Export interface.
-export { test, it, skip, todo, waitFor, assert, cover };
+export const assert = (assertion, message) => {
+  Test.assert(assertion, message);
+};
 
-// Export "private" testing handles.
+export const test = href => {
+  Test.test(_test, href);
+};
+
+export const it = (description, callback, interval) => {
+  Test.it(_test, null, description, callback, interval);
+};
+
+export const skip = (description, callback, interval) => {
+  Test.it(_test, 'SKIP', description, callback, interval);
+};
+
+export const todo = (description, callback, interval) => {
+  Test.it(_test, 'TODO', description, callback, interval);
+};
+
+export const waitFor = promise => {
+  Test.waitFor(_test, promise);
+};
+
+export const cover = (relativePath, goal) => {
+  Test.cover(_test, relativePath, goal);
+};
+
 export { XTestReporter as __XTestReporter__, Tap as __Tap__, Test as __Test__, RootTest as __RootTest__ };
 
 class XTestReporter extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
   set outputs(value) {
-    this[Symbol.for('_outputs')] = value;
-    this.update();
+    this.__outputs = value;
+    this.constructor.update(this);
   }
+
   get outputs() {
-    return this[Symbol.for('_outputs')];
+    return this.__outputs;
   }
-  syncForm() {
-    const formData = new FormData(this.shadowRoot.getElementById('form'));
-    for (const type of ['ok', 'todo', 'tada', 'skip']) {
-      if (formData.get(type)) {
-        this.setAttribute(`show-${type}`, '');
-      } else {
-        this.removeAttribute(`show-${type}`);
-      }
-    }
-  }
-  static onChange(evt) {
-    evt.target.getRootNode().host.syncForm();
-  }
-  disconnectedCallback() {
-    this.shadowRoot.removeEventListener('change', this.constructor.onChange);
-  }
+
   connectedCallback() {
-    const symbol = Symbol.for('__initialized__');
-    if (!this[symbol]) {
-      this[symbol] = true;
-      this.attachShadow({ mode: 'open' });
-      this.shadowRoot.innerHTML = `
+    this.constructor.initializeOnce(this);
+  }
+
+  static initializeOnce(target) {
+    if (!target.__initialized) {
+      target.__initialized = true;
+      target.shadowRoot.innerHTML = `
         <style>
           :host {
             display: flex;
             flex-direction: column;
             position: fixed;
             z-index: 1;
+            right: 0;
             bottom: 0;
             left: 0;
-            width: 100vw;
             height: 45vh;
             min-height: 260px;
-            box-sizing: border-box;
             background-color: #111111;
-            color: white;
             font-family: monospace;
           }
           #header {
@@ -66,6 +79,7 @@ class XTestReporter extends HTMLElement {
             padding: 6px 16px;
             border-radius: 4px;
             line-height: 14px;
+            color: white;
             background-color: #FF851B;
           }
           #result::before {
@@ -83,19 +97,18 @@ class XTestReporter extends HTMLElement {
           :host([ok]:not([testing])) #result::before {
             content: "OK!";
           }
-          #form {
-            padding: 8px 12px;
-            opacity: .5;
+          #tag-line {
+            margin: auto 12px;
+            color: #8C8C8C;
+            cursor: default;
           }
-          #form:hover {
-            opacity: 1;
-          }
-          #wrapper {
+          #body {
             flex: 1;
             overflow: auto;
             display: flex;
             /* Flip top/bottom for console-like scroll behavior. */
             flex-direction: column-reverse;
+            box-sizing: border-box;
           }
           #spacer {
             flex: 1;
@@ -105,6 +118,7 @@ class XTestReporter extends HTMLElement {
             color: #AAAAAA;
             line-height: 20px;
             padding: 0 12px;
+            cursor: default;
           }
           [output]:first-child {
             padding-top: 12px;
@@ -114,6 +128,12 @@ class XTestReporter extends HTMLElement {
           }
           [yaml] {
             line-height: 16px;
+          }
+          [test],
+          [bail] {
+            display: block;
+            width: min-content;
+            cursor: pointer;
           }
           [it][ok]:not([directive]) {
             color: #2ECC40;
@@ -134,114 +154,82 @@ class XTestReporter extends HTMLElement {
           [diagnostic] {
             color: #39CCCC;
           }
-          [test] {
+          [test]:not([bail]) {
             color: #0085ff;
           }
-          [test],
-          [bail],
-          [test]:visited,
-          [bail]:visited {
-            text-decoration: none;
-            display: block;
-            width: min-content;
-          }
-          [test]:hover,
-          [bail]:hover {
-            text-decoration: underline;
-          }
-          #footer {
-            opacity: 0.5;
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            color: #AAAAAA;
-            padding: 12px;
-          }
-          :host(:not([show-ok])) [it][ok]:not([directive]),
-          :host(:not([show-ok])) [it][ok]:not([directive]) + [yaml],
-          :host(:not([show-todo])) [it]:not([ok])[directive="todo"],
-          :host(:not([show-todo])) [it]:not([ok])[directive="todo"] + [yaml],
-          :host(:not([show-tada])) [it][ok][directive="todo"],
-          :host(:not([show-tada])) [it][ok][directive="todo"] + [yaml],
-          :host(:not([show-skip])) [it][ok][directive="skip"],
-          :host(:not([show-skip])) [it][ok][directive="skip"] + [yaml],
-          [filtered],
-          [filtered] + [yaml] {
-            display: none;
-          }
         </style>
-        <div id="header">
-          <div id="result"></div>
-          <form id="form">
-            <label><input type="checkbox" name="ok" checked> ok</label>
-            <label><input type="checkbox" name="todo" checked> todo</label>
-            <label><input type="checkbox" name="tada" checked> tada</label>
-            <label><input type="checkbox" name="skip" checked> skip</label>
-          </form>
-        </div>
-        <div id="wrapper"><div id="spacer"></div><div id="container"></div></div>
-        <div id="footer">x-test - a simple, tap-compliant test runner for the browser.</div>
+        <div id="header"><div id="result"></div><div id="tag-line">${TAG_LINE}</div></div>
+        <div id="body"><div id="spacer"></div><div id="container"></div></div>
       `;
-      this.setAttribute('ok', '');
-      this.setAttribute('testing', '');
-      this.syncForm();
-      this.shadowRoot.addEventListener('change', this.constructor.onChange);
+      target.setAttribute('ok', '');
+      target.setAttribute('testing', '');
     }
   }
-  update() {
-    if (this.outputs) {
-      const items = [];
-      const container = this.shadowRoot.getElementById('container');
-      for (const output of this.outputs.slice(container.children.length)) {
-        if (output.match(/^# https?:.*/)) {
-          const element = document.createElement('a');
-          element.href = output.replace('# ', '');
-          element.innerText = output;
-          element.setAttribute('output', '');
-          element.setAttribute('test', '');
-          items.push(element);
-        } else if (output.match(/^Bail out! https?:.*/)) {
-          const element = document.createElement('a');
-          element.href = output.replace('Bail out! ', '');
-          element.innerText = output;
-          element.setAttribute('output', '');
-          element.setAttribute('bail', '');
-          this.removeAttribute('ok');
-          items.push(element);
-        } else {
-          const element = document.createElement('div');
-          element.innerText = output;
-          element.setAttribute('output', '');
-          if (output.match(/^# /)) {
-            element.setAttribute('diagnostic', '');
-          } else if (output.match(/^\s*ok /)) {
-            element.setAttribute('it', '');
-            element.setAttribute('ok', '');
-            if (output.match(/^[^#]* # SKIP/)) {
-              element.setAttribute('directive', 'skip');
-            } else if (output.match(/^[^#]* # TODO/)) {
-              element.setAttribute('directive', 'todo');
-            }
-          } else if (output.match(/^\s*not ok /)) {
-            element.setAttribute('it', '');
-            if (output.match(/^[^#]* # TODO/)) {
-              element.setAttribute('directive', 'todo');
-            } else {
-              this.removeAttribute('ok');
-            }
-          } else if (output.match(/^\s*---/)) {
-            element.setAttribute('yaml', '');
-          } else if (output.match(/^TAP/)) {
-            element.setAttribute('version', '');
-          } else if (output.match(/^1\.\.\d*/)) {
-            element.setAttribute('plan', '');
-            this.removeAttribute('testing');
-          } else if (output.match(/Bail out!.*/)) {
-            this.removeAttribute('ok');
-            element.setAttribute('bail', '');
-          }
-          items.push(element);
+
+  static parseOutput(output) {
+    const result = { tag: '', properties: {}, attributes: {}, failed: false, done: false };
+    result.properties.innerText = output;
+    if (output.match(/^# https?:.*/)) {
+      result.tag = 'a';
+      result.properties.href = output.replace('# ', '');
+      Object.assign(result.attributes, { output: '', test: '' });
+    } else if (output.match(/^Bail out! https?:.*/)) {
+      result.tag = 'a';
+      result.failed = true;
+      result.properties.href = output.replace('Bail out! ', '');
+      Object.assign(result.attributes, { output: '', test: '', bail: '' });
+    } else {
+      result.tag = 'div';
+      result.attributes.output = '';
+      if (output.match(/^# /)) {
+        result.attributes.diagnostic = '';
+      } else if (output.match(/^ok /)) {
+        Object.assign(result.attributes, { it: '', ok: '' });
+        if (output.match(/^[^#]* # SKIP/)) {
+          result.attributes.directive = 'skip';
+        } else if (output.match(/^[^#]* # TODO/)) {
+          result.attributes.directive = 'todo';
         }
+      } else if (output.match(/^not ok /)) {
+        result.attributes.it = '';
+        if (output.match(/^[^#]* # TODO/)) {
+          result.attributes.directive = 'todo';
+        } else {
+          result.failed = true;
+        }
+      } else if (output.match(/^ {2}---/)) {
+        result.attributes.yaml = '';
+      } else if (output.match(/^TAP/)) {
+        result.attributes.version = '';
+      } else if (output.match(/^1\.\.\d*/)) {
+        result.attributes.plan = '';
+        result.done = true;
+      } else if (output.match(/Bail out!.*/)) {
+        result.attributes.bail = '';
+        result.failed = true;
+      }
+    }
+    return result;
+  }
+
+  static update(target) {
+    if (target.outputs) {
+      const items = [];
+      const container = target.shadowRoot.getElementById('container');
+      for (const output of target.outputs.slice(container.children.length)) {
+        const { tag, properties, attributes, failed, done } = this.parseOutput(output);
+        const element = document.createElement(tag);
+        Object.assign(element, properties);
+        for (const [attribute, value] of Object.entries(attributes)) {
+          element.setAttribute(attribute, value);
+        }
+        if (done) {
+          target.removeAttribute('testing');
+        }
+        if (failed) {
+          target.removeAttribute('ok');
+        }
+        items.push(element);
       }
       container.append(...items);
     }
@@ -252,19 +240,18 @@ class Tap {
   static version() {
     return 'TAP Version 13';
   }
+
   static diagnostic(message) {
     return `# ${message.replace(/\n/g, `\n# `)}`;
   }
-  static testLine(ok, number, description, directive, reason) {
+
+  static testLine(ok, number, description, directive) {
     description = description.replace(/\n/g, ' ');
-    const result = ok ? 'ok' : 'not ok';
-    let text = `${result} - ${number} ${description}`;
-    if (directive) {
-      reason = reason.replace(/\n/g, ' ');
-      text += ` # ${directive}${reason ? ` ${reason}` : ''}`;
-    }
-    return text;
+    const okText = ok ? 'ok' : 'not ok';
+    const directiveText = directive ? ` # ${directive}` : '';
+    return `${okText} - ${number} ${description}${directiveText}`;
   }
+
   static yaml(message, severity, data) {
     let text = '  ---';
     text += `\n  message: ${message.replace(/\n/g, ' ')}`;
@@ -276,9 +263,11 @@ class Tap {
     text += `\n  ...`;
     return text;
   }
+
   static bailOut(message) {
     return `Bail out! ${message.replace(/\n/g, ' ')}`;
   }
+
   static plan(number) {
     return `1..${number}`;
   }
@@ -295,7 +284,7 @@ class Test {
     target.href = location.href;
     target.bailed = false;
     target.promises = [];
-    target.lastItId = null;
+    target.currentItId = null;
     target.doneItIds = [];
   }
 
@@ -322,6 +311,12 @@ class Test {
       };
       this.listen(onMessage);
     });
+  }
+
+  static assert(assertion, message = 'assertion failed') {
+    if (!assertion) {
+      throw new Error(message);
+    }
   }
 
   static async waitFor(target, promise) {
@@ -361,34 +356,31 @@ class Test {
     this.post('x-test-cover', { url, goal });
   }
 
-  static async it(target, directive, reason, description, callback, interval) {
+  static async it(target, directive, description, callback, interval) {
+    // TODO: crude way to protect against accidental directives in description.
+    description.replace(/#/g, '*');
+    if (!(callback instanceof Function)) {
+      throw new Error(`Callback must be a function (got ${callback}).`);
+    }
     if (!target.bailed) {
       const itId = this.uuidv4();
-      const { lastItId } = target;
-      target.lastItId = itId;
+      const lastItId = target.currentItId;
+      target.currentItId = itId;
       this.waitFor(target, this.promiseIt(target, itId));
-      if (
-        // TODO: This seems like a potential eslint bug? It's not clear why
-        //  this would would be a constant condition.
-        // eslint-disable-next-line no-constant-condition
-        lastItId === null ||
-        target.doneItIds.includes(lastItId) ||
-        ((await this.promiseIt(target, lastItId)) || true)
-      ) {
-        const { testId: parentTestId } = target;
-        this.post('x-test-it-started', { itId, parentTestId });
-        const data = { itId, description, directive, reason, ok: true };
-        try {
-          if (directive !== 'SKIP') {
-            await Promise.race([callback(), this.timeout(interval)]);
-          }
-        } catch (err) {
-          data.ok = false;
-          data.error = this.createError(err);
-        } finally {
-          this.post('x-test-it-ended', data);
-          target.doneItIds.push(itId);
+      if (lastItId && !target.doneItIds.includes(lastItId)) {
+        await this.promiseIt(target, lastItId);
+      }
+      this.post('x-test-it-started', { itId, parentTestId: target.testId });
+      const data = { itId, description, directive, ok: true };
+      try {
+        if (directive !== 'SKIP') {
+          await Promise.race([callback(), this.timeout(interval)]);
         }
+      } catch (error) {
+        Object.assign(data, { ok: false, error: this.createError(error) });
+      } finally {
+        this.post('x-test-it-ended', data);
+        target.doneItIds.push(itId);
       }
     }
   }
@@ -410,10 +402,10 @@ class Test {
 
   static post(type, data) {
     // TODO: do we need to filter out untrusted origins here?
-    top.postMessage(data ? { type, data } : { type }, '*');
+    top.postMessage({ type, data }, '*');
   }
 
-  static yamlIt(ok, directive, reason, error) {
+  static yamlIt(ok, directive, error) {
     const yaml = { message: 'ok', severity: 'comment', data: {} };
     if (ok) {
       if (directive === 'SKIP') {
@@ -450,10 +442,7 @@ class Test {
   // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
   static uuidv4() {
     return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-      (
-        c ^
-        (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-      ).toString(16)
+      (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
     );
   }
 }
@@ -480,8 +469,7 @@ class RootTest extends Test {
 
   static output(target, string) {
     target.outputs = [...target.outputs, string];
-    // eslint-disable-next-line no-console
-    console.log(string);
+    console.log(string);  // eslint-disable-line no-console
     if (target.reporter) {
       target.reporter.outputs = target.outputs;
     }
@@ -543,13 +531,10 @@ class RootTest extends Test {
   static onItEnded(target, data) {
     if (!target.bailed && target.status !== 'ended') {
       Object.assign(target.its[data.itId], data);
-      const { itId, ok, description, directive, reason, error } = data;
+      const { itId, ok, description, directive, error } = data;
       const number = target.itIds.indexOf(itId) + 1;
-      this.output(
-        target,
-        Tap.testLine(ok, number, description, directive, reason)
-      );
-      const yaml = this.yamlIt(ok, directive, reason, error);
+      this.output(target, Tap.testLine(ok, number, description, directive));
+      const yaml = this.yamlIt(ok, directive, error);
       // We may choose to output these later...
       if (yaml.severity !== 'comment') {
         this.output(target, Tap.yaml(yaml.message, yaml.severity, yaml.data));
@@ -586,26 +571,23 @@ class RootTest extends Test {
       }
     }
     const ranges = [];
-    const state = { saw: set.has(0), start: 0 };
+    const state = { used: set.has(0), start: 0 };
     for (let index = 0; index < text.length; index++) {
-      const saw = set.has(index);
-      if (saw !== state.saw) {
-        ranges.push({ saw: state.saw, start: state.start, end: index });
-        Object.assign(state, { saw, start: index });
+      const used = set.has(index);
+      if (used !== state.used) {
+        ranges.push({ used: state.used, start: state.start, end: index });
+        Object.assign(state, { used, start: index });
       }
     }
-    ranges.push({ saw: state.saw, start: state.start, end: text.length });
-    const used = set.size;
-    const total = text.length;
-    const percent = used / total * 100;
+    ranges.push({ used: state.used, start: state.start, end: text.length });
     let output = '';
     let lineNumber = 1;
     for (const range of ranges) {
       let lines = text
         .slice(range.start, range.end)
         .split('\n')
-        .map((line, iii) => lineNumber === 1 || iii > 0 ? `${String(lineNumber++ + (range.saw ? '' : ' !')).padEnd(8, ' ')}|  ${line}` : line);
-      if (range.saw) {
+        .map((line, iii) => lineNumber === 1 || iii > 0 ? `${String(lineNumber++ + (range.used ? '' : ' !')).padEnd(8, ' ')}|  ${line}` : line);
+      if (range.used) {
         if (lines.length > 3) {
           lines = [...lines.slice(0, 1), '\u2026', ...lines.slice(-1)];
         }
@@ -614,8 +596,9 @@ class RootTest extends Test {
           lines = [...lines.slice(0, 2), '\u2026', ...lines.slice(-2)];
         }
       }
-      output += range.saw ? `${lines.join('\n')}` : `${lines.join('\n')}`;
+      output += range.used ? `${lines.join('\n')}` : `${lines.join('\n')}`;
     }
+    const percent = set.size / text.length * 100;
     const ok = percent >= goal;
     return { ok, percent, output };
   }
@@ -634,16 +617,11 @@ class RootTest extends Test {
         const { href } = target.tests[testId];
         this.output(target, Tap.diagnostic(`${href}`));
         const el = document.createElement('iframe');
-        el.id = testId;
-        el.src = href;
-        el.style.border = 'none';
-        el.style.backgroundColor = 'white';
-        el.style.height = '100vh';
-        el.style.width = '100vw';
-        el.style.position = 'fixed';
-        el.style.zIndex = '0';
-        el.style.top = '0';
-        el.style.left = '0';
+        Object.assign(el, { id: testId, src: href });
+        Object.assign(el.style, {
+          border: 'none', backgroundColor: 'white', height: '100vh',
+          width: '100vw', position: 'fixed', zIndex: '0', top: '0', left: '0',
+        });
         el.addEventListener('error', () => {
           const error = new Error(`${target.href} failed to load ${href}`);
           this.bail(target, error);
@@ -692,47 +670,11 @@ class RootTest extends Test {
   }
 }
 
-function cover(relativePath, goal) {
-  Test.cover(_test, relativePath, goal);
-}
-
-function assert(assertion, message) {
-  if (!assertion) {
-    throw new Error(message || 'assertion failed');
-  }
-}
-
-function test(href) {
-  // Initializes a new test script in an iframe.
-  Test.test(_test, href);
-}
-
-function it(description, callback, interval) {
-  // Registers a new test. Callback is not run immediately.
-  Test.it(_test, null, null, description, callback, interval);
-}
-
-function skip(reason, description, callback, interval) {
-  // Count test as passed and do not attempt to run.
-  Test.it(_test, 'SKIP', reason, description, callback, interval);
-}
-
-function todo(reason, description, callback, interval) {
-  // Expect that test is failing. Test will run to confirm this.
-  Test.it(_test, 'TODO', reason, description, callback, interval);
-}
-
-function waitFor(promise) {
-  // Don't end test before this promise settles (test bails if promise throws).
-  Test.waitFor(_test, promise);
-}
-
 // When we boot a new test, we check if we were instantiated or if we're root.
 const _isRoot = frameElement === null || !frameElement.id;
 const _testId = _isRoot ? Test.uuidv4() : frameElement.id;
 const _test = _isRoot ? new RootTest(_testId) : new Test(_testId);
 
-// Make sure uncaught errors and unhandled rejections cause failures.
 addEventListener('error', evt => {
   evt.preventDefault();
   Test.bail(_test, evt.error);

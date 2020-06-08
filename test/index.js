@@ -11,9 +11,7 @@ it('truthy things pass assertion tests', async () => {
 });
 
 todo(
-  `is
-handled...`,
-  `multi
+`multi
 line
 test`,
   () => {
@@ -21,12 +19,13 @@ test`,
   }
 );
 
-todo('foo', 'demonstrate passing "todo"', () => {
+todo('demonstrate passing "todo"', () => {
   assert(1);
 });
 
 test('./test-basic.html');
 test('./test-sibling.html');
 test('./nested/');
+test('./test-reporter.html');
 test('./test-coverage.html');
 test('./test-tap.html');
