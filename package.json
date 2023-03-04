@@ -14,25 +14,22 @@
     "access": "public"
   },
   "scripts": {
-    "start": "element-server",
+    "start": "http-server -o demo -c-1",
     "lint": "eslint --max-warnings=0 .",
     "lint-fix": "eslint --fix .",
     "test": "node test.js | tap-parser -l"
   },
   "files": [
     "LICENSE",
-    "/index.html",
-    "/index.css",
-    "/index.js",
     "/test.js",
     "/x-test.js",
     "/demo/**",
     "/test/**"
   ],
   "devDependencies": {
-    "@netflix/element-server": "^1.0.12",
-    "eslint": "^8.35.0",
+    "eslint": "^8.36.0",
+    "http-server": "^14.1.1",
     "puppeteer": "^19.7.2",
-    "tap-parser": "^10.0.1"
+    "tap-parser": "^12.0.1"
   }
 }
