@@ -31,8 +31,8 @@
   ],
   "devDependencies": {
     "@netflix/element-server": "^1.0.12",
-    "eslint": "^7.1.0",
-    "puppeteer": "^3.3.0",
+    "eslint": "^8.35.0",
+    "puppeteer": "^19.7.2",
     "tap-parser": "^10.0.1"
   }
 }

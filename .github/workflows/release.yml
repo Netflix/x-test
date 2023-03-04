@@ -1,0 +1,23 @@
+name: Release
+on:
+  release:
+    types: [created]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: yarn install
+      - run: yarn lint
+      - run: yarn start &
+      - run: sleep 2
+      - run: yarn test
+      - run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
