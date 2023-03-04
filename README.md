@@ -5,9 +5,9 @@ a simple, tap-compliant test runner for the browser
 ## Spec
 
 - importable as `type="module"`
-- is interoperable with TAP Version 13
+- is interoperable with TAP Version 14
 - nested sub-tests run in an iframe
-- has a recognizable testing interface
+- has a recognizable testing interface (`it`, `describe`, `assert`)
 - can be used for automated testing
 - can be used to assert coverage goals
 
@@ -18,31 +18,38 @@ a simple, tap-compliant test runner for the browser
 The following are exposed in the testing interface:
 
 - `test`: Creates a sub-test in an `iframe` based on given `src` html page.
-- `it`: The smallest testing unit--asynchronous.
-- `skip`: An `it` whose callback is not run and which will pass.
-- `todo`: An `it` whose callback _is_ run and is expected to fail.
-- `waitFor`: Ensures the test does not exit until given promise settles.
-- `assert`: Simple assertion call that expects a boolean.
-- `cover`: Sets a coverage goal for the given url.
+- `it`: The smallest testing unit — can be asynchronous.
+- `it.skip`: An `it` whose callback is not run and which will pass.
+- `it.only`: Skip all other `it` tests.
+- `it.todo`: An `it` whose callback _is_ run and is expected to fail.
+- `describe`: Simple grouping functionality.
+- `describe.skip`: Skip all `it` tests in this group.
+- `describe.only`: Skip all other `describe` groups and `it` tests.
+- `describe.todo`: Mark all `it` tests within this group as _todo_.
+- `waitFor`: Ensures test registration remains open until given promise settles.
+- `assert`: Simple assertion call that throws if the boolean input is false-y.
+- `coverage`: Sets a coverage goal for the given href.
 
 ### Events
 
-- `x-test-ping`: root responds ('x-test-pong', { status: 'started'|'ended' })
-- `x-test-ended`: all tests have completed or we bailed out
-- `x-test-cover-start`: root responds ('x-test-cover-ended')
-- `x-test-cover`: [internal] signal to test for coverage on a particular file
-- `x-test-bail`: [internal] signal to quit test early
-- `x-test-queue`: [internal] queues a new test
-- `x-test-next`: [internal] destroy current test and create a new one
-- `x-test-it-started`: [internal] user defined a new "it"
-- `x-test-it-ended`: [internal] user-defined "it" completed
+- `x-test-client-ping`: root responds (`x-test-root-pong`, { status: 'started'|'ended' waiting: true|false })
+- `x-test-root-pong`: response to `x-test-client-ping`
+- `x-test-root-coverage-request`: client should respond (`x-test-coverage-result`)
+- `x-test-client-coverage-result`: response to `x-test-root-coverage-request`
+- `x-test-root-end`: all tests have completed or we bailed out
+- (internal) `x-test-root-run`: all tests have completed or we bailed out
+- (internal) `x-test-suite-coverage`: signal to test for coverage on a particular file
+- (internal) `x-test-suite-register`: registers a new test / describe / it
+- (internal) `x-test-suite-ready`: signal that test suite is done with registration
+- (internal) `x-test-suite-result`: marks end of "it" test
+- (internal) `x-test-suite-bail`: signal to quit test early
 
 ### Parameters
 
-The following parameters can be passed in via a url `search`:
+The following parameters can be passed in via query params on the url:
 
 - `x-test-no-reporter`: turns off custom reporting tool ui
-- `x-test-cover`: turns on coverage reporting**
+- `x-test-run-coverage`: turns on coverage reporting**
 
 **See `test.js` for an example of how to capture coverage information in
 puppeteer and send it to your test to allow your automated test to fail due to
