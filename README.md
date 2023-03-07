@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.com/Netflix/x-test.svg?token=3yeDbz9qTUyNsEsN48Ap&branch=master)](https://travis-ci.com/Netflix/x-test)
-
 # x-test
 
 a simple, tap-compliant test runner for the browser
