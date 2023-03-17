@@ -756,6 +756,9 @@ class XTestRoot {
   }
 
   static kickoffTestStart(context, stepId) {
+    // Destroy prior test. This keeps the final test around for debugging.
+    const lastIframe = document.querySelector('iframe');
+    lastIframe?.remove();
     // Create the new test.
     const step = context.state.steps[stepId];
     const href = XTestRoot.href(context, stepId);
@@ -782,9 +785,6 @@ class XTestRoot {
   }
 
   static kickoffTestEnd(context, stepId) {
-    // Destroy test.
-    const lastIframe = document.querySelector('iframe');
-    lastIframe?.remove();
     const number = XTestRoot.number(context, stepId);
     const ok = XTestRoot.ok(context, stepId);
     const text = XTestRoot.text(context, stepId);
