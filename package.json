@@ -1,6 +1,6 @@
 {
   "name": "@netflix/x-test",
-  "version": "1.0.0-rc.18",
+  "version": "1.0.0-rc.19",
   "description": "a simple, tap-compliant test runner for the browser",
   "main": "x-test.js",
   "module": "x-test.js",
