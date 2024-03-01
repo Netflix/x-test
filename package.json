@@ -1,23 +1,22 @@
 {
   "name": "@netflix/x-test",
-  "version": "1.0.0-rc.20",
   "description": "a simple, tap-compliant test runner for the browser",
+  "version": "1.0.0-rc.20",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/Netflix/x-test",
+  "type": "module",
   "main": "x-test.js",
   "module": "x-test.js",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/Netflix/x-test.git"
-  },
-  "author": "Andrew Seier",
-  "license": "SEE LICENSE IN LICENSE",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "start": "http-server -o demo -c-1",
+    "start": "node ./server.js",
     "lint": "eslint --max-warnings=0 .",
     "lint-fix": "eslint --fix .",
-    "test": "node test.js | tap-parser -l"
+    "test": "node test.js | tap-parser -l",
+    "bump": "./bump.sh"
   },
   "files": [
     "LICENSE",
@@ -26,10 +25,20 @@
     "/demo/**",
     "/test/**"
   ],
+  "dependencies": {},
   "devDependencies": {
-    "eslint": "^8.36.0",
-    "http-server": "^14.1.1",
-    "puppeteer": "^19.7.2",
-    "tap-parser": "^12.0.1"
-  }
+    "eslint": "^8.56.0",
+    "puppeteer": "^22.0.0",
+    "tap-parser": "^15.3.1"
+  },
+  "contributors": [
+    {
+      "name": "Andrew Seier",
+      "email": "aseier@netflix.com"
+    },
+    {
+      "name": "Casey Klebba",
+      "email": "cklebba@netflix.com"
+    }
+  ]
 }
