@@ -45,6 +45,7 @@ export { XTestRoot as __XTestRoot__, XTestReporter as __XTestReporter__, XTestTa
 // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
   return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    // eslint-disable-next-line no-bitwise
     (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
   );
 }
@@ -465,24 +466,28 @@ class XTestRoot {
         if (candidate.type === 'test-end' && context.state.tests[candidate.testId].initiatorTestId === initiatorTestId) {
           return true;
         }
+        return undefined;
       });
       const parentTestEndIndex = context.state.stepIds.findLastIndex(candidateId => {
         const candidate = context.state.steps[candidateId];
         if (candidate.type === 'test-end' && context.state.tests[candidate.testId].testId === initiatorTestId) {
           return true;
         }
+        return undefined;
       });
       const coverageIndex = context.state.stepIds.findIndex(candidateId => {
         const candidate = context.state.steps[candidateId];
         if (candidate.type === 'coverage') {
           return true;
         }
+        return undefined;
       });
       const exitIndex = context.state.stepIds.findLastIndex(candidateId => {
         const candidate = context.state.steps[candidateId];
         if (candidate.type === 'exit') {
           return true;
         }
+        return undefined;
       });
       const index = siblingTestEndIndex === -1
         ? parentTestEndIndex === -1
@@ -529,6 +534,7 @@ class XTestRoot {
         if (candidate.type === 'test-plan' && candidate.testId === data.parents[0].testId) {
           return true;
         }
+        return undefined;
       });
       context.state.stepIds.splice(index, 0, stepId);
       context.state.steps[stepId] = { stepId, type: 'describe-start', describeId: data.describeId, status: 'waiting' };
@@ -552,6 +558,7 @@ class XTestRoot {
         if (candidate.type === 'test-plan' && candidate.testId === describe.parents[0].testId) {
           return true;
         }
+        return undefined;
       });
       context.state.stepIds.splice(index, 0, planStepId, endStepId);
       context.state.steps[planStepId] = { stepId: planStepId, type: 'describe-plan', describeId: data.describeId, status: 'waiting' };
@@ -569,6 +576,7 @@ class XTestRoot {
         if (candidate.type === 'test-plan' && candidate.testId === data.parents[0].testId) {
           return true;
         }
+        return undefined;
       });
       context.state.stepIds.splice(index, 0, stepId);
       context.state.steps[stepId] = { stepId, type: 'it', itId: data.itId, status: 'waiting' };
@@ -591,6 +599,7 @@ class XTestRoot {
         if (candidate.type === 'exit') {
           return true;
         }
+        return undefined;
       });
       context.state.stepIds.splice(index, 0, stepId);
       context.state.steps[stepId] = { stepId, type: 'coverage', coverageId: coverageId, status: 'waiting' };
@@ -1173,6 +1182,7 @@ class XTestRoot {
       let lines = text
         .slice(range.start, range.end)
         .split('\n')
+        // eslint-disable-next-line no-loop-func
         .map((line, iii) => lineNumber === 1 || iii > 0 ? `${String(lineNumber++ + (range.used ? '' : ' !')).padEnd(8, ' ')}|  ${line}` : line);
       if (range.used) {
         if (lines.length > 3) {
