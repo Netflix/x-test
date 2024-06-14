@@ -767,7 +767,8 @@ class XTestRoot {
       const error = new Error(`Failed to load ${href}`);
       XTestRoot.bail(context, error);
     });
-    Object.assign(iframe, { id: step.testId, src: href });
+    iframe.setAttribute('data-x-test-test-id', step.testId);
+    Object.assign(iframe, { src: href });
     Object.assign(iframe.style, {
       border: 'none', backgroundColor: 'white', height: '100vh',
       width: '100vw', position: 'fixed', zIndex: '0', top: '0', left: '0',
@@ -1438,7 +1439,7 @@ class XTestSuite {
 
 // There is one-and-only-one root. Either boot as root or child test.
 let suiteContext = null;
-if (frameElement === null || !frameElement.id) {
+if (!frameElement?.getAttribute('data-x-test-test-id')) {
   const state = {
     ended: false, waiting: false, children: [], stepIds: [], steps: {},
     tests: {}, describes: {}, its: {}, coverage: false, coverages: {},
@@ -1456,5 +1457,5 @@ if (frameElement === null || !frameElement.id) {
     state, uuid, publish, subscribe, timeout, addErrorListener,
     addUnhandledrejectionListener,
   };
-  XTestSuite.initialize(suiteContext, frameElement.id, location.href);
+  XTestSuite.initialize(suiteContext, frameElement.getAttribute('data-x-test-test-id'), location.href);
 }
