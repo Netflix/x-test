@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Changed “root” detection to something other than the “id” attribute.
+
 ## [1.0.0] - 2024-02-29
 
 ### Added
