@@ -25,9 +25,9 @@
     "/demo/**",
     "/test/**"
   ],
-  "dependencies": {},
   "devDependencies": {
-    "eslint": "^8.56.0",
+    "@netflix/eslint-config": "^3.0.0",
+    "eslint": "^9.0.0",
     "puppeteer": "^22.0.0",
     "tap-parser": "^15.3.1"
   },
