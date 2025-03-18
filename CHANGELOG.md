@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Don’t fail strict integrator CSP rules. Previously, we inlined some <style>
+  tags which would fail for a rule set like `default-src 'self';`. To ensure we
+  don’t reintroduce — strict CSP headers are now added to all test documents.
+
 ## [1.0.1] - 2024-06-14
 
 ### Fixed
