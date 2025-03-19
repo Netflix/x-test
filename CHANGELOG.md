@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2025-03-18
+
 ### Fixed
 
 - Don’t fail strict integrator CSP rules. Previously, we inlined some <style>
