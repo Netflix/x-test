@@ -1,7 +1,7 @@
 {
   "name": "@netflix/x-test",
   "description": "a simple, tap-compliant test runner for the browser",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "Apache-2.0",
   "repository": "https://github.com/Netflix/x-test",
   "type": "module",
