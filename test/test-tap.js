@@ -117,6 +117,12 @@ describe('bailOut', () => {
   it('basic', () => {
     assert(XTestTap.bailOut('oh no!') === 'Bail out! oh no!');
   });
+
+  it('without message', () => {
+    assert(XTestTap.bailOut() === 'Bail out!');
+    assert(XTestTap.bailOut(null) === 'Bail out!');
+    assert(XTestTap.bailOut('') === 'Bail out!');
+  });
 });
 
 describe('plan', () => {
