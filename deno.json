@@ -1,5 +1,10 @@
 {
   "name": "@netflix/x-test",
   "version": "1.0.3",
-  "exports": "./x-test.js"
+  "exports": {
+    ".": "./x-test.js",
+    "./x-test.js": "./x-test.js",
+    "./x-test-client-puppeteer.js": "./node/x-test-client-puppeteer.js",
+    "./x-test-client-playwright.js": "./node/x-test-client-playwright.js"
+  }
 }
