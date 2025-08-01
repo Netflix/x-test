@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Communications happen through a `BroadcastChannel` instead of `top`. This is
   better since it doesn’t use globals. Instead, a more targeted `x-test` channel
   is utilized for client <<>> root <<>> suite communications (#51).
+- The “/test” and “/demo” files are removed from the published file set.
 
 ## [1.0.3] - 2025-03-18
 
