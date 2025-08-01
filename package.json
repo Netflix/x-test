@@ -38,9 +38,7 @@
     "/x-test-root.js",
     "/x-test-suite.js",
     "/x-test-tap.js",
-    "/x-test.js",
-    "/demo/**",
-    "/test/**"
+    "/x-test.js"
   ],
   "dependencies": {},
   "peerDependencies": {
