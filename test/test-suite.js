@@ -1,4 +1,5 @@
-import { it, describe, assert, __XTestSuite__ } from '../x-test.js';
+import { it, describe, assert } from '../x-test.js';
+import { XTestSuite } from '../x-test-suite.js';
 
 // Dependency injection.
 const getContext = () => {
@@ -72,7 +73,7 @@ const getContext = () => {
 describe('initialize', () => {
   it('sets up default state and publishes when ready', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     assert(context.state.testId === '123');
     assert(context.state.href === 'http://localhost:8080');
     assert(context.state.parents.length === 1);
@@ -93,7 +94,7 @@ describe('initialize', () => {
 
   it('marks state as bailed when any test bails', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     context.publish('x-test-suite-bail');
     assert(context.state.bailed === true);
@@ -101,7 +102,7 @@ describe('initialize', () => {
 
   it('runs a test when told, ok', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     let called = false;
     context.state.callbacks['testItId'] = () => { called = true; };
@@ -120,7 +121,7 @@ describe('initialize', () => {
 
   it('runs a test when told, skip', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     let called = false;
     context.state.callbacks['testItId'] = () => { called = true; };
@@ -139,7 +140,7 @@ describe('initialize', () => {
 
   it('runs a test when told, not ok', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     let called = false;
     context.state.callbacks['testItId'] = () => {
@@ -161,7 +162,7 @@ describe('initialize', () => {
 
   it('runs a test when told, todo, ok', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     let called = false;
     context.state.callbacks['testItId'] = () => { called = true; };
@@ -180,7 +181,7 @@ describe('initialize', () => {
 
   it('runs a test when told, todo, not ok', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     let called = false;
     context.state.callbacks['testItId'] = () => {
@@ -202,13 +203,13 @@ describe('initialize', () => {
 
   it('closes registration after it is ready', async () => {
     const { context } = getContext();
-    __XTestSuite__.initialize(context, '123', 'http://localhost:8080');
+    XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-ready');
-    __XTestSuite__.test(context, './test.html');
-    __XTestSuite__.describe(context, 'nope', () => {});
-    __XTestSuite__.it(context, 'nope', () => {});
+    XTestSuite.test(context, './test.html');
+    XTestSuite.describe(context, 'nope', () => {});
+    XTestSuite.it(context, 'nope', () => {});
     assert(context.publish.calls.length === 1); // doesn't get registered.
   });
 });
@@ -218,7 +219,7 @@ describe('test', () => {
     const { context } = getContext();
     context.state.testId = '123';
     context.state.href = 'http://localhost:8080';
-    __XTestSuite__.test(context, './test.html');
+    XTestSuite.test(context, './test.html');
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'test');
@@ -234,7 +235,7 @@ describe('describe', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {};
-    __XTestSuite__.describe(context, 'description', callback);
+    XTestSuite.describe(context, 'description', callback);
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'describe-start');
@@ -254,7 +255,7 @@ describe('describe', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }, { type: 'describe', describeId: '999' }];
     const callback = () => {};
-    __XTestSuite__.describe(context, 'description', callback);
+    XTestSuite.describe(context, 'description', callback);
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'describe-start');
@@ -277,9 +278,9 @@ describe('describe', () => {
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {
       const innerCallback = () => {};
-      __XTestSuite__.describe(context, 'inner-description', innerCallback);
+      XTestSuite.describe(context, 'inner-description', innerCallback);
     };
-    __XTestSuite__.describe(context, 'description', callback);
+    XTestSuite.describe(context, 'description', callback);
     assert(context.publish.calls.length === 4);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'describe-start');
@@ -314,9 +315,9 @@ describe('describe', () => {
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {
       const innerCallback = () => {};
-      __XTestSuite__.it(context, 'inner-description', innerCallback);
+      XTestSuite.it(context, 'inner-description', innerCallback);
     };
-    __XTestSuite__.describe(context, 'description', callback);
+    XTestSuite.describe(context, 'description', callback);
     assert(context.publish.calls.length === 3);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'describe-start');
@@ -346,7 +347,7 @@ describe('describe', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => { throw new Error('test failure'); };
-    __XTestSuite__.describe(context, 'description', callback);
+    XTestSuite.describe(context, 'description', callback);
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'describe-start');
@@ -367,7 +368,7 @@ describe('describe', () => {
     const expected = 'Unexpected callback value "null".';
     let actual;
     try {
-      __XTestSuite__.describe(context, 'description', callback);
+      XTestSuite.describe(context, 'description', callback);
     } catch (error) {
       actual = error.message;
     }
@@ -382,7 +383,7 @@ describe('it', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {};
-    __XTestSuite__.it(context, 'description', callback);
+    XTestSuite.it(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'it');
@@ -403,7 +404,7 @@ describe('itSkip', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {};
-    __XTestSuite__.itSkip(context, 'description', callback);
+    XTestSuite.itSkip(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'it');
@@ -424,7 +425,7 @@ describe('itTodo', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {};
-    __XTestSuite__.itTodo(context, 'description', callback);
+    XTestSuite.itTodo(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'it');
@@ -445,7 +446,7 @@ describe('itOnly', () => {
     context.state.testId = '123';
     context.state.parents = [{ type: 'test', testId: '123' }];
     const callback = () => {};
-    __XTestSuite__.itOnly(context, 'description', callback);
+    XTestSuite.itOnly(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-register');
     assert(context.publish.calls[0][1].type === 'it');
@@ -466,7 +467,7 @@ describe('register', () => {
       const { context } = getContext();
       context.state.testId = '123';
       context.state.href = 'http://localhost:8080';
-      __XTestSuite__.coverage(context, './test.js', 99);
+      XTestSuite.coverage(context, './test.js', 99);
       assert(context.publish.calls.length === 1);
       assert(context.publish.calls[0][0] === 'x-test-suite-register');
       assert(context.publish.calls[0][1].type === 'coverage');
@@ -481,7 +482,7 @@ describe('register', () => {
       const expected = `Unexpected goal percentage "101".`;
       let actual;
       try {
-        __XTestSuite__.coverage(context, './test.js', 101);
+        XTestSuite.coverage(context, './test.js', 101);
       } catch (error) {
         actual = error.message;
       }
@@ -496,7 +497,7 @@ describe('waitFor', () => {
     const { context } = getContext();
     assert(context.state.promises.length === 0);
     const promise = Promise.resolve();
-    __XTestSuite__.waitFor(context, promise);
+    XTestSuite.waitFor(context, promise);
     assert(context.state.promises.length === 1);
   });
 
@@ -504,7 +505,7 @@ describe('waitFor', () => {
     const { context } = getContext();
     context.state.testId = '123';
     const promise = Promise.resolve();
-    await __XTestSuite__.waitFor(context, promise);
+    await XTestSuite.waitFor(context, promise);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-ready');
     assert(context.publish.calls[0][1].testId === '123');
@@ -516,9 +517,9 @@ describe('waitFor', () => {
     const promise1 = new Promise(resolve => { resolvePromise1 = resolve; });
     const promise2 = new Promise(resolve => { resolvePromise2 = resolve; });
     const promise3 = new Promise(resolve => { resolvePromise3 = resolve; });
-    __XTestSuite__.waitFor(context, promise1);
-    __XTestSuite__.waitFor(context, promise2);
-    __XTestSuite__.waitFor(context, promise3);
+    XTestSuite.waitFor(context, promise1);
+    XTestSuite.waitFor(context, promise2);
+    XTestSuite.waitFor(context, promise3);
     resolvePromise1();
     await new Promise(resolve => setTimeout(resolve));
     assert(context.publish.calls.length === 0);
@@ -536,7 +537,7 @@ describe('bail', () => {
     const error = new Error('error test');
     const { context } = getContext();
     assert(context.state.bailed === false);
-    __XTestSuite__.bail(context, error);
+    XTestSuite.bail(context, error);
     assert(context.state.bailed === true);
   });
 
@@ -544,7 +545,7 @@ describe('bail', () => {
     const error = new Error('error test');
     const { context } = getContext();
     context.state.testId = '123';
-    __XTestSuite__.bail(context, error);
+    XTestSuite.bail(context, error);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-suite-bail');
     assert(context.publish.calls[0][1].testId === '123');
@@ -555,7 +556,7 @@ describe('bail', () => {
 describe('error', () => {
   it('turns error into basic object', () => {
     const testError = new Error('error test');
-    const error = __XTestSuite__.createError(testError);
+    const error = XTestSuite.createError(testError);
     assert(error.message = testError.toString());
     assert(error.stack = testError.stack);
   });
