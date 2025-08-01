@@ -1,4 +1,4 @@
-import { it, describe, assert, waitFor } from '../x-test.js';
+import { it, describe, assert } from '../x-test.js';
 
 describe.only('this wrapper exercises describe only logic', () => {
   describe.skip('this wrapper exercises describe skip logic', () => {
@@ -26,21 +26,3 @@ describe.only('this wrapper exercises describe only logic', () => {
     });
   });
 });
-
-describe.only('interval', () => {
-  it.todo('times out after interval - this is supposed to fail', async () => {
-    await new Promise(resolve => setTimeout(resolve, 1_000));
-    assert(true);
-  }, 0);
-});
-
-// It’s difficult to write a test that proves this works, for now, you have to
-//  verify that this is indeed included in the output TAP.
-const { promise, resolve } = Promise.withResolvers();
-promise.then(() => {
-  it.only('asynchronously registered tests work', () => {
-    assert(true);
-  });
-});
-setTimeout(resolve, 0);
-waitFor(promise);

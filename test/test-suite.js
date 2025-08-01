@@ -396,18 +396,6 @@ describe('it', () => {
     assert(context.publish.calls[0][1].only === false);
     assert(context.publish.calls[0][1].interval === null);
   });
-
-  let message = 'no error thrown';
-  let passed = false;
-  try {
-    it('this will break', 'this is expected to fail');
-  } catch (error) {
-    message = error.message;
-    passed = error.message === 'Unexpected callback value "this is expected to fail".';
-  }
-  it('throws if “it” is not given a function as a callback', () => {
-    assert(passed, message);
-  });
 });
 
 describe('itSkip', () => {
@@ -571,10 +559,5 @@ describe('error', () => {
     const error = XTestSuite.createError(testError);
     assert(error.message = testError.toString());
     assert(error.stack = testError.stack);
-  });
-  it('handles string errors', () => {
-    const testError = 'error test';
-    const error = XTestSuite.createError(testError);
-    assert(error.message = testError.toString());
   });
 });

@@ -72,8 +72,9 @@ function addUnhandledrejectionListener(callback) {
 }
 
 async function timeout(interval) {
-  return await new Promise(resolve => {
-    setTimeout(() => { resolve(XTestSuite.timeout); }, interval);
+  interval = interval ?? 30000;
+  await new Promise((resolve, reject) => {
+    setTimeout(() => { reject(new Error(`timeout after ${interval}ms`)); }, interval);
   });
 }
 

@@ -1,6 +1,4 @@
 export class XTestSuite {
-  static timeout = Symbol('timeout');
-
   static initialize(context, testId, href) {
     Object.assign(context.state, { testId, href });
     context.state.parents.push({ type: 'test', testId });
@@ -46,11 +44,7 @@ export class XTestSuite {
       try {
         if (directive !== 'SKIP') {
           const callback = context.state.callbacks[itId];
-          const resolvedInterval = interval ?? 30_000;
-          const timeout = await Promise.race([callback(), context.timeout(resolvedInterval)]);
-          if (timeout === XTestSuite.timeout) {
-            throw new Error(`timeout after ${resolvedInterval.toLocaleString()}ms`);
-          }
+          await Promise.race([callback(), context.timeout(interval)]);
         }
         context.publish('x-test-suite-result', { itId, ok: true, error: null });
       } catch (error) {
