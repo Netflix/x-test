@@ -49,12 +49,18 @@ function uuid() {
   );
 }
 
+// We need two channels since a messages on a channel are not reflected.
+const publishChannel = new BroadcastChannel('x-test');
+const subscribeChannel = new BroadcastChannel('x-test');
+
 function publish(type, data) {
-  top.postMessage({ type, data }, '*');
+  publishChannel.postMessage({ type, data });
 }
 
 function subscribe(callback) {
-  top.addEventListener('message', callback);
+  subscribeChannel.addEventListener('message', event => {
+    callback({ data: event.data });
+  });
 }
 
 function addErrorListener(callback) {
