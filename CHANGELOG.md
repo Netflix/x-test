@@ -6,11 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Adds “node/x-test-client-*” files to greatly simplify the glue code required
+  by integrators to run tests in `node`. Integrators simply import the right
+  client and call `run()` (#53).
+
 ### Changed
 
 - Communications happen through a `BroadcastChannel` instead of `top`. This is
   better since it doesn’t use globals. Instead, a more targeted `x-test` channel
-  is utilized for client <<>> root <<>> suite communications.
+  is utilized for client <<>> root <<>> suite communications (#51).
 
 ## [1.0.3] - 2025-03-18
 

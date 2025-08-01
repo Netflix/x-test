@@ -65,10 +65,13 @@ given html page in an iframe. Such iframes are run one-at-a-time. All invoked
 
 **This is not the case if you nest `it`--but that's an anti-pattern anyhow.
 
-## Usage with `puppeteer`
+## Usage with `puppeteer` or `playwright`
 
-See `test.js` for an example of how you can use `puppeteer` to run your app's
-tests and log the resulting TAP output to the console.
+See `node/x-test-client-puppeteer.js` for an example of how you can use
+`puppeteer` to run your app’s tests and log the resulting TAP output.
+
+See `node/x-test-client-playwright.js` for an example of how you can use
+`playwright` to run your app’s tests and log the resulting TAP output.
 
 ## Parsing TAP
 

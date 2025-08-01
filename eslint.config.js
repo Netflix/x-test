@@ -34,8 +34,7 @@ export default [
     languageOptions: { globals: globals.browser },
     ...common,
     ignores: [
-      'server.js',
-      'test.js',
+      'node/**',
       'demo/react/*',
     ],
   },
@@ -45,7 +44,7 @@ export default [
     ...common,
   },
   {
-    files: ['server.js', 'test.js'],
+    files: ['node/**/*.js'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     ...common,
   },

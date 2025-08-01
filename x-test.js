@@ -35,7 +35,7 @@ describe.only = (text, callback) => XTestSuite.describeOnly(suiteContext, text, 
 describe.todo = (text, callback) => XTestSuite.describeTodo(suiteContext, text, callback);
 
 /**
-* Register an individual test lint. Alternatively, mark with flags.
+* Register an individual test point. Alternatively, mark with flags.
 */
 export const it = (text, callback, interval) => XTestSuite.it(suiteContext, text, callback, interval);
 it.skip = (text, callback, interval) => XTestSuite.itSkip(suiteContext, text, callback, interval);
