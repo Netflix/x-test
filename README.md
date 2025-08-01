@@ -32,6 +32,8 @@ The following are exposed in the testing interface:
 
 ### Events
 
+Messages are posted to a `BroadcastChannel` channel with the name `x-test`.
+
 - `x-test-client-ping`: root responds (`x-test-root-pong`, { status: 'started'|'ended' waiting: true|false })
 - `x-test-root-pong`: response to `x-test-client-ping`
 - `x-test-root-coverage-request`: client should respond (`x-test-coverage-result`)

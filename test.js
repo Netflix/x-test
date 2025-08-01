@@ -24,6 +24,7 @@ import puppeteer from 'puppeteer';
     // not started, already started, or already ended, ping for status.
     await page.evaluate(async () => {
       await new Promise(resolve => {
+        const channel = new BroadcastChannel('x-test');
         const onMessage = evt => {
           const { type, data } = evt.data;
           if (
@@ -31,12 +32,13 @@ import puppeteer from 'puppeteer';
             type === 'x-test-root-end' ||
             (type === 'x-test-root-pong' && (data.waiting || data.ended))
           ) {
-            top.removeEventListener('message', onMessage);
+            channel.removeEventListener('message', onMessage);
+            channel.close();
             resolve();
           }
         };
-        top.addEventListener('message', onMessage);
-        top.postMessage({ type: 'x-test-client-ping' }, '*');
+        channel.addEventListener('message', onMessage);
+        channel.postMessage({ type: 'x-test-client-ping' });
       });
     });
 
@@ -46,15 +48,17 @@ import puppeteer from 'puppeteer';
     // Send coverage information to x-test and await test completion.
     await page.evaluate(async data => {
       await new Promise(resolve => {
+        const channel = new BroadcastChannel('x-test');
         const onMessage = evt => {
           const { type } = evt.data;
           if (type === 'x-test-root-end') {
-            top.removeEventListener('message', onMessage);
+            channel.removeEventListener('message', onMessage);
+            channel.close();
             resolve();
           }
         };
-        top.addEventListener('message', onMessage);
-        top.postMessage({ type: 'x-test-client-coverage-result', data }, '*');
+        channel.addEventListener('message', onMessage);
+        channel.postMessage({ type: 'x-test-client-coverage-result', data });
       });
     }, { js });
 
