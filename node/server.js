@@ -46,8 +46,13 @@ class Server {
             if (stats) {
               Server.sendFile(response, directoryIndex, 'text/html', stats.size);
             } else {
-              // @TODO pushState optional
-              Server.sendRootIndex(response);
+              // Special case: redirect root path to demo
+              if (url.pathname === '/') {
+                Server.sendRedirect(response, '/demo/');
+              } else {
+                // @TODO pushState optional
+                Server.sendRootIndex(response);
+              }
             }
           });
         } else {
