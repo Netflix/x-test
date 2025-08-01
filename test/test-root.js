@@ -1,4 +1,5 @@
-import { it, describe, assert, __XTestRoot__ } from '../x-test.js';
+import { it, describe, assert } from '../x-test.js';
+import { XTestRoot } from '../x-test-root.js';
 
 // Dependency injection.
 const getContext = () => {
@@ -51,7 +52,7 @@ describe('level', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'test-plan', testId: 'testTestId' };
-    const level = __XTestRoot__.level(context, 'testStepId');
+    const level = XTestRoot.level(context, 'testStepId');
     assert(level === 1);
   });
 
@@ -59,7 +60,7 @@ describe('level', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'test-start', testId: 'testTestId' };
-    const level = __XTestRoot__.level(context, 'testStepId');
+    const level = XTestRoot.level(context, 'testStepId');
     assert(level === 0);
   });
 
@@ -67,7 +68,7 @@ describe('level', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'test-end', testId: 'testTestId' };
-    const level = __XTestRoot__.level(context, 'testStepId');
+    const level = XTestRoot.level(context, 'testStepId');
     assert(level === 0);
   });
 
@@ -75,7 +76,7 @@ describe('level', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'coverage', coverageId: 'testCoverageId' };
-    const level = __XTestRoot__.level(context, 'testStepId');
+    const level = XTestRoot.level(context, 'testStepId');
     assert(level === 0);
   });
 
@@ -94,7 +95,7 @@ describe('count', () => {
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'test-plan', testId: 'testTestId' };
     context.state.tests['testTestId'] = { children: [{}, {}, {}] };
-    const count = __XTestRoot__.count(context, 'testStepId');
+    const count = XTestRoot.count(context, 'testStepId');
     assert(count === 3);
   });
 
@@ -103,7 +104,7 @@ describe('count', () => {
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'describe-plan', describeId: 'testDescribeId' };
     context.state.describes['testDescribeId'] = { children: [{}, {}, {}] };
-    const count = __XTestRoot__.count(context, 'testStepId');
+    const count = XTestRoot.count(context, 'testStepId');
     assert(count === 3);
   });
 
@@ -112,7 +113,7 @@ describe('count', () => {
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'exit' };
     context.state.children = [{}, {}, {}];
-    const count = __XTestRoot__.count(context, 'testStepId');
+    const count = XTestRoot.count(context, 'testStepId');
     assert(count === 3);
   });
 });
@@ -123,7 +124,7 @@ describe('yaml', () => {
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'it', itId: 'testItId' };
     context.state.its['testItId'] = { ok: false, error: { message: 'test failure', stack: 'test error stack' } };
-    const yaml = __XTestRoot__.yaml(context, 'testStepId');
+    const yaml = XTestRoot.yaml(context, 'testStepId');
     assert(yaml.message === 'test failure');
     assert(yaml.severity === 'fail');
     assert(yaml.data.stack === 'test error stack');
@@ -134,7 +135,7 @@ describe('end', () => {
   it('marks state as ended', () => {
     const { context } = getContext();
     assert(context.state.ended === false);
-    __XTestRoot__.end(context);
+    XTestRoot.end(context);
     assert(context.state.ended === true);
   });
 
@@ -142,13 +143,13 @@ describe('end', () => {
     const { context } = getContext();
     context.state.waiting = true;
     assert(context.state.waiting === true);
-    __XTestRoot__.end(context);
+    XTestRoot.end(context);
     assert(context.state.waiting === false);
   });
 
   it('publishes that the test has ended', () => {
     const { context } = getContext();
-    __XTestRoot__.end(context);
+    XTestRoot.end(context);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-root-end');
   });
@@ -198,7 +199,7 @@ const expectedOutput = `\
       text,
       ranges: [{ start: 0, end: 162 }, { start: 239, end: 275 }],
     }];
-    const analysis = __XTestRoot__.analyzeHrefCoverage(js, url, 95);
+    const analysis = XTestRoot.analyzeHrefCoverage(js, url, 95);
     assert(analysis.ok === false);
     assert(analysis.output === expectedOutput);
     assert(analysis.percent === 72);

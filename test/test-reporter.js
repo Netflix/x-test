@@ -1,4 +1,5 @@
-import { it, describe, assert, __XTestReporter__ } from '../x-test.js';
+import { it, describe, assert } from '../x-test.js';
+import { XTestReporter } from '../x-test-reporter.js';
 
 describe('render', () => {
   it('prints out basic test', () => {
@@ -55,7 +56,7 @@ describe('render', () => {
 describe('parse', () => {
   it('parses test', () => {
     const output = '# Subtest: http://example.com/test.html';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'a');
     assert(Object.keys(result.properties).length === 2);
     assert(result.properties.href === 'http://example.com/test.html');
@@ -69,7 +70,7 @@ describe('parse', () => {
 
   it('parses bail test', () => {
     const output = 'Bail out! http://example.com/test.html';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'a');
     assert(Object.keys(result.properties).length === 2);
     assert(result.properties.href === 'http://example.com/test.html');
@@ -84,7 +85,7 @@ describe('parse', () => {
 
   it('parses diagnostic', () => {
     const output = '# something, anything';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -97,7 +98,7 @@ describe('parse', () => {
 
   it('parses test line', () => {
     const output = 'ok 145 - this cool thing i tested';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -111,7 +112,7 @@ describe('parse', () => {
 
   it('parses "SKIP" test line', () => {
     const output = 'ok 145 - this cool thing i tested # SKIP';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -126,7 +127,7 @@ describe('parse', () => {
 
   it('parses "TODO" test line', () => {
     const output = 'ok 145 - this cool thing i tested # TODO';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -141,7 +142,7 @@ describe('parse', () => {
 
   it('parses "not ok" test line', () => {
     const output = 'not ok 145 - this cool thing i tested';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -154,7 +155,7 @@ describe('parse', () => {
 
   it('parses "not ok", "TODO" test line', () => {
     const output = 'not ok 145 - this cool thing i tested # TODO tbd...';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -168,7 +169,7 @@ describe('parse', () => {
 
   it('parses version', () => {
     const output = 'TAP version 14';
-    const result = __XTestReporter__.parse(output);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);

@@ -5,8 +5,9 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/Netflix/x-test",
   "type": "module",
-  "main": "x-test.js",
-  "module": "x-test.js",
+  "exports": {
+    "x-test.js": "x-test.js"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
@@ -21,6 +22,11 @@
   "files": [
     "LICENSE",
     "/test.js",
+    "/x-test-reporter.css.js",
+    "/x-test-reporter.js",
+    "/x-test-root.js",
+    "/x-test-suite.js",
+    "/x-test-tap.js",
     "/x-test.js",
     "/demo/**",
     "/test/**"
