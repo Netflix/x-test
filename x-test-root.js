@@ -9,6 +9,9 @@ export class XTestRoot {
       document.body.append(context.state.reporter);
     }
     context.state.coverage = url.searchParams.get('x-test-run-coverage') === '';
+    const nameParam = url.searchParams.get('x-test-name');
+    context.state.filtering = !!nameParam;
+    context.state.namePattern = nameParam ? new RegExp(nameParam) : null;
     context.state.coverageValuePromise = new Promise(resolve => {
       context.state.resolveCoverageValuePromise = value => {
         context.state.coverageValue = value;
@@ -166,6 +169,14 @@ export class XTestRoot {
 
   static registerIt(context, data) {
     if (!context.state.ended) {
+      // Apply name pattern filtering if present
+      if (context.state.namePattern) {
+        const fullTestName = XTestRoot.buildFullTestName(context, data);
+        if (!context.state.namePattern.test(fullTestName)) {
+          return; // Skip registration if pattern doesn't match
+        }
+      }
+
       // New "it" (to be run as part of a test suite). Queue it up.
       const stepId = context.uuid();
       const itId = data.itId;
@@ -184,6 +195,22 @@ export class XTestRoot {
         context.state.tests[data.parents.at(-1).testId].children.push({ type: 'it', itId });
       }
     }
+  }
+
+  static buildFullTestName(context, it) {
+    const parts = [];
+    
+    // Add parent describe names in order
+    const describeParents = it.parents.filter(parent => parent.type === 'describe');
+    for (const parent of describeParents) {
+      const describe = context.state.describes[parent.describeId];
+      parts.push(describe.text);
+    }
+    
+    // Add the test name itself
+    parts.push(it.text);
+    
+    return parts.join(' ');
   }
 
   static registerCoverage(context, data) {
@@ -520,6 +547,12 @@ export class XTestRoot {
 
   static bail(context, error, options) {
     if (!context.state.ended) {
+      // Flush any queued output when bailing if filtering is active
+      if (context.state.filtering && context.state.queue.length > 0) {
+        XTestRoot.log(context, ...context.state.queue);
+        context.state.queue.length = 0;
+        context.state.queueing = false;
+      }
       if (error && error.stack) {
         XTestRoot.log(context, XTestTap.diagnostic(error.stack));
       }
@@ -560,7 +593,119 @@ export class XTestRoot {
       } else {
         tap = context.state.stepIds.slice(lastIndex, index).map(targetId => context.state.steps[targetId].tap);
       }
-      XTestRoot.log(context, ...tap.flat());
+      if (context.state.filtering) {
+        XTestRoot.handleFilteredOutput(context, tap.flat(), stepId);
+      } else {
+        XTestRoot.log(context, ...tap.flat());
+      }
+    }
+  }
+
+  static handleFilteredOutput(context, tap, stepId) {
+    const step = context.state.steps[stepId];
+
+    // Start queueing when we encounter a subtest
+    if (step.type === 'describe-start' || step.type === 'test-start') {
+      context.state.queueing = true;
+    }
+
+    // Handle empty test plans by removing back to matching subtest and suppressing the plan
+    if ((step.type === 'describe-plan' || step.type === 'test-plan') && XTestRoot.count(context, stepId) === 0) {
+      // Find the matching subtest line in the queue and remove everything from there
+      const subtestIndex = context.state.queue.findLastIndex(line => 
+        line.trim().startsWith('# Subtest:')
+      );
+      if (subtestIndex === -1) {
+        throw new Error('Expected to find matching subtest in queue for empty plan');
+      }
+      context.state.queue.length = subtestIndex;
+      // Don't add the empty plan line to the queue - just return early
+      return;
+    }
+
+    // Handle empty describe-end by removing from parent and suppressing the test line
+    if (step.type === 'describe-end') {
+      const describe = context.state.describes[step.describeId];
+      if (describe.children.length === 0) {
+        // This describe block is empty, remove it from its parent's children
+        const parentType = describe.parents.at(-1)?.type;
+        if (parentType === 'describe') {
+          const parentDescribe = context.state.describes[describe.parents.at(-1).describeId];
+          const childIndex = parentDescribe.children.findIndex(child => 
+            child.type === 'describe' && child.describeId === describe.describeId
+          );
+          if (childIndex !== -1) {
+            parentDescribe.children.splice(childIndex, 1);
+          }
+        } else if (parentType === 'test') {
+          const parentTest = context.state.tests[describe.parents.at(-1).testId];
+          const childIndex = parentTest.children.findIndex(child => 
+            child.type === 'describe' && child.describeId === describe.describeId
+          );
+          if (childIndex !== -1) {
+            parentTest.children.splice(childIndex, 1);
+          }
+        }
+        // Don't output the test line
+        return;
+      }
+    }
+
+    // Handle empty test-end by removing from parent and suppressing the test line
+    if (step.type === 'test-end') {
+      const test = context.state.tests[step.testId];
+      if (test.children.length === 0) {
+        // This test suite is empty, remove it from children array
+        const childIndex = context.state.children.findIndex(child => 
+          child.type === 'test' && child.testId === test.testId
+        );
+        if (childIndex !== -1) {
+          context.state.children.splice(childIndex, 1);
+        }
+        // Don't output the test line
+        return;
+      }
+    }
+
+    // Suppress coverage test lines when filtering
+    if (step.type === 'coverage') {
+      // Remove coverage from children array
+      const childIndex = context.state.children.findIndex(child => 
+        child.type === 'coverage' && child.coverageId === step.coverageId
+      );
+      if (childIndex !== -1) {
+        context.state.children.splice(childIndex, 1);
+      }
+      // Don't output the coverage test line
+      return;
+    }
+
+    // Always allow version and exit to go through normal flow
+    if (step.type === 'version' || step.type === 'exit') {
+      // Flush any remaining queued output before exit
+      if (step.type === 'exit' && context.state.queue.length > 0) {
+        XTestRoot.log(context, ...context.state.queue);
+        context.state.queue.length = 0;
+        context.state.queueing = false;
+      }
+      // These steps should not be queued - let them go through normal output flow
+      XTestRoot.log(context, ...tap);
+      return;
+    }
+
+    // If queueing, add to queue instead of outputting
+    if (context.state.queueing) {
+      context.state.queue.push(...tap);
+
+      // Flush queue and stop queueing when we encounter a test line
+      if (step.type === 'it' || step.type === 'describe-end' || step.type === 'test-end') {
+        context.state.queueing = false;
+        XTestRoot.log(context, ...context.state.queue);
+        context.state.queue.length = 0;
+      }
+    } else {
+      // Not queueing, output normally
+      XTestRoot.log(context, ...tap);
     }
   }
 

@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { Parser } from 'tap-parser';
 import { XTestClient } from './x-test-client.js';
 
 export class XTestPuppeteerClient {
@@ -10,7 +11,7 @@ export class XTestPuppeteerClient {
    * @param {Object} options.launchOptions - Puppeteer launch options
    */
   static async run(options) {
-    const url = options?.url ?? null;
+    let url = options?.url ?? null;
     const coverage = options?.coverage ?? false;
     const launchOptions = options?.launchOptions ?? {};
 
@@ -19,10 +20,25 @@ export class XTestPuppeteerClient {
     XTestClient.validateType('coverage', Boolean, coverage);
     XTestClient.validateType('launchOptions', Object, launchOptions);
 
+    // Parse command line arguments for test name filtering
+    const args = process.argv.slice(2);
+    const testNameArg = args.find(arg => arg.startsWith('--testName='));
+    if (testNameArg) {
+      const testName = testNameArg.split('=')[1];
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('x-test-name', testName);
+      url = urlObj.href;
+    }
+    if (coverage) {
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('x-test-run-coverage', '');
+      url = urlObj.href;
+    }
+
     try {
       // Launch browser
       const browser = await puppeteer.launch({
-        timeout: 10000,
+        timeout: 10_000,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
         ...launchOptions,
       });
@@ -34,12 +50,32 @@ export class XTestPuppeteerClient {
         await page.coverage.startJSCoverage();
       }
 
-      // Map browser console to stdout
-      page.on('console', message => console.log(message.text())); // eslint-disable-line no-console
+      // Parse command line arguments for tap-parser options
+      const cliArgs = process.argv.slice(2);
+      const useTapParser = !cliArgs.includes('--no-validate');
+      let parser = null;
+
+      if (useTapParser) {
+        // Set up TAP parser for validation
+        parser = new Parser(results => {
+          if (!results.ok) {
+            process.exit(1);
+          }
+        });
+
+        // Capture console output and parse as TAP
+        page.on('console', message => {
+          const text = message.text();
+          console.log(text); // eslint-disable-line no-console
+          parser.write(text + '\n');
+        });
+      } else {
+        // Map browser console directly to stdout
+        page.on('console', message => console.log(message.text())); // eslint-disable-line no-console
+      }
 
       // Navigate to test page
-      const testUrl = coverage ? `${url}?x-test-run-coverage` : url;
-      await page.goto(testUrl);
+      await page.goto(url);
 
       // Wait for test readiness
       await page.evaluate(XTestClient.run());
@@ -48,6 +84,11 @@ export class XTestPuppeteerClient {
       if (coverage && page.coverage) {
         const js = await page.coverage.stopJSCoverage();
         await page.evaluate(XTestClient.cover(), { js });
+      }
+
+      // Close parser if used
+      if (parser) {
+        parser.end();
       }
 
       // Close browser

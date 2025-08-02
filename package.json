@@ -21,11 +21,11 @@
     "playwright:install": "playwright install --with-deps",
     "test": "npm run test:puppeteer",
     "test:puppeteer": "npm run test:puppeteer:chrome",
-    "test:puppeteer:chrome": "node node/test-puppeteer-chrome.js | tap-parser -l",
+    "test:puppeteer:chrome": "node node/test-puppeteer-chrome.js",
     "test:playwright": "npm run test:playwright:chromium && npm run test:playwright:firefox && npm run test:playwright:webkit",
-    "test:playwright:chromium": "node node/test-playwright-chromium.js | tap-parser -l",
-    "test:playwright:firefox": "node node/test-playwright-firefox.js | tap-parser -l",
-    "test:playwright:webkit": "node node/test-playwright-webkit.js | tap-parser -l",
+    "test:playwright:chromium": "node node/test-playwright-chromium.js",
+    "test:playwright:firefox": "node node/test-playwright-firefox.js",
+    "test:playwright:webkit": "node node/test-playwright-webkit.js",
     "bump": "./bump.sh"
   },
   "files": [

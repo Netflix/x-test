@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds “node/x-test-client-*” files to greatly simplify the glue code required
   by integrators to run tests in `node`. Integrators simply import the right
   client and call `run()` (#53).
+- Adds “x-test-name” query param to enable filtering of tests based on the given
+  pattern name. This is done internally so it will work in both a browser and
+  a CLI output (#58).
 
 ### Changed
 
