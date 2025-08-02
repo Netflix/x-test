@@ -41,7 +41,7 @@ styleSheet.replaceSync(css`
   height: var(--header-height);
   flex-shrink: 0;
   box-shadow: inset 0 -1px 0 0 #484848, 0 1px 2px 0 #484848;
-  padding-right: 38px;
+  padding-right: 54px;
   background-color: var(--x-test-reporter-background-color);
 }
 :host([open]) #header {
@@ -111,12 +111,9 @@ styleSheet.replaceSync(css`
   content: "OK!";
 }
 
-#tag-line {
-  margin: auto 12px;
-  color: var(--subdued);
-  cursor: default;
-  user-select: none;
-  pointer-events: none;
+#form {
+  display: flex;
+  gap: 2px;
 }
 
 #body {

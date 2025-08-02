@@ -1,4 +1,5 @@
 import { chromium, firefox, webkit } from 'playwright';
+import { Parser } from 'tap-parser';
 import { XTestClient } from './x-test-client.js';
 
 export class XTestPlaywrightClient {
@@ -10,7 +11,7 @@ export class XTestPlaywrightClient {
    * @param {Object} options.launchOptions - Playwright launch options
    */
   static async run(options) {
-    const url = options?.url ?? null;
+    let url = options?.url ?? null;
     const browserId = options?.browser ?? null;
     const launchOptions = options?.launchOptions ?? {};
 
@@ -18,6 +19,16 @@ export class XTestPlaywrightClient {
     XTestClient.validateType('url', String, url);
     XTestClient.validateOneOf('browser', ['chromium', 'firefox', 'webkit'], browserId);
     XTestClient.validateType('launchOptions', Object, launchOptions);
+
+    // Parse command line arguments for test name filtering
+    const args = process.argv.slice(2);
+    const testNameArg = args.find(arg => arg.startsWith('--testName='));
+    if (testNameArg) {
+      const testName = testNameArg.split('=')[1];
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('x-test-name', testName);
+      url = urlObj.href;
+    }
 
     try {
       // Launch browser - let Playwright handle invalid browser errors
@@ -30,14 +41,40 @@ export class XTestPlaywrightClient {
       const context = await browserInstance.newContext();
       const page = await context.newPage();
 
-      // Map browser console to stdout
-      page.on('console', message => console.log(message.text())); // eslint-disable-line no-console
+      // Parse command line arguments for tap-parser options
+      const cliArgs = process.argv.slice(2);
+      const useTapParser = !cliArgs.includes('--no-validate');
+      let parser = null;
+
+      if (useTapParser) {
+        // Set up TAP parser for validation
+        parser = new Parser(results => {
+          if (!results.ok) {
+            process.exit(1);
+          }
+        });
+
+        // Capture console output and parse as TAP
+        page.on('console', message => {
+          const text = message.text();
+          console.log(text); // eslint-disable-line no-console
+          parser.write(text + '\n');
+        });
+      } else {
+        // Map browser console directly to stdout
+        page.on('console', message => console.log(message.text())); // eslint-disable-line no-console
+      }
 
       // Navigate to test page
       await page.goto(url);
 
       // Wait for test readiness
       await page.evaluate(XTestClient.run());
+
+      // Close parser if used
+      if (parser) {
+        parser.end();
+      }
 
       // Close browser
       await browserInstance.close();

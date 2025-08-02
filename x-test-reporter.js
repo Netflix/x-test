@@ -2,7 +2,7 @@ import styleSheet from './x-test-reporter.css.js';
 
 const template = document.createElement('template');
 template.setHTMLUnsafe(`
-  <div id="header"><div id="result"></div><div id="tag-line">x-test - a simple, tap-compliant test runner for the browser.</div></div>
+  <div id="header"><div id="result"></div><form id="form"><input id="test-name" name="testName" autofocus placeholder="Filter by name&hellip;"><input id="reset" type=reset value="&#x21BA;"></form></div>
   <div id="body"><div id="spacer"></div><div id="container"></div></div>
   <button id="toggle" type="button"></button>
 `);
@@ -22,6 +22,7 @@ export class XTestReporter extends HTMLElement {
     if (localStorage.getItem('x-test-reporter-closed') !== 'true') {
       this.setAttribute('open', '');
     }
+    this.shadowRoot.getElementById('test-name').value = new URL(location.href).searchParams.get('x-test-name') ?? '';
     this.shadowRoot.getElementById('toggle').addEventListener('click', () => {
       this.hasAttribute('open') ? this.removeAttribute('open') : this.setAttribute('open', '');
       localStorage.setItem('x-test-reporter-closed', String(!this.hasAttribute('open')));
@@ -33,6 +34,23 @@ export class XTestReporter extends HTMLElement {
       this.style.height = `${Math.round(currentHeight + currentHeaderY - nextHeaderY)}px`;
       localStorage.setItem('x-test-reporter-height', this.style.height);
     };
+    this.shadowRoot.getElementById('form').addEventListener('reset', () => {
+      const url = new URL(location.href);
+      url.searchParams.delete('x-test-name');
+      location.href = url.href;
+    });
+    this.shadowRoot.getElementById('form').addEventListener('submit', event => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const testName = formData.get('testName');
+      const url = new URL(location.href);
+      if (testName) {
+        url.searchParams.set('x-test-name', testName);
+      } else {
+        url.searchParams.delete('x-test-name');
+      }
+      location.href = url.href;
+    });
     this.shadowRoot.getElementById('header').addEventListener('pointerdown', event => {
       if (this.hasAttribute('open')) {
         const headerY = this.shadowRoot.getElementById('header').getBoundingClientRect().y;
