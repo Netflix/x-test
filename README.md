@@ -52,10 +52,11 @@ The following parameters can be passed in via query params on the url:
 
 - `x-test-no-reporter`: turns off custom reporting tool ui
 - `x-test-run-coverage`: turns on coverage reporting**
+- `x-test-name`: filters tests by name using regex pattern matching**
 
 **See `test.js` for an example of how to capture coverage information in
 puppeteer and send it to your test to allow your automated test to fail due to
-unmet coverage goals.
+unmet coverage goals. The `x-test-name` parameter filters tests by matching the full test name (including parent describe blocks) against the provided regex pattern.
 
 ## Execution
 
@@ -65,13 +66,32 @@ given html page in an iframe. Such iframes are run one-at-a-time. All invoked
 
 **This is not the case if you nest `it`--but that's an anti-pattern anyhow.
 
+## Test Filtering
+
+You can filter tests by name using the `x-test-name` query parameter, which accepts a regex pattern. This allows you to run only specific tests that match the pattern.
+
+### Browser Usage
+```
+http://localhost:8080/test/?x-test-name=should%20validate
+```
+
+### Command Line Usage
+When using the Puppeteer or Playwright clients, you can use the `--testName` argument:
+
+```bash
+node node/test-puppeteer-chrome.js --testName="should validate"
+node node/test-playwright-chromium.js --testName="user.*login"
+```
+
+The pattern will match against the full test name, including any parent `describe` block names joined with spaces.
+
 ## Usage with `puppeteer` or `playwright`
 
 See `node/x-test-client-puppeteer.js` for an example of how you can use
-`puppeteer` to run your app’s tests and log the resulting TAP output.
+`puppeteer` to run your app's tests and log the resulting TAP output.
 
 See `node/x-test-client-playwright.js` for an example of how you can use
-`playwright` to run your app’s tests and log the resulting TAP output.
+`playwright` to run your app's tests and log the resulting TAP output.
 
 ## Parsing TAP
 

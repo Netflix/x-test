@@ -84,7 +84,8 @@ if (!frameElement?.getAttribute('data-x-test-test-id')) {
     ended: false, waiting: false, children: [], stepIds: [], steps: {},
     tests: {}, describes: {}, its: {}, coverage: false, coverages: {},
     resolveCoverageValuePromise: null, coverageValuePromise: null,
-    coverageValue: null, reporter: null,
+    coverageValue: null, reporter: null, filtering: false, queue: [],
+    queueing: false,
   };
   const rootContext = { state, uuid, publish, subscribe, timeout };
   XTestRoot.initialize(rootContext, location.href);
