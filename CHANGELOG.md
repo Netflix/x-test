@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds “x-test-name” query param to enable filtering of tests based on the given
   pattern name. This is done internally so it will work in both a browser and
   a CLI output (#58).
+- Adds `@netflix/x-test-client` package with unified CLI for improved testing
+  integrations. Provides `x-test` command with argument validation and support
+  for multiple automation tools (#60).
 
 ### Changed
 

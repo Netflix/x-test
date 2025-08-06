@@ -34,18 +34,19 @@ export default [
     languageOptions: { globals: globals.browser },
     ...common,
     ignores: [
-      'node/**',
+      'server.js',
+      'client/**',
       'demo/react/*',
     ],
   },
   {
-    files: ['demo/react/**/*.js'],
-    languageOptions: { globals: { ...globals.browser, React: 'readonly', ReactDOM: 'readonly' } },
+    files: ['server.js', 'client/**/*.js'],
+    languageOptions: { globals: globals.node },
     ...common,
   },
   {
-    files: ['node/**/*.js'],
-    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    files: ['demo/react/**/*.js'],
+    languageOptions: { globals: { ...globals.browser, React: 'readonly', ReactDOM: 'readonly' } },
     ...common,
   },
   {

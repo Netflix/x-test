@@ -1,4 +1,4 @@
-export class XTestClient {
+export class XTestClientCommon {
   static run() {
     return async () => {
       const channel = new BroadcastChannel('x-test');
@@ -47,33 +47,5 @@ export class XTestClient {
     // Ensure we exit with a non-zero code if anything fails (e.g., timeout).
     console.error(error); // eslint-disable-line no-console
     process.exit(1);
-  }
-
-  static validateOneOf(name, keys, value) {
-    if (!keys.includes(value)) {
-      throw new Error(`Expected "${name}" to be one of [${keys.join(', ')}].`);
-    }
-  }
-
-  static validateObjectKeys(name, keys, value) {
-    XTestClient.validateType(name, Object, value);
-    for (const key of Object.keys(value)) {
-      if (!keys.includes(key)) {
-        throw new Error(`Unexpected ${name} key "${key}".`);
-      }
-    }
-  }
-
-  static validateType(name, type, value) {
-    switch (type) {
-      case Object:
-        return value && typeof value === 'object';
-      case Boolean:
-        return typeof value === 'boolean';
-      case String:
-        return typeof value === 'string';
-      default:
-        throw new Error(`Unexpected type validation "${type}" for "${name}".`);
-    }
   }
 }

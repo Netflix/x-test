@@ -1,0 +1,42 @@
+{
+  "name": "@netflix/x-test-client",
+  "description": "Node.js client tools for x-test - a simple, tap-compliant test runner for the browser",
+  "version": "1.0.3",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/Netflix/x-test",
+  "type": "module",
+  "bin": {
+    "x-test": "./x-test-client.js"
+  },
+  "exports": {
+    "./x-test-client.js": "./x-test-client.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "files": [
+    "LICENSE",
+    "/x-test-client.js",
+    "/x-test-client-common.js",
+    "/x-test-client-puppeteer.js"
+  ],
+  "dependencies": {
+    "tap-parser": ">=18.0.0",
+    "puppeteer": ">=20.0.0"
+  },
+  "engines": {
+    "node": ">=20.18",
+    "npm": ">=10.8"
+  },
+  "contributors": [
+    {
+      "name": "Andrew Seier",
+      "email": "aseier@netflix.com"
+    },
+    {
+      "name": "Casey Klebba",
+      "email": "cklebba@netflix.com"
+    }
+  ]
+}
