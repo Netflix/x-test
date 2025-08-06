@@ -604,107 +604,131 @@ export class XTestRoot {
   static handleFilteredOutput(context, tap, stepId) {
     const step = context.state.steps[stepId];
 
-    // Start queueing when we encounter a subtest
-    if (step.type === 'describe-start' || step.type === 'test-start') {
-      context.state.queueing = true;
-    }
-
-    // Handle empty test plans by removing back to matching subtest and suppressing the plan
-    if ((step.type === 'describe-plan' || step.type === 'test-plan') && XTestRoot.count(context, stepId) === 0) {
-      // Find the matching subtest line in the queue and remove everything from there
-      const subtestIndex = context.state.queue.findLastIndex(line => 
-        line.trim().startsWith('# Subtest:')
-      );
-      if (subtestIndex === -1) {
-        throw new Error('Expected to find matching subtest in queue for empty plan');
-      }
-      context.state.queue.length = subtestIndex;
-      // Don't add the empty plan line to the queue - just return early
-      return;
-    }
-
-    // Handle empty describe-end by removing from parent and suppressing the test line
-    if (step.type === 'describe-end') {
-      const describe = context.state.describes[step.describeId];
-      if (describe.children.length === 0) {
-        // This describe block is empty, remove it from its parent's children
-        const parentType = describe.parents.at(-1)?.type;
-        if (parentType === 'describe') {
-          const parentDescribe = context.state.describes[describe.parents.at(-1).describeId];
-          const childIndex = parentDescribe.children.findIndex(child => 
-            child.type === 'describe' && child.describeId === describe.describeId
-          );
-          if (childIndex !== -1) {
-            parentDescribe.children.splice(childIndex, 1);
-          }
-        } else if (parentType === 'test') {
-          const parentTest = context.state.tests[describe.parents.at(-1).testId];
-          const childIndex = parentTest.children.findIndex(child => 
-            child.type === 'describe' && child.describeId === describe.describeId
-          );
-          if (childIndex !== -1) {
-            parentTest.children.splice(childIndex, 1);
-          }
+    switch (step.type) {
+      case 'describe-start':
+      case 'test-start':
+        context.state.queueing = true;
+        XTestRoot.queueOrOutput(context, tap, step.type);
+        break;
+      case 'describe-plan':
+      case 'test-plan':
+        if (XTestRoot.count(context, stepId) === 0) {
+          XTestRoot.handleEmptyPlan(context);
+        } else {
+          XTestRoot.queueOrOutput(context, tap, step.type);
         }
-        // Don't output the test line
-        return;
-      }
-    }
-
-    // Handle empty test-end by removing from parent and suppressing the test line
-    if (step.type === 'test-end') {
-      const test = context.state.tests[step.testId];
-      if (test.children.length === 0) {
-        // This test suite is empty, remove it from children array
-        const childIndex = context.state.children.findIndex(child => 
-          child.type === 'test' && child.testId === test.testId
-        );
-        if (childIndex !== -1) {
-          context.state.children.splice(childIndex, 1);
+        break;
+      case 'describe-end':
+        if (!XTestRoot.handleEmptyDescribe(context, step)) {
+          XTestRoot.queueOrOutput(context, tap, step.type);
         }
-        // Don't output the test line
-        return;
-      }
+        break;
+      case 'test-end':
+        if (!XTestRoot.handleEmptyTest(context, step)) {
+          XTestRoot.queueOrOutput(context, tap, step.type);
+        }
+        break;
+      case 'coverage':
+        XTestRoot.handleCoverage(context, step);
+        break;
+      case 'version':
+        XTestRoot.log(context, ...tap);
+        break;
+      case 'exit':
+        XTestRoot.handleExit(context, tap);
+        break;
+      case 'it':
+        XTestRoot.queueOrOutput(context, tap, step.type);
+        break;
+      default:
+        throw new Error(`Unexpected step type "${step.type}".`);
     }
+  }
 
-    // Suppress coverage test lines when filtering
-    if (step.type === 'coverage') {
-      // Remove coverage from children array
+  static handleEmptyPlan(context) {
+    // Find the matching subtest line in the queue and remove everything from there
+    const subtestIndex = context.state.queue.findLastIndex(line => 
+      line.trim().startsWith('# Subtest:')
+    );
+    if (subtestIndex === -1) {
+      throw new Error('Expected to find matching subtest in queue for empty plan');
+    }
+    context.state.queue.length = subtestIndex;
+  }
+
+  static handleEmptyDescribe(context, step) {
+    const describe = context.state.describes[step.describeId];
+    if (describe.children.length === 0) {
+      XTestRoot.removeFromParent(describe.parents, 'describe', step.describeId, context);
+      return true;
+    }
+    return false;
+  }
+
+  static handleEmptyTest(context, step) {
+    const test = context.state.tests[step.testId];
+    if (test.children.length === 0) {
       const childIndex = context.state.children.findIndex(child => 
-        child.type === 'coverage' && child.coverageId === step.coverageId
+        child.type === 'test' && child.testId === test.testId
       );
       if (childIndex !== -1) {
         context.state.children.splice(childIndex, 1);
       }
-      // Don't output the coverage test line
-      return;
+      return true;
     }
+    return false;
+  }
 
-    // Always allow version and exit to go through normal flow
-    if (step.type === 'version' || step.type === 'exit') {
-      // Flush any remaining queued output before exit
-      if (step.type === 'exit' && context.state.queue.length > 0) {
-        XTestRoot.log(context, ...context.state.queue);
-        context.state.queue.length = 0;
-        context.state.queueing = false;
+  static handleCoverage(context, step) {
+    const childIndex = context.state.children.findIndex(child => 
+      child.type === 'coverage' && child.coverageId === step.coverageId
+    );
+    if (childIndex !== -1) {
+      context.state.children.splice(childIndex, 1);
+    }
+  }
+
+  static handleExit(context, tap) {
+    if (context.state.queue.length > 0) {
+      XTestRoot.log(context, ...context.state.queue);
+      context.state.queue.length = 0;
+      context.state.queueing = false;
+    }
+    XTestRoot.log(context, ...tap);
+  }
+
+  static removeFromParent(parents, childType, childId, context) {
+    const parentType = parents.at(-1)?.type;
+    if (parentType === 'describe') {
+      const parentDescribe = context.state.describes[parents.at(-1).describeId];
+      const childIndex = parentDescribe.children.findIndex(child => 
+        child.type === childType && child[`${childType}Id`] === childId
+      );
+      if (childIndex !== -1) {
+        parentDescribe.children.splice(childIndex, 1);
       }
-      // These steps should not be queued - let them go through normal output flow
-      XTestRoot.log(context, ...tap);
-      return;
+    } else if (parentType === 'test') {
+      const parentTest = context.state.tests[parents.at(-1).testId];
+      const childIndex = parentTest.children.findIndex(child => 
+        child.type === childType && child[`${childType}Id`] === childId
+      );
+      if (childIndex !== -1) {
+        parentTest.children.splice(childIndex, 1);
+      }
     }
+  }
 
-    // If queueing, add to queue instead of outputting
+  static queueOrOutput(context, tap, stepType) {
     if (context.state.queueing) {
       context.state.queue.push(...tap);
-
-      // Flush queue and stop queueing when we encounter a test line
-      if (step.type === 'it' || step.type === 'describe-end' || step.type === 'test-end') {
+      
+      // Flush queue and stop queueing for end steps
+      if (stepType === 'it' || stepType === 'describe-end' || stepType === 'test-end') {
         context.state.queueing = false;
         XTestRoot.log(context, ...context.state.queue);
         context.state.queue.length = 0;
       }
     } else {
-      // Not queueing, output normally
       XTestRoot.log(context, ...tap);
     }
   }
