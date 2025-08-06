@@ -9,6 +9,10 @@ The x-test utility is a simple, TAP-compliant test runner for the browser. It
 allows you to run tests directly in the browser using a familiar testing
 interface (`it`, `describe`, `assert`) while producing TAP Version 14 output.
 
+The repository is structured as an npm workspace with two packages:
+- `@netflix/x-test` - Browser-side test runner and utilities
+- `@netflix/x-test-client` - Node.js automation clients and CLI tools
+
 ## Development Commands
 
 ### Development Server
@@ -16,11 +20,8 @@ interface (`it`, `describe`, `assert`) while producing TAP Version 14 output.
 - The server serves static files and supports directory indexing
 
 ### Testing
-- `npm test` - Run all browser/tool combinations sequentially
-- `npm run test:puppeteer:chrome` - Run tests with Puppeteer Chrome
-- `npm run test:playwright:chrome` - Run tests with Playwright Chrome (with coverage)
-- `npm run test:playwright:firefox` - Run tests with Playwright Firefox (no coverage)
-- `npm run test:playwright:webkit` - Run tests with Playwright WebKit (no coverage)
+- `npm test` - Run tests using the x-test CLI with Puppeteer Chrome
+- `npm run test:puppeteer:chrome` - Run tests with Puppeteer Chrome (same as above)
 
 ### Code Quality
 - `npm run lint` - Run ESLint with zero warnings allowed
@@ -60,26 +61,27 @@ interface (`it`, `describe`, `assert`) while producing TAP Version 14 output.
 
 6. **x-test-tap.js** - TAP Version 14 output generator (`XTestTap`) with proper indentation and formatting
 
-#### Node.js Components  
-7. **node/server.js** - Development HTTP server with:
+#### Development Server
+7. **server.js** - Development HTTP server with:
    - Static file serving with MIME type detection
    - Directory indexing with root-to-demo redirect
    - Support for custom headers via environment variables
 
-8. **node/x-test-client.js** - Generic client helper for external test runners:
+#### Client Package Components  
+8. **client/x-test-client.js** - Main CLI entry point that:
+   - Handles command-line argument parsing and validation
+   - Dispatches to appropriate automation clients
+   - Provides unified interface for all client tools
+
+9. **client/x-test-client-common.js** - Shared utilities (`XTestClientCommon`) for:
    - BroadcastChannel communication with x-test
    - Test readiness detection and coverage data exchange
    - TAP bailout functionality for error scenarios
 
-9. **node/x-test-client-puppeteer.js** - Puppeteer-specific client that:
-   - Handles browser launch with Chrome DevTools coverage
-   - Uses generic x-test-client for communication
-   - Outputs TAP-compliant results
-
-10. **node/x-test-client-playwright.js** - Playwright-specific client that:
-    - Supports multiple browsers (chromium, firefox, webkit)
-    - Normalizes Playwright coverage format to x-test format
-    - Handles browser-specific capability detection
+10. **client/x-test-client-puppeteer.js** - Puppeteer-specific client that:
+    - Handles browser launch with Chrome DevTools coverage
+    - Uses x-test-client-common for communication
+    - Outputs TAP-compliant results with internal validation
 
 ### Test Execution Flow
 
@@ -105,14 +107,18 @@ Each test defines an HTML document which runs in an iframe:
 /
 ├── /demo/                    # Example usage patterns
 ├── /test/                    # Internal x-test library tests
-├── /node/                    # Node.js-specific components
-│   ├── server.js             # Development server
-│   ├── x-test-client*.js     # Test automation clients
-│   └── test-*.js             # Test runner scripts for different browsers
+├── /client/                  # Client package (@netflix/x-test-client)
+│   ├── x-test-client.js      # Main CLI entry point
+│   ├── x-test-client-common.js # Shared utilities
+│   ├── x-test-client-puppeteer.js # Puppeteer automation
+│   ├── package.json          # Client package configuration
+│   ├── jsr.json              # Client JSR configuration
+│   └── README.md             # Client documentation
+├── server.js                 # Development HTTP server
 ├── x-test*.js                # Core browser components  
-├── package.json              # Package configuration
+├── package.json              # Root package configuration
 ├── eslint.config.js          # Linting rules
-└── deno.json                 # Deno configuration
+└── jsr.json                  # Root JSR configuration
 ```
 
 ## Testing Patterns
@@ -128,33 +134,40 @@ When writing tests:
 
 ## Client Usage
 
-For external test automation:
+### Command Line Interface
+
+The primary way to run automated tests is through the x-test CLI:
+
+```bash
+x-test --client=puppeteer --url=http://localhost:8080/test/ --coverage=true
+```
+
+Available arguments:
+- `--client=puppeteer` - Use Puppeteer with Chrome (required)
+- `--url=<url>` - URL to test page (required)  
+- `--coverage=true|false` - Enable coverage collection
+- `--test-name=<pattern>` - Filter tests by regex pattern
+
+### Programmatic Usage
+
+While primarily designed as a CLI, you can also import the client programmatically:
 
 ```javascript
-// Puppeteer
-import { XTestPuppeteerClient } from '@netflix/x-test/x-test-client-puppeteer.js';
-await XTestPuppeteerClient.run({
-  url: 'http://localhost:8080/test/',
-  coverage: true,
-  launchOptions: { headless: true }
-});
+// Import the CLI entry point
+import '@netflix/x-test-client';
 
-// Playwright  
-import { XTestPlaywrightClient } from '@netflix/x-test/x-test-client-playwright.js';
-import { chromium } from 'playwright';
-await XTestPlaywrightClient.run({
-  url: 'http://localhost:8080/test/',
-  coverage: true, // Only works with Chromium browsers
-  browser: chromium
-});
+// The individual clients are internal implementation details
+// and not exported for external use
 ```
 
 ## Development Notes
 
 - Node.js >= 20.18 and npm >= 10.8 required
-- Browser tests support multiple automation tools (Puppeteer, Playwright) 
+- Repository uses npm workspaces with two packages
+- Browser tests use Puppeteer automation with Chrome
 - Coverage collection only available in Chromium-based browsers
 - All code follows strict ESLint rules (see eslint.config.js)
 - Uses BroadcastChannel API for cross-context communication
-- Published as @netflix/x-test on npm registry
+- Published as @netflix/x-test and @netflix/x-test-client on npm registry
+- Also published to JSR registry
 - Apache 2.0 licensed

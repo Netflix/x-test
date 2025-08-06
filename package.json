@@ -5,34 +5,27 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/Netflix/x-test",
   "type": "module",
+  "workspaces": [
+    ".",
+    "client"
+  ],
   "exports": {
-    "x-test.js": "x-test.js",
-    "x-test-client-puppeteer.js": "node/x-test-client-puppeteer.js",
-    "x-test-client-playwright.js": "node/x-test-client-playwright.js"
+    "./x-test.js": "./x-test.js"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "start": "node ./node/server.js",
+    "start": "node ./server.js",
     "lint": "eslint --max-warnings=0 .",
     "lint-fix": "eslint --fix .",
-    "playwright:install": "playwright install --with-deps",
-    "test": "npm run test:puppeteer",
-    "test:puppeteer": "npm run test:puppeteer:chrome",
-    "test:puppeteer:chrome": "node node/test-puppeteer-chrome.js",
-    "test:playwright": "npm run test:playwright:chromium && npm run test:playwright:firefox && npm run test:playwright:webkit",
-    "test:playwright:chromium": "node node/test-playwright-chromium.js",
-    "test:playwright:firefox": "node node/test-playwright-firefox.js",
-    "test:playwright:webkit": "node node/test-playwright-webkit.js",
+    "test": "npm run test:puppeteer:chrome",
+    "test:puppeteer:chrome": "x-test --client=puppeteer --url=http://127.0.0.1:8080/test/ --coverage=true",
     "bump": "./bump.sh"
   },
   "files": [
     "LICENSE",
-    "/node/x-test-client.js",
-    "/node/x-test-client-puppeteer.js",
-    "/node/x-test-client-playwright.js",
     "/x-test-reporter.css.js",
     "/x-test-reporter.js",
     "/x-test-root.js",
@@ -41,23 +34,9 @@
     "/x-test.js"
   ],
   "dependencies": {},
-  "peerDependencies": {
-    "puppeteer": ">=20.0.0",
-    "playwright": ">=1.0.0"
-  },
-  "peerDependenciesMeta": {
-    "puppeteer": {
-      "optional": true
-    },
-    "playwright": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "eslint": "^9.20.1",
-    "playwright": "^1.49.1",
-    "puppeteer": "^24.2.1",
-    "tap-parser": "^18.0.0"
+    "@netflix/x-test-client": "workspace:*",
+    "eslint": "^9.20.1"
   },
   "engines": {
     "node": ">=20.18",
