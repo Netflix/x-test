@@ -19,10 +19,10 @@ by running `git checkout main && git pull origin main`.
 1. Edit version in **both** package.json files:
    - Root `package.json` (for `@netflix/x-test`)
    - `client/package.json` (for `@netflix/x-test-client`)
-   - Also update `package-lock.json` and `jsr.json` files
+   - Also update the `package-lock.json` file and the `jsr.json` files
 
-   Don't forget that `package-lock.json` should be edited in multiple places to
-   account for workspace versions. For example, set the “version” key to
+   Don't forget that the `package-lock.json` should be edited in multiple places
+   to account for workspace versions. For example, set the “version” key to
    “1.0.0-rc.57” in both package.json files.
 
 2. Add / commit those files. By convention, set the message to the new version

@@ -18,8 +18,8 @@ fi
 # Bump version in “package.json” files using npm version itself. This ensures
 #  that we stay anchored to first-class tooling. Pass “--git-tag-version=false”
 #  to prevent the command from (1) committing changes and (2) creating a tag.
-prefixed_version="$(npm version --git-tag-version=false "${1}")"
-prefixed_client_version="$(npm version --git-tag-version=false --workspace=@netflix/x-test-client "${1}")"
+prefixed_version="$(npm version --git-tag-version=false "${1}" | grep "^v")"
+prefixed_client_version="$(npm version --git-tag-version=false --workspace=@netflix/x-test-client "${1}" | grep "^v")"
 
 # Validate that both packages have the same version.
 if [ "${prefixed_version}" != "${prefixed_client_version}" ]
@@ -41,7 +41,6 @@ package_lock_json_file="${root_directory}/package-lock.json"
 client_directory="${root_directory}/client"
 client_jsr_json_file="${client_directory}/jsr.json"
 client_package_json_file="${client_directory}/package.json"
-client_package_lock_json_file="${client_directory}/package-lock.json"
 
 # Bump version in “jsr.json” files.
 jsr_json_find="\"version\": \"[^\"]*\""
@@ -58,7 +57,6 @@ git add "${package_json_file}"
 git add "${package_lock_json_file}"
 git add "${jsr_json_file}"
 git add "${client_package_json_file}"
-git add "${client_package_lock_json_file}"
 git add "${client_jsr_json_file}"
 git commit --message="${version}"
 git tag --annotate "v${version}" --message="${version}"
