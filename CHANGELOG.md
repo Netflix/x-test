@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-rc.1] - 2025-10-23
+
 ### Added
 
 - Adds “node/x-test-client-*” files to greatly simplify the glue code required
