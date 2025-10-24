@@ -9,9 +9,9 @@ The x-test utility is a simple, TAP-compliant test runner for the browser. It
 allows you to run tests directly in the browser using a familiar testing
 interface (`it`, `describe`, `assert`) while producing TAP Version 14 output.
 
-The repository is structured as an npm workspace with two packages:
-- `@netflix/x-test` - Browser-side test runner and utilities
-- `@netflix/x-test-client` - Node.js automation clients and CLI tools
+This repository contains the `@netflix/x-test` package - the browser-side test
+runner and utilities. For automated test execution and CI/CD integration, see
+the separate `@netflix/x-test-cli` package.
 
 ## Development Commands
 
@@ -20,8 +20,8 @@ The repository is structured as an npm workspace with two packages:
 - The server serves static files and supports directory indexing
 
 ### Testing
-- `npm test` - Run tests using the x-test CLI with Puppeteer Chrome
-- `npm run test:puppeteer:chrome` - Run tests with Puppeteer Chrome (same as above)
+- `npm test` - Run tests using @netflix/x-test-cli with Puppeteer Chrome
+- Tests can also be run by opening test HTML files directly in a browser
 
 ### Code Quality
 - `npm run lint` - Run ESLint with zero warnings allowed
@@ -67,22 +67,6 @@ The repository is structured as an npm workspace with two packages:
    - Directory indexing with root-to-demo redirect
    - Support for custom headers via environment variables
 
-#### Client Package Components  
-8. **client/x-test-client.js** - Main CLI entry point that:
-   - Handles command-line argument parsing and validation
-   - Dispatches to appropriate automation clients
-   - Provides unified interface for all client tools
-
-9. **client/x-test-client-common.js** - Shared utilities (`XTestClientCommon`) for:
-   - BroadcastChannel communication with x-test
-   - Test readiness detection and coverage data exchange
-   - TAP bailout functionality for error scenarios
-
-10. **client/x-test-client-puppeteer.js** - Puppeteer-specific client that:
-    - Handles browser launch with Chrome DevTools coverage
-    - Uses x-test-client-common for communication
-    - Outputs TAP-compliant results with internal validation
-
 ### Test Execution Flow
 
 Each test defines an HTML document which runs in an iframe:
@@ -95,10 +79,9 @@ Each test defines an HTML document which runs in an iframe:
 ### Key Patterns
 
 - **Event-driven communication**: Uses BroadcastChannel for cross-context messaging
-- **TAP compliance**: All output follows TAP Version 14 specification  
+- **TAP compliance**: All output follows TAP Version 14 specification
 - **Sequential execution**: Both `test()` and `it()` calls run in declared order
-- **Modular clients**: Separate clients for different automation tools with normalized interfaces
-- **Coverage integration**: Chromium-based coverage with tool-specific format normalization
+- **Iframe isolation**: Each test runs in its own isolated iframe context
 - **Error handling**: Global error/rejection handlers with proper TAP bailout
 
 ## File Structure
@@ -107,18 +90,11 @@ Each test defines an HTML document which runs in an iframe:
 /
 ├── /demo/                    # Example usage patterns
 ├── /test/                    # Internal x-test library tests
-├── /client/                  # Client package (@netflix/x-test-client)
-│   ├── x-test-client.js      # Main CLI entry point
-│   ├── x-test-client-common.js # Shared utilities
-│   ├── x-test-client-puppeteer.js # Puppeteer automation
-│   ├── package.json          # Client package configuration
-│   ├── jsr.json              # Client JSR configuration
-│   └── README.md             # Client documentation
 ├── server.js                 # Development HTTP server
-├── x-test*.js                # Core browser components  
-├── package.json              # Root package configuration
+├── x-test*.js                # Core browser components
+├── package.json              # Package configuration
 ├── eslint.config.js          # Linting rules
-└── jsr.json                  # Root JSR configuration
+└── jsr.json                  # JSR configuration
 ```
 
 ## Testing Patterns
@@ -132,42 +108,26 @@ When writing tests:
 - Use `waitFor(promise)` to delay test completion until promise resolves
 - Use `.skip`, `.only`, `.todo` modifiers as needed on both `describe` and `it`
 
-## Client Usage
+## Automation and CI/CD
 
-### Command Line Interface
+For automated test execution and CI/CD integration, use the `@netflix/x-test-cli`
+package (maintained in a separate repository). The CLI tool provides:
 
-The primary way to run automated tests is through the x-test CLI:
+- Browser automation with Puppeteer
+- TAP output parsing and validation
+- Code coverage collection and analysis
+- Test filtering and execution control
 
-```bash
-x-test --client=puppeteer --url=http://localhost:8080/test/ --coverage=true
-```
-
-Available arguments:
-- `--client=puppeteer` - Use Puppeteer with Chrome (required)
-- `--url=<url>` - URL to test page (required)  
-- `--coverage=true|false` - Enable coverage collection
-- `--test-name=<pattern>` - Filter tests by regex pattern
-
-### Programmatic Usage
-
-While primarily designed as a CLI, you can also import the client programmatically:
-
-```javascript
-// Import the CLI entry point
-import '@netflix/x-test-client';
-
-// The individual clients are internal implementation details
-// and not exported for external use
-```
+x-test can also be run directly by opening test HTML files in any browser, making
+it suitable for manual testing and debugging.
 
 ## Development Notes
 
 - Node.js >= 20.18 and npm >= 10.8 required
-- Repository uses npm workspaces with two packages
-- Browser tests use Puppeteer automation with Chrome
+- x-test runs entirely in the browser with no build step
+- Automated testing requires `@netflix/x-test-cli` (separate package/repository)
 - Coverage collection only available in Chromium-based browsers
 - All code follows strict ESLint rules (see eslint.config.js)
 - Uses BroadcastChannel API for cross-context communication
-- Published as @netflix/x-test and @netflix/x-test-client on npm registry
-- Also published to JSR registry
+- Published as @netflix/x-test on npm registry and JSR
 - Apache 2.0 licensed

@@ -1,7 +1,0 @@
-{
-  "name": "@netflix/x-test-client",
-  "version": "2.0.0-rc.1",
-  "exports": {
-    "./x-test-client.js": "/x-test-client.js"
-  }
-}

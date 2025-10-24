@@ -12,7 +12,7 @@ jobs:
           node-version: '20.18'
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
-      - run: npm publish --workspaces
+      - run: npm publish
         env:
           # The secrets should be implicitly passed via “secrets: inherit”.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

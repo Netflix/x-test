@@ -5,10 +5,6 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/Netflix/x-test",
   "type": "module",
-  "workspaces": [
-    ".",
-    "client"
-  ],
   "exports": {
     "./x-test.js": "./x-test.js"
   },
@@ -35,7 +31,7 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "@netflix/x-test-client": "workspace:*",
+    "@netflix/x-test-cli": "1.0.0-rc.2",
     "eslint": "^9.20.1"
   },
   "engines": {

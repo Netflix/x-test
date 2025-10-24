@@ -75,8 +75,8 @@ http://localhost:8080/test/?x-test-name=should%20validate
 
 ### Command Line Usage
 
-For automated testing with Node.js clients, see the
-[@netflix/x-test-client](./client/README.md) package documentation.
+For automated testing with a Node.js CLI, see the
+[@netflix/x-test-cli](https://github.com/Netflix/x-test-cli) package documentation.
 
 ## Parsing TAP
 
