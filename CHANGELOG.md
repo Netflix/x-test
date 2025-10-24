@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-rc.2] - 2025-10-24
+
+### Changed
+
+- The “@netflix/x-test-cli” is now packaged separately and is imported here like
+  any other dev dependency.
+
 ## [2.0.0-rc.1] - 2025-10-23
 
 ### Added
