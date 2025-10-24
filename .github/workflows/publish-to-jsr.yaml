@@ -17,4 +17,3 @@ jobs:
       # Can we get this to use “deno publish”?
       # - run: deno publish
       - run: npx jsr publish
-      - run: npx jsr publish --config client/jsr.json

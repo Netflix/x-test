@@ -35,12 +35,11 @@ export default [
     ...common,
     ignores: [
       'server.js',
-      'client/**',
       'demo/react/*',
     ],
   },
   {
-    files: ['server.js', 'client/**/*.js'],
+    files: ['server.js'],
     languageOptions: { globals: globals.node },
     ...common,
   },
