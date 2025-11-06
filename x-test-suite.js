@@ -1,13 +1,18 @@
 export class XTestSuite {
   static timeout = Symbol('timeout');
 
+  /**
+   * @param {any} context
+   * @param {any} testId
+   * @param {any} href
+   */
   static initialize(context, testId, href) {
     Object.assign(context.state, { testId, href });
     context.state.parents.push({ type: 'test', testId });
-    context.subscribe(async event => {
+    context.subscribe(async (/** @type {any} */ event) => {
       switch (event.data.type) {
         case 'x-test-suite-bail':
-          XTestSuite.onBail(context, event);
+          XTestSuite.onBail(context);
           break;
         case 'x-test-root-run':
           XTestSuite.onRun(context, event);
@@ -18,11 +23,11 @@ export class XTestSuite {
     });
 
     // Setup global error / rejection handlers.
-    context.addErrorListener(event => {
+    context.addErrorListener((/** @type {any} */ event) => {
       event.preventDefault();
       XTestSuite.bail(context, event.error);
     });
-    context.addUnhandledrejectionListener(event => {
+    context.addUnhandledrejectionListener((/** @type {any} */ event) => {
       event.preventDefault();
       XTestSuite.bail(context, event.reason);
     });
@@ -31,12 +36,19 @@ export class XTestSuite {
     XTestSuite.waitFor(context, Promise.resolve());
   }
 
+  /**
+   * @param {any} context
+   */
   static onBail(context/*, event*/) {
     if (!context.state.bailed) {
       context.state.bailed = true;
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} event
+   */
   static async onRun(context, event) {
     if (
       !context.state.bailed &&
@@ -60,6 +72,10 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} error
+   */
   static bail(context, error) {
     if (!context.state.bailed) {
       context.state.bailed = true;
@@ -70,6 +86,10 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} originalError
+   * @returns {{message: string, stack?: string}}
+   */
   static createError(originalError) {
     const error = {};
     if (originalError instanceof Error) {
@@ -80,6 +100,11 @@ export class XTestSuite {
     return error;
   }
 
+  /**
+   * @param {any} context
+   * @param {any} ok
+   * @param {any} text
+   */
   static assert(context, ok, text) {
     if (context && !context.state.bailed) {
       if (!ok) {
@@ -88,6 +113,11 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} href
+   * @param {any} goal
+   */
   static coverage(context, href, goal) {
     if (context && !context.state.bailed) {
       if (!(goal >= 0 && goal <= 100)) {
@@ -99,6 +129,10 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} href
+   */
   static test(context, href) {
     if (context && !context.state.bailed && !context.state.ready) {
       const testId = context.uuid();
@@ -108,6 +142,13 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   * @param {any} directive
+   * @param {any} only
+   */
   static #describerInner(context, text, callback, directive, only) {
     if (context && !context.state.bailed && !context.state.ready) {
       if (!(callback instanceof Function)) {
@@ -132,22 +173,50 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   */
   static describe(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback);
+    XTestSuite.#describerInner(context, text, callback, null, null);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   */
   static describeSkip(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback, 'SKIP');
+    XTestSuite.#describerInner(context, text, callback, 'SKIP', null);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   */
   static describeOnly(context, text, callback) {
     XTestSuite.#describerInner(context, text, callback, null, true);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   */
   static describeTodo(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback, 'TODO');
+    XTestSuite.#describerInner(context, text, callback, 'TODO', null);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   * @param {any} interval
+   * @param {any} directive
+   * @param {any} only
+   */
   static #itInner(context, text, callback, interval, directive, only) {
     if (context && !context.state.bailed && !context.state.ready) {
       if (!(callback instanceof Function)) {
@@ -166,22 +235,50 @@ export class XTestSuite {
     }
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   * @param {any} interval
+   */
   static it(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval);
+    XTestSuite.#itInner(context, text, callback, interval, null, null);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   * @param {any} interval
+   */
   static itSkip(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval, 'SKIP');
+    XTestSuite.#itInner(context, text, callback, interval, 'SKIP', null);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   * @param {any} interval
+   */
   static itOnly(context, text, callback, interval) {
     XTestSuite.#itInner(context, text, callback, interval, null, true);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} text
+   * @param {any} callback
+   * @param {any} interval
+   */
   static itTodo(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval, 'TODO');
+    XTestSuite.#itInner(context, text, callback, interval, 'TODO', null);
   }
 
+  /**
+   * @param {any} context
+   * @param {any} promise
+   */
   static async waitFor(context, promise) {
     if (context && !context.state.bailed) {
       if (!context.state.bailed) {

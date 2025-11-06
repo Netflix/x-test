@@ -1,4 +1,8 @@
 // Simple shim as we await cross-browser support for native css modules.
+/**
+ * @param {TemplateStringsArray} strings
+ * @returns {string} CSS string
+ */
 const css = strings => strings.join();
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync(css`

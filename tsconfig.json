@@ -1,0 +1,92 @@
+{
+  "compilerOptions": {
+    ////////////////////////////////////////////////////////////////////////////
+    // Language & Target Environment ///////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Target modern JavaScript without transpilation
+    // ESNEXT = latest JS features supported by TypeScript
+    // No transpilation occurs — we only emit .d.ts files
+    "target": "ESNEXT",
+
+    // Runtime environment libraries for type checking
+    // ESNext: Modern JavaScript features (Promise, Map, Set, etc.)
+    // DOM: Browser APIs (document, window, HTMLElement, etc.)
+    // DOM.Iterable: Iteration support for DOM collections
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Module System (No Bundler) //////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Use native ES modules (import/export) without transformation
+    // "NodeNext" = preserve modern import/export syntax as-is
+    // Supports both CJS and ESM with proper package.json "type" detection
+    "module": "NodeNext",
+
+    // Module resolution strategy for Node.js-style ESM
+    // "NodeNext" = supports package.json "exports", .js extensions required
+    // Aligns with Node.js native ESM behavior
+    "moduleResolution": "NodeNext",
+
+    "verbatimModuleSyntax": true,
+
+    ////////////////////////////////////////////////////////////////////////////
+    // JSDoc Type Checking /////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Enable JavaScript files in the compilation
+    // Required for JSDoc type checking to work
+    "allowJs": true,
+
+    // Actually type-check JavaScript files using JSDoc annotations
+    // Without this, JSDoc comments are ignored!
+    "checkJs": true,
+
+    // Generate TypeScript declaration files (.d.ts) from JSDoc
+    // Enables IDE autocomplete and type hints for consumers
+    "declaration": true,
+
+    // Only emit .d.ts files, never transpile .js
+    // This ensures zero JavaScript transformation
+    "emitDeclarationOnly": true,
+
+    // Output directory for generated .d.ts declaration files
+    "outDir": "./types",
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Type Checking Rigor ////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Enable all strict type checking options
+    // Includes: strictNullChecks, strictFunctionTypes, strictBindCallApply,
+    //           strictPropertyInitialization, noImplicitAny, noImplicitThis,
+    //           alwaysStrict, useUnknownInCatchVariables
+    "strict": true,
+
+    // Skip type checking of .d.ts files in node_modules
+    // Improves performance without sacrificing our code's type safety
+    "skipLibCheck": true,
+
+    // Enforce consistent file name casing across imports
+    // Prevents cross-platform issues (macOS case-insensitive vs Linux)
+    "forceConsistentCasingInFileNames": true
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  // File Selection //////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+
+  // Type check all JavaScript source files
+  "include": [
+    "*.js"
+  ],
+
+  // Exclude from type checking:
+  // - server.js: Node.js server with different environment
+  // - eslint.config.js: ESLint config with untyped dependencies
+  "exclude": [
+    "server.js",
+    "eslint.config.js",
+  ]
+}

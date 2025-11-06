@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Adds TypeScript support for top-level exports from `x-test`. Previously, it
+  the integration with TypeScript applications was not smooth (#68).
+
 ## [2.0.0-rc.2] - 2025-10-24
 
 ### Changed
