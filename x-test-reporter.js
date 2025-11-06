@@ -7,53 +7,105 @@ template.setHTMLUnsafe(`
   <button id="toggle" type="button"></button>
 `);
 
+/**
+ * @typedef {Object} References
+ * @property {HTMLInputElement} testName
+ * @property {HTMLButtonElement} toggle
+ * @property {HTMLDivElement} header
+ * @property {HTMLFormElement} form
+ * @property {HTMLDivElement} container
+ */
+
 export class XTestReporter extends HTMLElement {
+  /** @type {ShadowRoot} */
+  #root;
+  /** @type {References} */
+  #references;
+
+  /**
+   * @template {keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap} T
+   * @param {string} id
+   * @param {T} expectedTag
+   * @returns {T extends keyof HTMLElementTagNameMap ? HTMLElementTagNameMap[T] : T extends keyof SVGElementTagNameMap ? SVGElementTagNameMap[T] : Element}
+   */
+  #getElement(id, expectedTag) {
+    const el = this.#root.querySelector(`#${id}`);
+    if (!el) {
+      throw new Error(`Expected ${id} to exist.`);
+    }
+    if (el.tagName.toLowerCase() !== expectedTag) {
+      throw new Error(`Expected ${id} to be <${expectedTag}>, got <${el.tagName.toLowerCase()}>`);
+    }
+    return /** @type {any} */ (el);
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.adoptedStyleSheets = [styleSheet];
-    this.shadowRoot.append(template.content.cloneNode(true));
+    if (!this.shadowRoot) {
+      throw new Error('Shadow root must exist after attachShadow');
+    }
+    this.#root = this.shadowRoot;
+    this.#root.adoptedStyleSheets = [styleSheet];
+    this.#root.append(template.content.cloneNode(true));
+    this.#references = {
+      testName: this.#getElement('test-name', 'input'),
+      toggle: this.#getElement('toggle', 'button'),
+      header: this.#getElement('header', 'div'),
+      form: this.#getElement('form', 'form'),
+      container: this.#getElement('container', 'div'),
+    };
   }
 
   connectedCallback() {
     this.setAttribute('ok', '');
     this.setAttribute('testing', '');
-    this.style.height = localStorage.getItem('x-test-reporter-height');
+    this.style.height = localStorage.getItem('x-test-reporter-height') ?? '';
     if (localStorage.getItem('x-test-reporter-closed') !== 'true') {
       this.setAttribute('open', '');
     }
-    this.shadowRoot.getElementById('test-name').value = new URL(location.href).searchParams.get('x-test-name') ?? '';
-    this.shadowRoot.getElementById('toggle').addEventListener('click', () => {
+    this.#references.testName.value = new URL(location.href).searchParams.get('x-test-name') ?? '';
+    this.#references.toggle.addEventListener('click', () => {
       this.hasAttribute('open') ? this.removeAttribute('open') : this.setAttribute('open', '');
       localStorage.setItem('x-test-reporter-closed', String(!this.hasAttribute('open')));
     });
-    const resize = event => {
+    /**
+     * @param {PointerEvent} event
+     */
+    const resize = (event) => {
       const nextHeaderY = event.clientY - Number(this.getAttribute('dragging'));
-      const currentHeaderY = this.shadowRoot.getElementById('header').getBoundingClientRect().y;
+      const currentHeaderY = this.#references.header.getBoundingClientRect().y;
       const currentHeight = this.getBoundingClientRect().height;
       this.style.height = `${Math.round(currentHeight + currentHeaderY - nextHeaderY)}px`;
       localStorage.setItem('x-test-reporter-height', this.style.height);
     };
-    this.shadowRoot.getElementById('form').addEventListener('reset', () => {
+    this.#references.form.addEventListener('reset', () => {
       const url = new URL(location.href);
       url.searchParams.delete('x-test-name');
       location.href = url.href;
     });
-    this.shadowRoot.getElementById('form').addEventListener('submit', event => {
+    /**
+     * @param {SubmitEvent} event
+     */
+    const handleSubmit = (event) => {
       event.preventDefault();
-      const formData = new FormData(event.target);
+      const formData = new FormData(this.#references.form);
       const testName = formData.get('testName');
       const url = new URL(location.href);
-      if (testName) {
+      if (testName && typeof testName === 'string') {
         url.searchParams.set('x-test-name', testName);
       } else {
         url.searchParams.delete('x-test-name');
       }
       location.href = url.href;
-    });
-    this.shadowRoot.getElementById('header').addEventListener('pointerdown', event => {
+    };
+    this.#references.form.addEventListener('submit', handleSubmit);
+    /**
+     * @param {PointerEvent} event
+     */
+    const handlePointerDown = (event) => {
       if (this.hasAttribute('open')) {
-        const headerY = this.shadowRoot.getElementById('header').getBoundingClientRect().y;
+        const headerY = this.#references.header.getBoundingClientRect().y;
         const clientY = event.clientY;
         this.setAttribute('dragging', String(clientY - headerY));
         addEventListener('pointermove', resize);
@@ -61,19 +113,22 @@ export class XTestReporter extends HTMLElement {
           iframe.style.pointerEvents = 'none';
         }
       }
-    });
+    };
+    this.#references.header.addEventListener('pointerdown', handlePointerDown);
     addEventListener('pointerup', () => {
       removeEventListener('pointermove', resize);
       this.removeAttribute('dragging');
       for (const iframe of document.querySelectorAll('iframe')) {
-        iframe.style.pointerEvents = null;
+        iframe.style.pointerEvents = '';
       }
     });
   }
 
+  /**
+   * @param {...string} tap
+   */
   tap(...tap) {
     const items = [];
-    const container = this.shadowRoot.getElementById('container');
     for (const text of tap) {
       const { tag, properties, attributes, failed, done } = XTestReporter.parse(text);
       const element = document.createElement(tag);
@@ -89,11 +144,15 @@ export class XTestReporter extends HTMLElement {
       }
       items.push(element);
     }
-    container.append(...items);
+    this.#references.container.append(...items);
   }
 
+  /**
+   * @param {string} text
+   * @returns {{tag: string, properties: Record<string, any>, attributes: Record<string, any>, failed: boolean, done: boolean}}
+   */
   static parse(text) {
-    const result = { tag: '', properties: {}, attributes: {}, failed: false, done: false };
+    const result = { tag: '', properties: /** @type {Record<string, any>} */ ({}), attributes: /** @type {Record<string, any>} */ ({}), failed: false, done: false };
     result.properties.innerText = text;
     const indentMatch = text.match(/^((?: {4})+)/);
     if (indentMatch) {

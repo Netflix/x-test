@@ -6,7 +6,14 @@
   "repository": "https://github.com/Netflix/x-test",
   "type": "module",
   "exports": {
-    "./x-test.js": "./x-test.js"
+    ".": {
+      "types": "./types/x-test.d.ts",
+      "default": "./x-test.js"
+    },
+    "./x-test.js": {
+      "types": "./types/x-test.d.ts",
+      "default": "./x-test.js"
+    }
   },
   "publishConfig": {
     "access": "public",
@@ -18,10 +25,12 @@
     "lint-fix": "eslint --fix .",
     "test": "npm run test:puppeteer:chrome",
     "test:puppeteer:chrome": "x-test --client=puppeteer --url=http://127.0.0.1:8080/test/ --coverage=true",
+    "types": "tsc",
     "bump": "./bump.sh"
   },
   "files": [
     "LICENSE",
+    "/types/x-test.d.ts",
     "/x-test-reporter.css.js",
     "/x-test-reporter.js",
     "/x-test-root.js",
@@ -29,10 +38,12 @@
     "/x-test-tap.js",
     "/x-test.js"
   ],
-  "dependencies": {},
   "devDependencies": {
+    "@netflix/eslint-config": "^3.0.0",
     "@netflix/x-test-cli": "1.0.0-rc.2",
-    "eslint": "^9.20.1"
+    "eslint": "^9.20.1",
+    "eslint-plugin-jsdoc": "^61.1.12",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20.18",
