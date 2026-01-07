@@ -29,14 +29,15 @@
     "bump": "./bump.sh"
   },
   "files": [
-    "LICENSE",
-    "/types/x-test.d.ts",
     "/x-test-reporter.css.js",
     "/x-test-reporter.js",
     "/x-test-root.js",
     "/x-test-suite.js",
     "/x-test-tap.js",
-    "/x-test.js"
+    "/x-test.js",
+    "/demo",
+    "/test",
+    "/types"
   ],
   "devDependencies": {
     "@netflix/eslint-config": "^3.0.0",
