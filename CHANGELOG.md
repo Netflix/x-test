@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-rc.4] - 2026-01-09
+
 ### Added
 
 -  The “/test” and “/demo” files are restored in the published file set.
