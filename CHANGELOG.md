@@ -6,15 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- NPM token lives in a GH environment for publish action (more secure).
-
-## [2.0.0-rc.4] - 2026-01-09
+## [2.0.0-rc.5] - 2026-01-09
 
 ### Added
 
 - The “/test” and “/demo” files are restored in the published file set.
+- NPM token lives in a GH environment for publish action (more secure).
 
 ## [2.0.0-rc.3] - 2025-11-06
 
