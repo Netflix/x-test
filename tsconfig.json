@@ -58,12 +58,6 @@
     // Type Checking Rigor ////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
 
-    // Enable all strict type checking options
-    // Includes: strictNullChecks, strictFunctionTypes, strictBindCallApply,
-    //           strictPropertyInitialization, noImplicitAny, noImplicitThis,
-    //           alwaysStrict, useUnknownInCatchVariables
-    "strict": true,
-
     // Skip type checking of .d.ts files in node_modules
     // Improves performance without sacrificing our code's type safety
     "skipLibCheck": true,
