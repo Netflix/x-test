@@ -8,7 +8,7 @@ import { XTestSuite } from './x-test-suite.js';
  *   assert('foo' === 'bar', 'foo does not equal bar');
  * @param {unknown} ok - The condition to assert (truthy/falsy)
  * @param {string} [text] - The assertion message
- * @returns {void}
+ * @returns {asserts ok} Throws if condition is falsy.
  */
 export const assert = (ok, text) => XTestSuite.assert(suiteContext, ok, text);
 
