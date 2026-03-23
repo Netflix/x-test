@@ -6,8 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-rc.6] - 2026-03-23
+
 ### Changed
 
+- Typed `assert` as a proper TypeScript assertion function (`asserts ok`) so
+  that type narrowing works automatically after assertions (#74).
 - Updated dependencies, including major bumps to ESLint (9.x → 10.x) and
   TypeScript (5.x → 6.x). Added `globals` as an explicit dev dependency.
 - Renamed `types` npm script to `type` for better consistency with the naming
