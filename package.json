@@ -25,7 +25,7 @@
     "lint-fix": "eslint --fix .",
     "test": "npm run test:puppeteer:chrome",
     "test:puppeteer:chrome": "x-test --client=puppeteer --url=http://127.0.0.1:8080/test/ --coverage=true",
-    "types": "tsc",
+    "type": "tsc",
     "bump": "./bump.sh"
   },
   "files": [

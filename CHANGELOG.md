@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed `types` npm script to `type` for better consistency with the naming
+  in the related `x-element` repository (#75).
+
 ## [2.0.0-rc.5] - 2026-01-09
 
 ### Added
