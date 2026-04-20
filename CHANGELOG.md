@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Multiple `<script type="module">` tags in one HTML file now all
+  register tests into the same suite. Previously only the first
+  script’s registrations survived; the rest were silently dropped (#81).
+
 ## [2.0.0-rc.6] - 2026-03-23
 
 ### Changed

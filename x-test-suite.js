@@ -1,6 +1,6 @@
-export class XTestSuite {
-  static timeout = Symbol('timeout');
+import { XTestCommon } from './x-test-common.js';
 
+export class XTestSuite {
   /**
    * @param {any} context
    * @param {any} testId
@@ -32,8 +32,8 @@ export class XTestSuite {
       XTestSuite.bail(context, event.reason);
     });
 
-    // Await a single microtask before we signal that we're ready.
-    XTestSuite.waitFor(context, Promise.resolve());
+    // Keep registration open until _at least_ DOMContentLoaded.
+    XTestSuite.waitFor(context, context.domContentLoadedPromise);
   }
 
   /**
@@ -60,7 +60,7 @@ export class XTestSuite {
           const callback = context.state.callbacks[itId];
           const resolvedInterval = interval ?? 30_000;
           const timeout = await Promise.race([callback(), context.timeout(resolvedInterval)]);
-          if (timeout === XTestSuite.timeout) {
+          if (timeout === XTestCommon.TIMEOUT) {
             throw new Error(`timeout after ${resolvedInterval.toLocaleString()}ms`);
           }
         }

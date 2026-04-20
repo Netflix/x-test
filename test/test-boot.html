@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <!--
+      This suite documents how x-test boots across every supported
+      <script type="module"> arrangement: head placement, body placement,
+      multiple sibling scripts contributing to the same suite, and an
+      inline module script.
+
+      The invariant holding it all together: x-test keeps the registration
+      window open until DOMContentLoaded fires, which happens *after* every
+      deferred module script has synchronously evaluated. Any combination
+      of these arrangements registers into a single suite.
+    -->
+    <meta http-equiv="content-security-policy" content="default-src 'self'; script-src 'self' 'sha256-Tr3Xl0Jk5gT59jVAgb3/Gh7rLeEEE/DdwKxzketLPAU=';">
+
+    <!-- Supports “x-test” loaded in <head>. -->
+    <script type="module" src="../x-test.js"></script>
+
+    <!-- Supports a user test script placed in <head>. -->
+    <script type="module" src="test-boot-a.js"></script>
+  </head>
+  <body>
+    <h3>test-boot</h3>
+
+    <!-- Support a user test script placed in <body>. -->
+    <script type="module" src="test-boot-b.js"></script>
+
+    <!-- Supports multiple user scripts in <body>. -->
+    <script type="module" src="test-boot-c.js"></script>
+
+    <!-- Support inline module scripts. -->
+    <script type="module">
+      import { it, describe, assert } from '../x-test.js';
+
+      describe('inline <script type="module">', () => {
+        it('registers alongside src-backed scripts', () => {
+          assert(true);
+        });
+      });
+    </script>
+  </body>
+</html>

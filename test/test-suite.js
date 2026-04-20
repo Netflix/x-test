@@ -66,7 +66,8 @@ const getContext = () => {
   addUnhandledrejectionListener.callbacks = [];
   injectError.calls = [];
   injectUnhandledrejection.calls = [];
-  const context = { state, uuid, publish, subscribe, timeout, addErrorListener, addUnhandledrejectionListener };
+  const domContentLoadedPromise = Promise.resolve();
+  const context = { state, uuid, publish, subscribe, timeout, addErrorListener, addUnhandledrejectionListener, domContentLoadedPromise };
   return { context, injectError, injectUnhandledrejection };
 };
 
