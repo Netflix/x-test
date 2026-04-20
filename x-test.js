@@ -171,7 +171,10 @@ if (!frameElement?.getAttribute('data-x-test-test-id')) {
     coverageValue: null, reporter: null, filtering: false, queue: [],
     queueing: false,
   };
-  const rootContext = { state, uuid, publish, subscribe, timeout: XTestCommon.timeout };
+  const rootContext = {
+    state, uuid, publish, subscribe, timeout: XTestCommon.timeout,
+    iframeError: XTestCommon.iframeError, iframeLoad: XTestCommon.iframeLoad,
+  };
   XTestRoot.initialize(rootContext, location.href);
 } else {
   const state = {

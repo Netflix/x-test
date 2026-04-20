@@ -35,3 +35,23 @@ describe('domContentLoadedPromise', () => {
     assert(result === undefined);
   });
 });
+
+describe('iframeError', () => {
+  it('resolves with XTestCommon.IFRAME_ERROR when the error event fires', async () => {
+    const fake = makeFakeTarget();
+    const promise = XTestCommon.iframeError(fake);
+    fake.handlers.error();
+    const result = await promise;
+    assert(result === XTestCommon.IFRAME_ERROR);
+  });
+});
+
+describe('iframeLoad', () => {
+  it('resolves with XTestCommon.IFRAME_LOAD when the load event fires', async () => {
+    const fake = makeFakeTarget();
+    const promise = XTestCommon.iframeLoad(fake);
+    fake.handlers.load();
+    const result = await promise;
+    assert(result === XTestCommon.IFRAME_LOAD);
+  });
+});
