@@ -29,6 +29,7 @@
     "bump": "./bump.sh"
   },
   "files": [
+    "/x-test-common.js",
     "/x-test-reporter.css.js",
     "/x-test-reporter.js",
     "/x-test-root.js",

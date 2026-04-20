@@ -1,3 +1,4 @@
+import { XTestCommon } from './x-test-common.js';
 import { XTestRoot } from './x-test-root.js';
 import { XTestSuite } from './x-test-suite.js';
 
@@ -159,16 +160,6 @@ function addUnhandledrejectionListener(callback) {
   addEventListener('unhandledrejection', callback);
 }
 
-/**
- * @param {number} interval - The timeout duration in milliseconds
- * @returns {Promise<symbol>} Promise resolving to timeout symbol
- */
-async function timeout(interval) {
-  return await new Promise(resolve => {
-    setTimeout(() => { resolve(XTestSuite.timeout); }, interval);
-  });
-}
-
 // There is one-and-only-one root. Either boot as root or child test.
 /** @type {unknown} */
 let suiteContext = null;
@@ -180,16 +171,17 @@ if (!frameElement?.getAttribute('data-x-test-test-id')) {
     coverageValue: null, reporter: null, filtering: false, queue: [],
     queueing: false,
   };
-  const rootContext = { state, uuid, publish, subscribe, timeout };
+  const rootContext = { state, uuid, publish, subscribe, timeout: XTestCommon.timeout };
   XTestRoot.initialize(rootContext, location.href);
 } else {
   const state = {
     testId: null, href: null, callbacks: {}, bailed: false, waitForId: null,
     ready: false, promises: [], parents: [],
   };
+  const domContentLoadedPromise = XTestCommon.domContentLoadedPromise(document);
   suiteContext = {
-    state, uuid, publish, subscribe, timeout, addErrorListener,
-    addUnhandledrejectionListener,
+    state, uuid, publish, subscribe, timeout: XTestCommon.timeout, addErrorListener,
+    addUnhandledrejectionListener, domContentLoadedPromise,
   };
   XTestSuite.initialize(suiteContext, frameElement.getAttribute('data-x-test-test-id'), location.href);
 }
