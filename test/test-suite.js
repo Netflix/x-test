@@ -82,15 +82,17 @@ describe('initialize', () => {
     assert(context.state.parents[0].testId === '123');
     assert(context.addErrorListener.calls.length === 1);
     assert(context.addUnhandledrejectionListener.calls.length === 1);
-    assert(context.publish.calls.length === 0);
+    assert(context.publish.calls.length === 1);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize');
+    assert(context.publish.calls[0][1].testId === '123');
     assert(context.state.waitForId === '0');
     assert(context.state.promises.length === 1);
     assert(context.state.ready === false);
     await Promise.all(context.state.promises);
     assert(context.state.ready === true);
-    assert(context.publish.calls.length === 1);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready');
-    assert(context.publish.calls[0][1].testId === '123');
+    assert(context.publish.calls.length === 2);
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready');
+    assert(context.publish.calls[1][1].testId === '123');
   });
 
   it('marks state as bailed when any test bails', async () => {
@@ -111,13 +113,14 @@ describe('initialize', () => {
     context.publish('x-test-root-run', { itId: 'testItId' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 3);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready'); // This is from initialization.
-    assert(context.publish.calls[1][0] === 'x-test-root-run'); // This is from our test.
-    assert(context.publish.calls[2][0] === 'x-test-suite-result');
-    assert(context.publish.calls[2][1].itId === 'testItId');
-    assert(context.publish.calls[2][1].ok === true);
-    assert(context.publish.calls[2][1].error === null);
+    assert(context.publish.calls.length === 4);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize'); // From initialization (sync).
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready'); // From initialization (async).
+    assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
+    assert(context.publish.calls[3][0] === 'x-test-suite-result');
+    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].ok === true);
+    assert(context.publish.calls[3][1].error === null);
   });
 
   it('runs a test when told, skip', async () => {
@@ -130,13 +133,14 @@ describe('initialize', () => {
     context.publish('x-test-root-run', { itId: 'testItId', directive: 'SKIP' });
     assert(called === false);
     await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 3);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready'); // This is from initialization.
-    assert(context.publish.calls[1][0] === 'x-test-root-run'); // This is from our test.
-    assert(context.publish.calls[2][0] === 'x-test-suite-result');
-    assert(context.publish.calls[2][1].itId === 'testItId');
-    assert(context.publish.calls[2][1].ok === true);
-    assert(context.publish.calls[2][1].error === null);
+    assert(context.publish.calls.length === 4);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize'); // From initialization (sync).
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready'); // From initialization (async).
+    assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
+    assert(context.publish.calls[3][0] === 'x-test-suite-result');
+    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].ok === true);
+    assert(context.publish.calls[3][1].error === null);
   });
 
   it('runs a test when told, not ok', async () => {
@@ -152,13 +156,14 @@ describe('initialize', () => {
     context.publish('x-test-root-run', { itId: 'testItId' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 3);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready'); // This is from initialization.
-    assert(context.publish.calls[1][0] === 'x-test-root-run'); // This is from our test.
-    assert(context.publish.calls[2][0] === 'x-test-suite-result');
-    assert(context.publish.calls[2][1].itId === 'testItId');
-    assert(context.publish.calls[2][1].ok === false);
-    assert(context.publish.calls[2][1].error.message === 'test failure');
+    assert(context.publish.calls.length === 4);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize'); // From initialization (sync).
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready'); // From initialization (async).
+    assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
+    assert(context.publish.calls[3][0] === 'x-test-suite-result');
+    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].ok === false);
+    assert(context.publish.calls[3][1].error.message === 'test failure');
   });
 
   it('runs a test when told, todo, ok', async () => {
@@ -171,13 +176,14 @@ describe('initialize', () => {
     context.publish('x-test-root-run', { itId: 'testItId', directive: 'TODO' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 3);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready'); // This is from initialization.
-    assert(context.publish.calls[1][0] === 'x-test-root-run'); // This is from our test.
-    assert(context.publish.calls[2][0] === 'x-test-suite-result');
-    assert(context.publish.calls[2][1].itId === 'testItId');
-    assert(context.publish.calls[2][1].ok === true);
-    assert(context.publish.calls[2][1].error === null);
+    assert(context.publish.calls.length === 4);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize'); // From initialization (sync).
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready'); // From initialization (async).
+    assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
+    assert(context.publish.calls[3][0] === 'x-test-suite-result');
+    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].ok === true);
+    assert(context.publish.calls[3][1].error === null);
   });
 
   it('runs a test when told, todo, not ok', async () => {
@@ -193,25 +199,27 @@ describe('initialize', () => {
     context.publish('x-test-root-run', { itId: 'testItId', directive: 'TODO' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 3);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready'); // This is from initialization.
-    assert(context.publish.calls[1][0] === 'x-test-root-run'); // This is from our test.
-    assert(context.publish.calls[2][0] === 'x-test-suite-result');
-    assert(context.publish.calls[2][1].itId === 'testItId');
-    assert(context.publish.calls[2][1].ok === false);
-    assert(context.publish.calls[2][1].error.message === 'test failure');
+    assert(context.publish.calls.length === 4);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize'); // From initialization (sync).
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready'); // From initialization (async).
+    assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
+    assert(context.publish.calls[3][0] === 'x-test-suite-result');
+    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].ok === false);
+    assert(context.publish.calls[3][1].error.message === 'test failure');
   });
 
   it('closes registration after it is ready', async () => {
     const { context } = getContext();
     XTestSuite.initialize(context, '123', 'http://localhost:8080');
     await Promise.all(context.state.promises);
-    assert(context.publish.calls.length === 1);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready');
+    assert(context.publish.calls.length === 2);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize');
+    assert(context.publish.calls[1][0] === 'x-test-suite-ready');
     XTestSuite.test(context, './test.html');
     XTestSuite.describe(context, 'nope', () => {});
     XTestSuite.it(context, 'nope', () => {});
-    assert(context.publish.calls.length === 1); // doesn't get registered.
+    assert(context.publish.calls.length === 2); // doesn't get registered.
   });
 });
 

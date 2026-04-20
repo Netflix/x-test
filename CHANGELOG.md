@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Iframes pointed at bad URLs (404, 500, SPA fallbacks, unreachable
+  hosts) now fail cleanly with a clear error instead of silently
+  passing as `1..0 ok` or hanging (#82).
 - Multiple `<script type="module">` tags in one HTML file now all
   register tests into the same suite. Previously only the first
   script’s registrations survived; the rest were silently dropped (#81).

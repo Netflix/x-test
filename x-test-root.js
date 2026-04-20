@@ -1,4 +1,5 @@
 import { XTestReporter } from './x-test-reporter.js';
+import { XTestCommon } from './x-test-common.js';
 import { XTestTap } from './x-test-tap.js';
 
 export class XTestRoot {
@@ -35,8 +36,14 @@ export class XTestRoot {
         case 'x-test-client-coverage-result':
           XTestRoot.onCoverageResult(context, event);
           break;
+        case 'x-test-root-defer':
+          XTestRoot.onDefer(context, event);
+          break;
         case 'x-test-suite-register':
           XTestRoot.onRegister(context, event);
+          break;
+        case 'x-test-suite-initialize':
+          XTestRoot.onInitialize(context, event);
           break;
         case 'x-test-suite-ready':
           XTestRoot.onReady(context, event);
@@ -71,6 +78,48 @@ export class XTestRoot {
   static onBail(context, event) {
     if (!context.state.ended) {
       XTestRoot.bail(context, event.data.data.error, { testId: event.data.data.testId });
+    }
+  }
+
+  /**
+   * @param {any} context
+   * @param {any} event
+   */
+  static onInitialize(context, event) {
+    if (!context.state.ended) {
+      const testId = event.data.data.testId;
+      const test = context.state.tests[testId];
+      test.initialized = true;
+    }
+  }
+
+  /**
+   * @param {any} context
+   * @param {any} event
+   */
+  static onDefer(context, event) {
+    if (!context.state.ended) {
+      const data = event.data.data;
+      switch (data.type) {
+        case 'check-initialized':
+          XTestRoot.checkInitialized(context, data);
+          break;
+        default:
+          throw new Error(`Unexpected defer type "${data.type}".`);
+      }
+    }
+  }
+
+  /**
+   * @param {any} context
+   * @param {any} data
+   */
+  static checkInitialized(context, data) {
+    if (!context.state.ended) {
+      const test = context.state.tests[data.testId];
+      if (!test.initialized) {
+        XTestRoot.bail(context, new Error(`Failed to initialize ${data.href}`));
+      }
     }
   }
 
@@ -475,10 +524,29 @@ export class XTestRoot {
     const step = context.state.steps[stepId];
     const href = XTestRoot.href(context, stepId);
     const iframe = document.createElement('iframe');
-    iframe.addEventListener('error', () => {
-      const error = new Error(`Failed to load ${href}`);
-      XTestRoot.bail(context, error);
+    const timeout = context.timeout(30_000);
+    const iframeError = context.iframeError(iframe);
+    const iframeLoad = context.iframeLoad(iframe);
+
+    Promise.race([timeout, iframeError, iframeLoad]).then(result => {
+      if (!context.state.ended) {
+        switch (result) {
+          case XTestCommon.TIMEOUT:
+            XTestRoot.bail(context, new Error(`Timed out loading ${href}`));
+            break;
+          case XTestCommon.IFRAME_ERROR:
+            XTestRoot.bail(context, new Error(`Failed to load ${href}`));
+            break;
+          case XTestCommon.IFRAME_LOAD:
+            // To ensure the child frame is given adequate time to register
+            //  after being loaded, we wait for a message in the queue to be
+            //  processed before giving up. See handler for more detail.
+            context.publish('x-test-root-defer', { type: 'check-initialized', testId: step.testId, href });
+            break;
+        }
+      }
     });
+
     iframe.setAttribute('data-x-test-test-id', step.testId);
     Object.assign(iframe, { src: href });
     Object.assign(iframe.style, {

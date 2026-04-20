@@ -8,6 +8,7 @@ export class XTestSuite {
    */
   static initialize(context, testId, href) {
     Object.assign(context.state, { testId, href });
+    context.publish('x-test-suite-initialize', { testId });
     context.state.parents.push({ type: 'test', testId });
     context.subscribe(async (/** @type {any} */ event) => {
       switch (event.data.type) {

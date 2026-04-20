@@ -40,6 +40,8 @@ Messages are posted to a `BroadcastChannel` channel with the name `x-test`.
 - `x-test-client-coverage-result`: response to `x-test-root-coverage-request`
 - `x-test-root-end`: all tests have completed or we bailed out
 - (internal) `x-test-root-run`: all tests have completed or we bailed out
+- (internal) `x-test-root-defer`: defer work until round-trip through BroadcastChannel queue
+- (internal) `x-test-suite-initialize`: published the moment suite it boots for tracking load success
 - (internal) `x-test-suite-coverage`: signal to test for coverage on a particular file
 - (internal) `x-test-suite-register`: registers a new test / describe / it
 - (internal) `x-test-suite-ready`: signal that test suite is done with registration
