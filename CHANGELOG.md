@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Suites no longer bail with “Timed out loading …” partway through an
+  otherwise successful run. When the child’s `ready` beat its iframe
+  load event, the iframe was removed before load could dispatch and
+  the load-phase timer later settled a stale race (#83).
 - Iframes pointed at bad URLs (404, 500, SPA fallbacks, unreachable
   hosts) now fail cleanly with a clear error instead of silently
   passing as `1..0 ok` or hanging (#82).
