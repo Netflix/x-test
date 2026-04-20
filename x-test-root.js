@@ -361,6 +361,12 @@ export class XTestRoot {
   static onReady(context, event) {
     if (!context.state.ended) {
       const data = event.data.data;
+      // Ready means this iframe’s x-test is up — the load-phase race is moot.
+      //  Flag the test so a late timeout / error / load doesn’t bail.
+      const readyTest = context.state.tests[data.testId];
+      if (readyTest) {
+        readyTest.ready = true;
+      }
       const only = (
         Object.values(context.state.its).some((/** @type {any} */ candidate) => {
           return candidate.only && candidate.parents[0].testId === data.testId;
@@ -529,7 +535,11 @@ export class XTestRoot {
     const iframeLoad = context.iframeLoad(iframe);
 
     Promise.race([timeout, iframeError, iframeLoad]).then(result => {
-      if (!context.state.ended) {
+      // Ready may have arrived before the iframe’s load/error event, in
+      //  which case the iframe has already been removed and this race is
+      //  stale — the pending timeout would otherwise fire ~30s later.
+      //  Comment “ready” condition and load /demo/stale-race to reproduce.
+      if (!context.state.ended && !context.state.tests[step.testId]?.ready) {
         switch (result) {
           case XTestCommon.TIMEOUT:
             XTestRoot.bail(context, new Error(`Timed out loading ${href}`));

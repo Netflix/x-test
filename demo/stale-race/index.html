@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="content-security-policy" content="default-src 'self';">
+  </head>
+  <body>
+    <h3>demo stale-race guard</h3>
+    <!--
+      Open in a real browser (not Puppeteer). This root has no tests of
+      its own — it only registers a slow sibling test. The sequence:
+        1. Root boots, creates self-iframe for this same URL.
+        2. Self-iframe loads (cached), publishes `ready`, registers the
+           sibling, and reports completion before its own iframe.load
+           dispatches on the parent.
+        3. Parent kicks off the sibling, which removes the self-iframe.
+           Its pending load event is now discarded.
+        4. ~30s later the self-iframe's load-phase timer fires. Without
+           the stale-race guard the run bails with "Timed out loading".
+           With the guard, the stale timer is ignored and the demo
+           completes cleanly ~35s in.
+    -->
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>
