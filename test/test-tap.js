@@ -2,8 +2,8 @@ import { it, describe, assert } from '../x-test.js';
 import { XTestTap } from '../x-test-tap.js';
 
 describe('version', () => {
-  it('renders "TAP Version 14"', () => {
-    assert(XTestTap.version() === 'TAP Version 14');
+  it('renders "TAP version 14"', () => {
+    assert(XTestTap.version() === 'TAP version 14');
   });
 });
 

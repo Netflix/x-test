@@ -4,7 +4,7 @@ import { XTestReporter } from '../x-test-reporter.js';
 describe('render', () => {
   it('prints out basic test', () => {
     const tap = [
-      'TAP Version 14',
+      'TAP version 14',
       '# Subtest: http://127.0.0.1:8080/test/',
       '    # Subtest: level 1',
       '        ok 1 - first test',
@@ -37,7 +37,7 @@ describe('render', () => {
 
   it('bails', () => {
     const tap = [
-      'TAP Version 14',
+      'TAP version 14',
       '# Subtest: http://127.0.0.1:8080/test/',
       '    # these',
       '    # are',

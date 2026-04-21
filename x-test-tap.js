@@ -12,7 +12,7 @@ export class XTestTap {
    * @returns {string}
    */
   static version() {
-    return 'TAP Version 14';
+    return 'TAP version 14';
   }
 
   /**

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- TAP version pragma now emits `TAP version 14` (lower-case `v`) to
+  match the TAP specification text (#88).
 - Suites no longer bail with “Timed out loading …” partway through an
   otherwise successful run. When the child’s `ready` beat its iframe
   load event, the iframe was removed before load could dispatch and
