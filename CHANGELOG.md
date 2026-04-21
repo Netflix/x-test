@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Summarize errors encountered during the test run as diagnostics under a
+  `# Failures:` header. This allows both humans and machines to “tail” the
+  output (versus having to understand the entire output at all times) (#89).
+
 ### Fixed
 
 - TAP version pragma now emits `TAP version 14` (lower-case `v`) to
