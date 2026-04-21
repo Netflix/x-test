@@ -205,3 +205,92 @@ const expectedOutput = `\
     assert(analysis.percent === 72);
   });
 });
+
+describe('collectFailureStepIds', () => {
+  it('returns failing it step ids in order, excluding TODO and passing', () => {
+    const { context } = getContext();
+    context.state.stepIds.push('s1', 's2', 's3', 's4');
+    context.state.steps = {
+      s1: { type: 'it', itId: 'passIt' },
+      s2: { type: 'it', itId: 'failIt' },
+      s3: { type: 'it', itId: 'todoIt' },
+      s4: { type: 'version' },
+    };
+    context.state.its = {
+      passIt: { ok: true },
+      failIt: { ok: false },
+      todoIt: { ok: false, directive: 'TODO' },
+    };
+    const ids = XTestRoot.collectFailureStepIds(context);
+    assert(ids.length === 1);
+    assert(ids[0] === 's2');
+  });
+
+  it('does not include failing coverage steps', () => {
+    const { context } = getContext();
+    context.state.stepIds.push('s1');
+    context.state.steps = { s1: { type: 'coverage', coverageId: 'c1' } };
+    context.state.coverages = { c1: { ok: false } };
+    const ids = XTestRoot.collectFailureStepIds(context);
+    assert(ids.length === 0);
+  });
+});
+
+describe('formatFailure', () => {
+  it('formats a failing "it" with arrow-joined breadcrumb and raw stack', () => {
+    const { context } = getContext();
+    context.state.stepIds.push('s1');
+    context.state.steps['s1'] = { stepId: 's1', type: 'it', itId: 'i1' };
+    context.state.tests['t1'] = { href: 'http://example.com/test.html', children: [{ type: 'describe', describeId: 'd1' }] };
+    context.state.describes['d1'] = {
+      text: 'outer',
+      parents: [{ type: 'test', testId: 't1' }],
+      children: [{ type: 'it', itId: 'i1' }],
+    };
+    context.state.its['i1'] = {
+      itId: 'i1',
+      text: 'does the thing',
+      ok: false,
+      directive: null,
+      error: { message: 'nope', stack: 'Error: nope\n    at foo' },
+      parents: [{ type: 'test', testId: 't1' }, { type: 'describe', describeId: 'd1' }],
+    };
+    const block = XTestRoot.formatFailure(context, 's1');
+    const lines = block.split('\n');
+    assert(lines[0] === 'http://example.com/test.html');
+    assert(lines[1] === '> outer');
+    assert(lines[2] === '> does the thing');
+    assert(lines[3] === 'Error: nope');
+    assert(lines[4] === '    at foo');
+  });
+
+  it('falls back to "Error: <message>" when stack is missing', () => {
+    const { context } = getContext();
+    context.state.stepIds.push('s1');
+    context.state.steps['s1'] = { stepId: 's1', type: 'it', itId: 'i1' };
+    context.state.tests['t1'] = { href: 'http://example.com/test.html', children: [] };
+    context.state.its['i1'] = {
+      itId: 'i1',
+      text: 'the test',
+      ok: false,
+      directive: null,
+      error: { message: 'nope' },
+      parents: [{ type: 'test', testId: 't1' }],
+    };
+    const block = XTestRoot.formatFailure(context, 's1');
+    const lines = block.split('\n');
+    assert(lines[lines.length - 1] === 'Error: nope');
+  });
+
+});
+
+describe('check', () => {
+  it('does not kick off the exit step once the run has ended (e.g. after a bail)', () => {
+    const { context } = getContext();
+    context.state.stepIds.push('exitStep');
+    context.state.steps = { exitStep: { type: 'exit', status: 'waiting' } };
+    context.state.ended = true;
+    XTestRoot.check(context);
+    assert(context.state.steps.exitStep.status === 'waiting');
+  });
+});

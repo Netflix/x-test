@@ -21,6 +21,10 @@ export class XTestReporter extends HTMLElement {
   #root;
   /** @type {References} */
   #references;
+  /** @type {boolean} */
+  #postRun = false;
+  /** @type {boolean} */
+  #inFailures = false;
 
   /**
    * @template {keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap} T
@@ -130,7 +134,10 @@ export class XTestReporter extends HTMLElement {
   tap(...tap) {
     const items = [];
     for (const text of tap) {
-      const { tag, properties, attributes, failed, done } = XTestReporter.parse(text);
+      if (this.#postRun && text === '# Failures:') {
+        this.#inFailures = true;
+      }
+      const { tag, properties, attributes, failed, done } = XTestReporter.parse(text, this.#inFailures);
       const element = document.createElement(tag);
       Object.assign(element, properties);
       for (const [attribute, value] of Object.entries(attributes)) {
@@ -138,6 +145,7 @@ export class XTestReporter extends HTMLElement {
       }
       if (done) {
         this.removeAttribute('testing');
+        this.#postRun = true;
       }
       if (failed) {
         this.removeAttribute('ok');
@@ -149,9 +157,10 @@ export class XTestReporter extends HTMLElement {
 
   /**
    * @param {string} text
+   * @param {boolean} inFailures
    * @returns {{tag: string, properties: Record<string, any>, attributes: Record<string, any>, failed: boolean, done: boolean}}
    */
-  static parse(text) {
+  static parse(text, inFailures) {
     const result = { tag: '', properties: /** @type {Record<string, any>} */ ({}), attributes: /** @type {Record<string, any>} */ ({}), failed: false, done: false };
     result.properties.innerText = text;
     const indentMatch = text.match(/^((?: {4})+)/);
@@ -204,6 +213,14 @@ export class XTestReporter extends HTMLElement {
       } else if (text.match(/^(?: {4})*Bail out!.*/)) {
         result.attributes.bail = '';
         result.failed = true;
+      }
+    }
+    if (inFailures && 'diagnostic' in result.attributes) {
+      result.attributes.failure = '';
+      const urlMatch = text.match(/^# (https?:\/\/\S+)$/);
+      if (urlMatch) {
+        result.tag = 'a';
+        result.properties.href = urlMatch[1];
       }
     }
     return result;
