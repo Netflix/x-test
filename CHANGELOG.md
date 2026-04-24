@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-rc.8] - 2026-04-24
+
 ### Added
 
 - `assert.deepEqual(actual, expected, message?)` for strict deep-equality
