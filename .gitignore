@@ -3,7 +3,7 @@ coverage
 types/x-test-reporter.css.d.ts
 types/x-test-reporter.d.ts
 types/x-test-root.d.ts
-types/x-test-suite.d.ts
+types/x-test-frame.d.ts
 types/x-test-tap.d.ts
 types/x-test.config.d.ts
 types/x-test-common.d.ts

@@ -1,9 +1,9 @@
-import { test } from '../x-test.js';
+import { load } from '../x-test.js';
 
-test('./test-reporter.html');
-test('./test-suite.html');
-test('./test-root.html');
-test('./test-tap.html');
-test('./test-common.html');
-test('./test-boot.html');
-test('./test-scratch.html');
+load('./test-reporter.html');
+load('./test-frame.html');
+load('./test-root.html');
+load('./test-tap.html');
+load('./test-common.html');
+load('./test-boot.html');
+load('./test-scratch.html');

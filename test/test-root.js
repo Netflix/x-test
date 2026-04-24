@@ -8,7 +8,7 @@ const getContext = () => {
     children: [],
     stepIds: [],
     steps: {},
-    tests: {},
+    frames: {},
     describes: {},
     its: {},
     reporter: null,
@@ -42,26 +42,26 @@ const getContext = () => {
 };
 
 describe('level', () => {
-  it('returns level = 1 for "test-plan"', () => {
+  it('returns level = 1 for "load-plan"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'test-plan', testId: 'testTestId' };
+    context.state.steps['testStepId'] = { type: 'frame-plan', frameId: 'testTestId' };
     const level = XTestRoot.level(context, 'testStepId');
     assert(level === 1);
   });
 
-  it('returns level = 0 for "test-start"', () => {
+  it('returns level = 0 for "load-start"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'test-start', testId: 'testTestId' };
+    context.state.steps['testStepId'] = { type: 'frame-start', frameId: 'testTestId' };
     const level = XTestRoot.level(context, 'testStepId');
     assert(level === 0);
   });
 
-  it('returns level = 0 for "test-end"', () => {
+  it('returns level = 0 for "load-end"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'test-end', testId: 'testTestId' };
+    context.state.steps['testStepId'] = { type: 'frame-end', frameId: 'testTestId' };
     const level = XTestRoot.level(context, 'testStepId');
     assert(level === 0);
   });
@@ -76,11 +76,11 @@ describe('level', () => {
 });
 
 describe('count', () => {
-  it('returns count for "test-plan"', () => {
+  it('returns count for "load-plan"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'test-plan', testId: 'testTestId' };
-    context.state.tests['testTestId'] = { children: [{}, {}, {}] };
+    context.state.steps['testStepId'] = { type: 'frame-plan', frameId: 'testTestId' };
+    context.state.frames['testTestId'] = { children: [{}, {}, {}] };
     const count = XTestRoot.count(context, 'testStepId');
     assert(count === 3);
   });
@@ -153,10 +153,10 @@ describe('formatFailure', () => {
     const { context } = getContext();
     context.state.stepIds.push('s1');
     context.state.steps['s1'] = { stepId: 's1', type: 'it', itId: 'i1' };
-    context.state.tests['t1'] = { href: 'http://example.com/test.html', children: [{ type: 'describe', describeId: 'd1' }] };
+    context.state.frames['t1'] = { href: 'http://example.com/test.html', children: [{ type: 'describe', describeId: 'd1' }] };
     context.state.describes['d1'] = {
       text: 'outer',
-      parents: [{ type: 'test', testId: 't1' }],
+      parents: [{ type: 'frame', frameId: 't1' }],
       children: [{ type: 'it', itId: 'i1' }],
     };
     context.state.its['i1'] = {
@@ -165,7 +165,7 @@ describe('formatFailure', () => {
       ok: false,
       directive: null,
       error: { message: 'nope', stack: 'Error: nope\n    at foo' },
-      parents: [{ type: 'test', testId: 't1' }, { type: 'describe', describeId: 'd1' }],
+      parents: [{ type: 'frame', frameId: 't1' }, { type: 'describe', describeId: 'd1' }],
     };
     const block = XTestRoot.formatFailure(context, 's1');
     const lines = block.split('\n');
@@ -180,14 +180,14 @@ describe('formatFailure', () => {
     const { context } = getContext();
     context.state.stepIds.push('s1');
     context.state.steps['s1'] = { stepId: 's1', type: 'it', itId: 'i1' };
-    context.state.tests['t1'] = { href: 'http://example.com/test.html', children: [] };
+    context.state.frames['t1'] = { href: 'http://example.com/test.html', children: [] };
     context.state.its['i1'] = {
       itId: 'i1',
       text: 'the test',
       ok: false,
       directive: null,
       error: { message: 'nope' },
-      parents: [{ type: 'test', testId: 't1' }],
+      parents: [{ type: 'frame', frameId: 't1' }],
     };
     const block = XTestRoot.formatFailure(context, 's1');
     const lines = block.split('\n');

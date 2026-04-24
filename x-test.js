@@ -1,6 +1,6 @@
 import { XTestCommon } from './x-test-common.js';
 import { XTestRoot } from './x-test-root.js';
-import { XTestSuite } from './x-test-suite.js';
+import { XTestFrame } from './x-test-frame.js';
 
 // TODO: #67: Consider requiring explicit boolean conversion.
 /**
@@ -11,7 +11,7 @@ import { XTestSuite } from './x-test-suite.js';
  * @param {string} [text] - The assertion message
  * @returns {asserts ok} Throws if condition is falsy.
  */
-export const assert = (ok, text) => XTestSuite.assert(suiteContext, ok, text);
+export const assert = (ok, text) => XTestFrame.assert(suiteContext, ok, text);
 
 /**
  * Strict deep-equality assertion. Supports primitives, plain objects, and arrays.
@@ -24,16 +24,16 @@ export const assert = (ok, text) => XTestSuite.assert(suiteContext, ok, text);
  * @param {string} [text] - The assertion message
  * @returns {asserts actual is T} Throws if values are not deeply equal.
  */
-assert.deepEqual = (actual, expected, text) => XTestSuite.deepEqual(suiteContext, actual, expected, text);
+assert.deepEqual = (actual, expected, text) => XTestFrame.deepEqual(suiteContext, actual, expected, text);
 
 /**
- * Register a test to be run as a subsequent test suite.
+ * Load a new frame.
  * @example
- *   test('./test-sibling.html');
+ *   load('./test-sibling.html');
  * @param {string} href - The URL/path to the test file to run
  * @returns {void}
  */
-export const test = href => XTestSuite.test(suiteContext, href);
+export const load = href => XTestFrame.load(suiteContext, href);
 
 /**
  * Register a grouping of tests. Alternatively, mark with flags (.skip, .only, .todo).
@@ -41,7 +41,7 @@ export const test = href => XTestSuite.test(suiteContext, href);
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-export const describe = (text, callback) => XTestSuite.describe(suiteContext, text, callback);
+export const describe = (text, callback) => XTestFrame.describe(suiteContext, text, callback);
 
 /**
  * Register a test group that will be skipped during execution.
@@ -49,7 +49,7 @@ export const describe = (text, callback) => XTestSuite.describe(suiteContext, te
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-describe.skip = (text, callback) => XTestSuite.describeSkip(suiteContext, text, callback);
+describe.skip = (text, callback) => XTestFrame.describeSkip(suiteContext, text, callback);
 
 /**
  * Register a test group that will run exclusively (skips other non-only tests).
@@ -57,7 +57,7 @@ describe.skip = (text, callback) => XTestSuite.describeSkip(suiteContext, text, 
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-describe.only = (text, callback) => XTestSuite.describeOnly(suiteContext, text, callback);
+describe.only = (text, callback) => XTestFrame.describeOnly(suiteContext, text, callback);
 
 /**
  * Register a placeholder test group for future implementation.
@@ -65,7 +65,7 @@ describe.only = (text, callback) => XTestSuite.describeOnly(suiteContext, text, 
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-describe.todo = (text, callback) => XTestSuite.describeTodo(suiteContext, text, callback);
+describe.todo = (text, callback) => XTestFrame.describeTodo(suiteContext, text, callback);
 
 /**
  * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
@@ -74,7 +74,7 @@ describe.todo = (text, callback) => XTestSuite.describeTodo(suiteContext, text, 
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-export const it = (text, callback, interval) => XTestSuite.it(suiteContext, text, callback, interval);
+export const it = (text, callback, interval) => XTestFrame.it(suiteContext, text, callback, interval);
 
 /**
  * Register a test case that will be skipped during execution.
@@ -83,7 +83,7 @@ export const it = (text, callback, interval) => XTestSuite.it(suiteContext, text
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-it.skip = (text, callback, interval) => XTestSuite.itSkip(suiteContext, text, callback, interval);
+it.skip = (text, callback, interval) => XTestFrame.itSkip(suiteContext, text, callback, interval);
 
 /**
  * Register a test case that will run exclusively (skips other non-only tests).
@@ -92,7 +92,7 @@ it.skip = (text, callback, interval) => XTestSuite.itSkip(suiteContext, text, ca
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-it.only = (text, callback, interval) => XTestSuite.itOnly(suiteContext, text, callback, interval);
+it.only = (text, callback, interval) => XTestFrame.itOnly(suiteContext, text, callback, interval);
 
 /**
  * Register a placeholder test case for future implementation.
@@ -101,7 +101,7 @@ it.only = (text, callback, interval) => XTestSuite.itOnly(suiteContext, text, ca
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-it.todo = (text, callback, interval) => XTestSuite.itTodo(suiteContext, text, callback, interval);
+it.todo = (text, callback, interval) => XTestFrame.itTodo(suiteContext, text, callback, interval);
 
 // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 /**
@@ -156,10 +156,10 @@ function addUnhandledrejectionListener(callback) {
 // There is one-and-only-one root. Either boot as root or child test.
 /** @type {unknown} */
 let suiteContext = null;
-if (!frameElement?.getAttribute('data-x-test-test-id')) {
+if (!frameElement?.getAttribute('data-x-test-frame-id')) {
   const state = {
     ended: false, children: [], stepIds: [], steps: {},
-    tests: {}, describes: {}, its: {}, reporter: null,
+    frames: {}, describes: {}, its: {}, reporter: null,
     filtering: false, queue: [], queueing: false,
   };
   const rootContext = {
@@ -169,7 +169,7 @@ if (!frameElement?.getAttribute('data-x-test-test-id')) {
   XTestRoot.initialize(rootContext, location.href);
 } else {
   const state = {
-    testId: null, href: null, callbacks: {}, bailed: false,
+    frameId: null, href: null, callbacks: {}, bailed: false,
     ready: false, parents: [],
   };
   const domContentLoadedPromise = XTestCommon.domContentLoadedPromise(document);
@@ -177,5 +177,5 @@ if (!frameElement?.getAttribute('data-x-test-test-id')) {
     state, uuid, publish, subscribe, timeout: XTestCommon.timeout, addErrorListener,
     addUnhandledrejectionListener, domContentLoadedPromise,
   };
-  XTestSuite.initialize(suiteContext, frameElement.getAttribute('data-x-test-test-id'), location.href);
+  XTestFrame.initialize(suiteContext, frameElement.getAttribute('data-x-test-frame-id'), location.href);
 }

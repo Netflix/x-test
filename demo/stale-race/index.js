@@ -1,3 +1,3 @@
-import { test } from '../../x-test.js';
+import { load } from '../../x-test.js';
 
-test('./keepalive.html');
+load('./keepalive.html');

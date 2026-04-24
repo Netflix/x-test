@@ -35,7 +35,7 @@ the separate `@netflix/x-test-cli` package.
 
 #### Browser Components
 1. **x-test.js** - Main library entry point containing:
-   - Public API exports (`it`, `describe`, `assert`, `test`)
+   - Public API exports (`it`, `describe`, `assert`, `load`)
    - BroadcastChannel-based communication setup
    - Root/suite context initialization logic
    - UUID generation and utility functions
@@ -71,7 +71,7 @@ the separate `@netflix/x-test-cli` package.
 
 Each test defines an HTML document which runs in an iframe:
 - Root page coordinates overall test execution via BroadcastChannel
-- Each `test()` call creates a new iframe running that test file
+- Each `load()` call creates a new iframe running that test file
 - Individual `it()` calls within each iframe execute sequentially with optional timeouts
 - Results bubble up through BroadcastChannel communication
 - Output is TAP Version 14 compliant
@@ -80,7 +80,7 @@ Each test defines an HTML document which runs in an iframe:
 
 - **Event-driven communication**: Uses BroadcastChannel for cross-context messaging
 - **TAP compliance**: All output follows TAP Version 14 specification
-- **Sequential execution**: Both `test()` and `it()` calls run in declared order
+- **Sequential execution**: Both `load()` and `it()` calls run in declared order
 - **Iframe isolation**: Each test runs in its own isolated iframe context
 - **Error handling**: Global error/rejection handlers with proper TAP bailout
 
@@ -100,7 +100,7 @@ Each test defines an HTML document which runs in an iframe:
 ## Testing Patterns
 
 When writing tests:
-- Use `test('https://fully-qualified/path.htm')` for iframe-based sub-tests
+- Use `load('https://fully-qualified/path.html')` for iframe-based sub-tests
 - Use `it(description, callback, timeout)` for individual test cases
 - Use `describe(description, callback)` for logical grouping
 - Use `assert(condition, message)` for assertions
