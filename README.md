@@ -16,7 +16,7 @@ a simple, tap-compliant test runner for the browser
 
 The following are exposed in the testing interface:
 
-- `test`: Creates a sub-test in an `iframe` based on given `src` html page.
+- `load`: Creates a sub-test in an `iframe` based on given `src` html page.
 - `it`: The smallest testing unit — can be asynchronous.
 - `it.skip`: An `it` whose callback is not run and which will pass.
 - `it.only`: Skip all other `it` tests.
@@ -36,7 +36,7 @@ The following parameters can be passed in via query params on the url:
 
 ## Execution
 
-Both `test` and `it` calls will execute _in order_. `test` calls will boot the
+Both `load` and `it` calls will execute _in order_. `load` calls will boot the
 given html page in an iframe. Such iframes are run one-at-a-time. All invoked
 `it` calls await the completion of previously-invoked `it` calls.
 

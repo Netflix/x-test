@@ -13,7 +13,7 @@ export namespace assert {
      */
     function deepEqual<T>(actual: unknown, expected: T, text?: string): asserts actual is T;
 }
-export function test(href: string): void;
+export function load(href: string): void;
 export function describe(text: string, callback: () => void): void;
 export namespace describe {
     /**

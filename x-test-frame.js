@@ -1,22 +1,22 @@
 import { XTestCommon } from './x-test-common.js';
 
-export class XTestSuite {
+export class XTestFrame {
   /**
    * @param {any} context
-   * @param {any} testId
+   * @param {any} frameId
    * @param {any} href
    */
-  static async initialize(context, testId, href) {
-    Object.assign(context.state, { testId, href });
-    context.publish('x-test-suite-initialize', { testId });
-    context.state.parents.push({ type: 'test', testId });
+  static async initialize(context, frameId, href) {
+    Object.assign(context.state, { frameId, href });
+    context.publish('x-test-frame-initialize', { frameId });
+    context.state.parents.push({ type: 'frame', frameId });
     context.subscribe(async (/** @type {any} */ event) => {
       switch (event.data.type) {
-        case 'x-test-suite-bail':
-          XTestSuite.onBail(context);
+        case 'x-test-frame-bail':
+          XTestFrame.onBail(context);
           break;
         case 'x-test-root-run':
-          XTestSuite.onRun(context, event);
+          XTestFrame.onRun(context, event);
           break;
         default:
           // Ignore — this message isn't for us.
@@ -26,11 +26,11 @@ export class XTestSuite {
     // Setup global error / rejection handlers.
     context.addErrorListener((/** @type {any} */ event) => {
       event.preventDefault();
-      XTestSuite.bail(context, event.error);
+      XTestFrame.bail(context, event.error);
     });
     context.addUnhandledrejectionListener((/** @type {any} */ event) => {
       event.preventDefault();
-      XTestSuite.bail(context, event.reason);
+      XTestFrame.bail(context, event.reason);
     });
 
     // The registration window stays open until “DOMContentLoaded”, which allows
@@ -39,7 +39,7 @@ export class XTestSuite {
     await context.domContentLoadedPromise;
     if (!context.state.bailed) {
       context.state.ready = true;
-      context.publish('x-test-suite-ready', { testId: context.state.testId });
+      context.publish('x-test-frame-ready', { frameId: context.state.frameId });
     }
   }
 
@@ -71,10 +71,10 @@ export class XTestSuite {
             throw new Error(`timeout after ${resolvedInterval.toLocaleString()}ms`);
           }
         }
-        context.publish('x-test-suite-result', { itId, ok: true, error: null });
+        context.publish('x-test-frame-result', { itId, ok: true, error: null });
       } catch (error) {
-        error = XTestSuite.createError(error); // eslint-disable-line no-ex-assign
-        context.publish('x-test-suite-result', { itId, ok: false, error });
+        error = XTestFrame.createError(error); // eslint-disable-line no-ex-assign
+        context.publish('x-test-frame-result', { itId, ok: false, error });
       }
     }
   }
@@ -87,8 +87,8 @@ export class XTestSuite {
     if (!context.state.bailed) {
       context.state.bailed = true;
       context.publish(
-        'x-test-suite-bail',
-        { testId: context.state.testId, error: XTestSuite.createError(error) }
+        'x-test-frame-bail',
+        { frameId: context.state.frameId, error: XTestFrame.createError(error) }
       );
     }
   }
@@ -132,7 +132,7 @@ export class XTestSuite {
    * @param {any} [text]
    */
   static deepEqual(context, actual, expected, text) {
-    XTestSuite.assert(context, XTestSuite.#deepEqual(actual, expected), text ?? 'not deep equal');
+    XTestFrame.assert(context, XTestFrame.#deepEqual(actual, expected), text ?? 'not deep equal');
   }
 
   /**
@@ -183,7 +183,7 @@ export class XTestSuite {
 
     // Compare nested values / recurse.
     for (const key of Object.keys(a)) {
-      if (!Object.hasOwn(b, key) || !XTestSuite.#deepEqual(a[key], b[key])) {
+      if (!Object.hasOwn(b, key) || !XTestFrame.#deepEqual(a[key], b[key])) {
         return false;
       }
     }
@@ -195,12 +195,12 @@ export class XTestSuite {
    * @param {any} context
    * @param {any} href
    */
-  static test(context, href) {
+  static load(context, href) {
     if (context && !context.state.bailed && !context.state.ready) {
-      const testId = context.uuid();
-      const testHref = new URL(href, context.state.href).href;
-      const initiatorTestId = context.state.testId;
-      context.publish('x-test-suite-register', { type: 'test', testId, initiatorTestId, href: testHref });
+      const frameId = context.uuid();
+      const frameHref = new URL(href, context.state.href).href;
+      const initiatorFrameId = context.state.frameId;
+      context.publish('x-test-frame-register', { type: 'frame', frameId, initiatorFrameId, href: frameHref });
     }
   }
 
@@ -221,16 +221,16 @@ export class XTestSuite {
       directive = directive ?? null;
       only = only ?? false;
       context.publish(
-        'x-test-suite-register',
+        'x-test-frame-register',
         { type: 'describe-start', describeId, parents, text, directive, only }
       );
       try {
         context.state.parents.push({ type: 'describe', describeId });
         callback();
         context.state.parents.pop();
-        context.publish('x-test-suite-register', { type: 'describe-end', describeId });
+        context.publish('x-test-frame-register', { type: 'describe-end', describeId });
       } catch (error) {
-        XTestSuite.bail(context, error);
+        XTestFrame.bail(context, error);
       }
     }
   }
@@ -241,7 +241,7 @@ export class XTestSuite {
    * @param {any} callback
    */
   static describe(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback, null, null);
+    XTestFrame.#describerInner(context, text, callback, null, null);
   }
 
   /**
@@ -250,7 +250,7 @@ export class XTestSuite {
    * @param {any} callback
    */
   static describeSkip(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback, 'SKIP', null);
+    XTestFrame.#describerInner(context, text, callback, 'SKIP', null);
   }
 
   /**
@@ -259,7 +259,7 @@ export class XTestSuite {
    * @param {any} callback
    */
   static describeOnly(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback, null, true);
+    XTestFrame.#describerInner(context, text, callback, null, true);
   }
 
   /**
@@ -268,7 +268,7 @@ export class XTestSuite {
    * @param {any} callback
    */
   static describeTodo(context, text, callback) {
-    XTestSuite.#describerInner(context, text, callback, 'TODO', null);
+    XTestFrame.#describerInner(context, text, callback, 'TODO', null);
   }
 
   /**
@@ -291,7 +291,7 @@ export class XTestSuite {
       only = only ?? false;
       context.state.callbacks[itId] = callback;
       context.publish(
-        'x-test-suite-register',
+        'x-test-frame-register',
         { type: 'it', itId, parents, text, interval, directive, only }
       );
     }
@@ -304,7 +304,7 @@ export class XTestSuite {
    * @param {any} interval
    */
   static it(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval, null, null);
+    XTestFrame.#itInner(context, text, callback, interval, null, null);
   }
 
   /**
@@ -314,7 +314,7 @@ export class XTestSuite {
    * @param {any} interval
    */
   static itSkip(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval, 'SKIP', null);
+    XTestFrame.#itInner(context, text, callback, interval, 'SKIP', null);
   }
 
   /**
@@ -324,7 +324,7 @@ export class XTestSuite {
    * @param {any} interval
    */
   static itOnly(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval, null, true);
+    XTestFrame.#itInner(context, text, callback, interval, null, true);
   }
 
   /**
@@ -334,6 +334,6 @@ export class XTestSuite {
    * @param {any} interval
    */
   static itTodo(context, text, callback, interval) {
-    XTestSuite.#itInner(context, text, callback, interval, 'TODO', null);
+    XTestFrame.#itInner(context, text, callback, interval, 'TODO', null);
   }
 }

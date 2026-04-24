@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renamed `test(href)` load function to `load(href)`. Conceptually, when you
+  call this function you “load a new frame with this href” (#99).
 - The `x-test-name` URL parameter has been renamed to `x-test-name-pattern`
   to more clearly signal that it accepts a regex pattern rather than a
   literal name and matches Node’s test CLI argument naming (#99).

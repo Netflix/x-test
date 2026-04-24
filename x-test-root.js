@@ -24,19 +24,19 @@ export class XTestRoot {
         case 'x-test-root-defer':
           XTestRoot.onDefer(context, event);
           break;
-        case 'x-test-suite-register':
+        case 'x-test-frame-register':
           XTestRoot.onRegister(context, event);
           break;
-        case 'x-test-suite-initialize':
+        case 'x-test-frame-initialize':
           XTestRoot.onInitialize(context, event);
           break;
-        case 'x-test-suite-ready':
+        case 'x-test-frame-ready':
           XTestRoot.onReady(context, event);
           break;
-        case 'x-test-suite-result':
+        case 'x-test-frame-result':
           XTestRoot.onResult(context, event);
           break;
-        case 'x-test-suite-bail':
+        case 'x-test-frame-bail':
           XTestRoot.onBail(context, event);
           break;
       }
@@ -44,7 +44,7 @@ export class XTestRoot {
     });
 
     // Run own tests in iframe.
-    context.publish('x-test-suite-register', { type: 'test', testId: context.uuid(), href: url.href });
+    context.publish('x-test-frame-register', { type: 'frame', frameId: context.uuid(), href: url.href });
   }
 
   /**
@@ -53,7 +53,7 @@ export class XTestRoot {
    */
   static onBail(context, event) {
     if (!context.state.ended) {
-      XTestRoot.bail(context, event.data.data.error, { testId: event.data.data.testId });
+      XTestRoot.bail(context, event.data.data.error, { frameId: event.data.data.frameId });
     }
   }
 
@@ -63,9 +63,9 @@ export class XTestRoot {
    */
   static onInitialize(context, event) {
     if (!context.state.ended) {
-      const testId = event.data.data.testId;
-      const test = context.state.tests[testId];
-      test.initialized = true;
+      const frameId = event.data.data.frameId;
+      const frame = context.state.frames[frameId];
+      frame.initialized = true;
     }
   }
 
@@ -92,8 +92,8 @@ export class XTestRoot {
    */
   static checkInitialized(context, data) {
     if (!context.state.ended) {
-      const test = context.state.tests[data.testId];
-      if (!test.initialized) {
+      const frame = context.state.frames[data.frameId];
+      if (!frame.initialized) {
         XTestRoot.bail(context, new Error(`Failed to initialize ${data.href}`));
       }
     }
@@ -103,21 +103,21 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} data
    */
-  static registerTest(context, data) {
+  static registerFrame(context, data) {
     if (!context.state.ended) {
-      const testId = data.testId;
-      // New "test" (to be opened in its own iframe). Queue it up.
-      const initiatorTestId = data.initiatorTestId;
-      const siblingTestEndIndex = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
+      const frameId = data.frameId;
+      // New “frame” (to be opened in its own iframe). Queue it up.
+      const initiatorFrameId = data.initiatorFrameId;
+      const siblingFrameEndIndex = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'test-end' && context.state.tests[candidate.testId].initiatorTestId === initiatorTestId) {
+        if (candidate.type === 'frame-end' && context.state.frames[candidate.frameId].initiatorFrameId === initiatorFrameId) {
           return true;
         }
         return false;
       });
-      const parentTestEndIndex = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
+      const parentFrameEndIndex = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'test-end' && context.state.tests[candidate.testId].testId === initiatorTestId) {
+        if (candidate.type === 'frame-end' && context.state.frames[candidate.frameId].frameId === initiatorFrameId) {
           return true;
         }
         return false;
@@ -129,31 +129,31 @@ export class XTestRoot {
         }
         return false;
       });
-      const index = siblingTestEndIndex === -1
-        ? parentTestEndIndex === -1
+      const index = siblingFrameEndIndex === -1
+        ? parentFrameEndIndex === -1
           ? exitIndex
-          : parentTestEndIndex + 1
-        : siblingTestEndIndex + 1;
+          : parentFrameEndIndex + 1
+        : siblingFrameEndIndex + 1;
       const lastSiblingChildrenIndex = context.state.children.findLastIndex((/** @type {any} */ candidate) => {
-        return candidate.type === 'test' && context.state.tests[candidate.testId].initiatorTestId === initiatorTestId;
+        return candidate.type === 'frame' && context.state.frames[candidate.frameId].initiatorFrameId === initiatorFrameId;
       });
       const parentTestChildrenIndex = context.state.children.findLastIndex((/** @type {any} */ candidate) => {
-        return candidate.type === 'test' && context.state.tests[candidate.testId].testId === initiatorTestId;
+        return candidate.type === 'frame' && context.state.frames[candidate.frameId].frameId === initiatorFrameId;
       });
       const childrenIndex = lastSiblingChildrenIndex === -1
         ? parentTestChildrenIndex === -1
           ? context.state.children.length
           : parentTestChildrenIndex + 1
         : lastSiblingChildrenIndex + 1;
-      const testStartStepId = context.uuid();
-      const testPlanStepId = context.uuid();
-      const testEndStepId = context.uuid();
-      context.state.stepIds.splice(index, 0, testStartStepId, testPlanStepId, testEndStepId);
-      context.state.steps[testStartStepId] = { stepId: testStartStepId, type: 'test-start', testId, status: 'waiting' };
-      context.state.steps[testPlanStepId] = { stepId: testPlanStepId, type: 'test-plan', testId, status: 'waiting' };
-      context.state.steps[testEndStepId] = { stepId: testEndStepId, type: 'test-end', testId, status: 'waiting' };
-      context.state.tests[testId] = { ...data, children: [] };
-      context.state.children.splice(childrenIndex, 0, { type: 'test', testId });
+      const frameStartStepId = context.uuid();
+      const framePlanStepId = context.uuid();
+      const frameEndStepId = context.uuid();
+      context.state.stepIds.splice(index, 0, frameStartStepId, framePlanStepId, frameEndStepId);
+      context.state.steps[frameStartStepId] = { stepId: frameStartStepId, type: 'frame-start', frameId, status: 'waiting' };
+      context.state.steps[framePlanStepId] = { stepId: framePlanStepId, type: 'frame-plan', frameId, status: 'waiting' };
+      context.state.steps[frameEndStepId] = { stepId: frameEndStepId, type: 'frame-end', frameId, status: 'waiting' };
+      context.state.frames[frameId] = { ...data, children: [] };
+      context.state.children.splice(childrenIndex, 0, { type: 'frame', frameId });
     }
   }
 
@@ -168,7 +168,7 @@ export class XTestRoot {
       const describeId = data.describeId;
       const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'test-plan' && candidate.testId === data.parents[0].testId) {
+        if (candidate.type === 'frame-plan' && candidate.frameId === data.parents[0].frameId) {
           return true;
         }
         return false;
@@ -179,7 +179,7 @@ export class XTestRoot {
       if (data.parents.at(-1)?.type === 'describe') {
         context.state.describes[data.parents.at(-1).describeId].children.push({ type: 'describe', describeId });
       } else {
-        context.state.tests[data.parents.at(-1).testId].children.push({ type: 'describe', describeId });
+        context.state.frames[data.parents.at(-1).frameId].children.push({ type: 'describe', describeId });
       }
     }
   }
@@ -196,7 +196,7 @@ export class XTestRoot {
       const describe = context.state.describes[data.describeId];
       const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'test-plan' && candidate.testId === describe.parents[0].testId) {
+        if (candidate.type === 'frame-plan' && candidate.frameId === describe.parents[0].frameId) {
           return true;
         }
         return false;
@@ -226,7 +226,7 @@ export class XTestRoot {
       const itId = data.itId;
       const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'test-plan' && candidate.testId === data.parents[0].testId) {
+        if (candidate.type === 'frame-plan' && candidate.frameId === data.parents[0].frameId) {
           return true;
         }
         return false;
@@ -237,7 +237,7 @@ export class XTestRoot {
       if (data.parents.at(-1)?.type === 'describe') {
         context.state.describes[data.parents.at(-1).describeId].children.push({ type: 'it', itId });
       } else {
-        context.state.tests[data.parents.at(-1).testId].children.push({ type: 'it', itId });
+        context.state.frames[data.parents.at(-1).frameId].children.push({ type: 'it', itId });
       }
     }
   }
@@ -271,8 +271,8 @@ export class XTestRoot {
     if (!context.state.ended) {
       const data = event.data.data;
       switch(data.type) {
-        case 'test':
-          XTestRoot.registerTest(context, data);
+        case 'frame':
+          XTestRoot.registerFrame(context, data);
           break;
         case 'describe-start':
           XTestRoot.registerDescribeStart(context, data);
@@ -298,21 +298,21 @@ export class XTestRoot {
       const data = event.data.data;
       // Ready means this iframe’s x-test is up — the load-phase race is moot.
       //  Flag the test so a late timeout / error / load doesn’t bail.
-      const readyTest = context.state.tests[data.testId];
-      if (readyTest) {
-        readyTest.ready = true;
+      const readyFrame = context.state.frames[data.frameId];
+      if (readyFrame) {
+        readyFrame.ready = true;
       }
       const only = (
         Object.values(context.state.its).some((/** @type {any} */ candidate) => {
-          return candidate.only && candidate.parents[0].testId === data.testId;
+          return candidate.only && candidate.parents[0].frameId === data.frameId;
         }) ||
         Object.values(context.state.describes).some((/** @type {any} */ candidate) => {
-          return candidate.only && candidate.parents[0].testId === data.testId;
+          return candidate.only && candidate.parents[0].frameId === data.frameId;
         })
       );
       if (only) {
         for (const it of Object.values(context.state.its)) {
-          if (it.parents[0].testId === data.testId) {
+          if (it.parents[0].frameId === data.frameId) {
             if (!it.only) {
               const describeParents = it.parents
                 .filter((/** @type {any} */ candidate) => candidate.type === 'describe')
@@ -331,7 +331,7 @@ export class XTestRoot {
         }
       } else {
         for (const it of Object.values(context.state.its)) {
-          if (it.parents[0].testId === data.testId) {
+          if (it.parents[0].frameId === data.frameId) {
             if (!it.directive) {
               const describeParents = it.parents
                 .filter((/** @type {any} */ candidate) => candidate.type === 'describe')
@@ -346,11 +346,11 @@ export class XTestRoot {
       }
       const stepId = context.state.stepIds.find((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        return candidate.type === 'test-start' && candidate.testId === data.testId;
+        return candidate.type === 'frame-start' && candidate.frameId === data.frameId;
       });
       const step = context.state.steps[stepId];
       if (step.status !== 'running') {
-        throw new Error('test to ready is not running');
+        throw new Error('frame to ready is not running');
       }
       const href = XTestRoot.href(context, stepId);
       const level = XTestRoot.level(context, stepId);
@@ -447,11 +447,11 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffTestStart(context, stepId) {
-    // Destroy prior test. This keeps the final test around for debugging.
+  static kickoffFrameStart(context, stepId) {
+    // Destroy prior frame. This keeps the final frame around for debugging.
     const lastIframe = document.querySelector('iframe');
     lastIframe?.remove();
-    // Create the new test.
+    // Create the new frame.
     const step = context.state.steps[stepId];
     const href = XTestRoot.href(context, stepId);
     const iframe = document.createElement('iframe');
@@ -464,7 +464,7 @@ export class XTestRoot {
       //  which case the iframe has already been removed and this race is
       //  stale — the pending timeout would otherwise fire ~30s later.
       //  Comment “ready” condition and load /demo/stale-race to reproduce.
-      if (!context.state.ended && !context.state.tests[step.testId]?.ready) {
+      if (!context.state.ended && !context.state.frames[step.frameId]?.ready) {
         switch (result) {
           case XTestCommon.TIMEOUT:
             XTestRoot.bail(context, new Error(`Timed out loading ${href}`));
@@ -476,13 +476,13 @@ export class XTestRoot {
             // To ensure the child frame is given adequate time to register
             //  after being loaded, we wait for a message in the queue to be
             //  processed before giving up. See handler for more detail.
-            context.publish('x-test-root-defer', { type: 'check-initialized', testId: step.testId, href });
+            context.publish('x-test-root-defer', { type: 'check-initialized', frameId: step.frameId, href });
             break;
         }
       }
     });
 
-    iframe.setAttribute('data-x-test-test-id', step.testId);
+    iframe.setAttribute('data-x-test-frame-id', step.frameId);
     Object.assign(iframe, { src: href });
     Object.assign(iframe.style, {
       border: 'none', backgroundColor: 'white', height: '100vh',
@@ -496,7 +496,7 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffTestPlan(context, stepId) {
+  static kickoffFramePlan(context, stepId) {
     const count = XTestRoot.count(context, stepId);
     const level = XTestRoot.level(context, stepId);
     const tap = XTestTap.plan(count, level);
@@ -508,7 +508,7 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffTestEnd(context, stepId) {
+  static kickoffFrameEnd(context, stepId) {
     const number = XTestRoot.number(context, stepId);
     const ok = XTestRoot.ok(context, stepId);
     const text = XTestRoot.text(context, stepId);
@@ -579,8 +579,8 @@ export class XTestRoot {
   static formatFailure(context, stepId) {
     const step = context.state.steps[stepId];
     const it = context.state.its[step.itId];
-    const test = context.state.tests[it.parents[0].testId];
-    const lines = [test.href];
+    const frame = context.state.frames[it.parents[0].frameId];
+    const lines = [frame.href];
     const describeParents = it.parents.filter((/** @type {any} */ parent) => parent.type === 'describe');
     for (const parent of describeParents) {
       lines.push(`> ${context.state.describes[parent.describeId].text.replace(/#/g, '*')}`);
@@ -629,16 +629,16 @@ export class XTestRoot {
               XTestRoot.kickoffDescribeEnd(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'test-start':
-              XTestRoot.kickoffTestStart(context, stepId);
+            case 'frame-start':
+              XTestRoot.kickoffFrameStart(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'test-plan':
-              XTestRoot.kickoffTestPlan(context, stepId);
+            case 'frame-plan':
+              XTestRoot.kickoffFramePlan(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'test-end':
-              XTestRoot.kickoffTestEnd(context, stepId);
+            case 'frame-end':
+              XTestRoot.kickoffFrameEnd(context, stepId);
               XTestRoot.check(context);
               break;
             case 'it':
@@ -672,10 +672,10 @@ export class XTestRoot {
       if (error && error.stack) {
         XTestRoot.log(context, XTestTap.diagnostic(error.stack));
       }
-      if (options?.testId) {
-        const test = context.state.tests[options.testId];
-        test.error = error;
-        const href = test.href;
+      if (options?.frameId) {
+        const frame = context.state.frames[options.frameId];
+        frame.error = error;
+        const href = frame.href;
         XTestRoot.log(context, XTestTap.bailOut(href));
       } else {
         XTestRoot.log(context, XTestTap.bailOut());
@@ -736,12 +736,12 @@ export class XTestRoot {
 
     switch (step.type) {
       case 'describe-start':
-      case 'test-start':
+      case 'frame-start':
         context.state.queueing = true;
         XTestRoot.queueOrOutput(context, tap, step.type);
         break;
       case 'describe-plan':
-      case 'test-plan':
+      case 'frame-plan':
         if (XTestRoot.count(context, stepId) === 0) {
           XTestRoot.handleEmptyPlan(context);
         } else {
@@ -753,8 +753,8 @@ export class XTestRoot {
           XTestRoot.queueOrOutput(context, tap, step.type);
         }
         break;
-      case 'test-end':
-        if (!XTestRoot.handleEmptyTest(context, step)) {
+      case 'frame-end':
+        if (!XTestRoot.handleEmptyFrame(context, step)) {
           XTestRoot.queueOrOutput(context, tap, step.type);
         }
         break;
@@ -806,11 +806,11 @@ export class XTestRoot {
    * @param {any} step
    * @returns {boolean}
    */
-  static handleEmptyTest(context, step) {
-    const test = context.state.tests[step.testId];
-    if (test.children.length === 0) {
+  static handleEmptyFrame(context, step) {
+    const frame = context.state.frames[step.frameId];
+    if (frame.children.length === 0) {
       const childIndex = context.state.children.findIndex((/** @type {any} */ child) =>
-        child.type === 'test' && child.testId === test.testId
+        child.type === 'frame' && child.frameId === frame.frameId
       );
       if (childIndex !== -1) {
         context.state.children.splice(childIndex, 1);
@@ -851,13 +851,13 @@ export class XTestRoot {
       if (childIndex !== -1) {
         parentDescribe.children.splice(childIndex, 1);
       }
-    } else if (parentType === 'test') {
-      const parentTest = context.state.tests[parents.at(-1).testId];
-      const childIndex = parentTest.children.findIndex((/** @type {any} */ child) =>
+    } else if (parentType === 'frame') {
+      const parentFrame = context.state.frames[parents.at(-1).frameId];
+      const childIndex = parentFrame.children.findIndex((/** @type {any} */ child) =>
         child.type === childType && child[`${childType}Id`] === childId
       );
       if (childIndex !== -1) {
-        parentTest.children.splice(childIndex, 1);
+        parentFrame.children.splice(childIndex, 1);
       }
     }
   }
@@ -873,7 +873,7 @@ export class XTestRoot {
       context.state.queue.push(...tap);
 
       // Flush queue and stop queueing for end steps
-      if (stepType === 'it' || stepType === 'describe-end' || stepType === 'test-end') {
+      if (stepType === 'it' || stepType === 'describe-end' || stepType === 'frame-end') {
         context.state.queueing = false;
         XTestRoot.log(context, ...context.state.queue);
         context.state.queue.length = 0;
@@ -891,8 +891,8 @@ export class XTestRoot {
    */
   static childOk(context, child, options) {
     switch (child.type) {
-      case 'test':
-        return context.state.tests[child.testId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
+      case 'frame':
+        return context.state.frames[child.frameId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
       case 'describe':
         return context.state.describes[child.describeId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
       case 'it':
@@ -910,8 +910,8 @@ export class XTestRoot {
   static ok(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'test-end':
-        return XTestRoot.childOk(context, { type: 'test', testId: step.testId }, { todoOk: true });
+      case 'frame-end':
+        return XTestRoot.childOk(context, { type: 'frame', frameId: step.frameId }, { todoOk: true });
       case 'describe-end':
         return XTestRoot.childOk(context, { type: 'describe', describeId: step.describeId }, { todoOk: true });
       case 'it':
@@ -933,7 +933,7 @@ export class XTestRoot {
         const it = context.state.its[step.itId];
         const parentChildren = it.parents.at(-1)?.type === 'describe'
           ? context.state.describes[it.parents.at(-1).describeId].children
-          : context.state.tests[it.parents.at(-1).testId].children;
+          : context.state.frames[it.parents.at(-1).frameId].children;
         const index = parentChildren.findIndex((/** @type {any} */ candidate) => candidate.itId === it.itId);
         return index + 1;
       }
@@ -941,13 +941,13 @@ export class XTestRoot {
         const describe = context.state.describes[step.describeId];
         const parentChildren = describe.parents.at(-1)?.type === 'describe'
           ? context.state.describes[describe.parents.at(-1).describeId].children
-          : context.state.tests[describe.parents.at(-1).testId].children;
+          : context.state.frames[describe.parents.at(-1).frameId].children;
         const index = parentChildren.findIndex((/** @type {any} */ candidate) => candidate.describeId === describe.describeId);
         return index + 1;
       }
-      case 'test-end': {
-        const test = context.state.tests[step.testId];
-        const index = context.state.children.findIndex((/** @type {any} */ candidate) => candidate.testId === test.testId);
+      case 'frame-end': {
+        const frame = context.state.frames[step.frameId];
+        const index = context.state.children.findIndex((/** @type {any} */ candidate) => candidate.frameId === frame.frameId);
         return index + 1;
       }
       default:
@@ -966,8 +966,8 @@ export class XTestRoot {
     //  restrictive in the future.
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'test-end':
-        return context.state.tests[step.testId].href;
+      case 'frame-end':
+        return context.state.frames[step.frameId].href;
       case 'describe-start':
       case 'describe-end':
         return context.state.describes[step.describeId].text.replace(/#/g, '*');
@@ -986,9 +986,9 @@ export class XTestRoot {
   static href(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'test-start':
-      case 'test-end':
-        return context.state.tests[step.testId].href;
+      case 'frame-start':
+      case 'frame-end':
+        return context.state.frames[step.frameId].href;
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1003,7 +1003,7 @@ export class XTestRoot {
     const step = context.state.steps[stepId];
     switch (step.type) {
       case 'describe-end':
-      case 'test-end':
+      case 'frame-end':
         return null;
       case 'it':
         return context.state.its[step.itId].directive;
@@ -1020,10 +1020,10 @@ export class XTestRoot {
   static level(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'test-plan':
+      case 'frame-plan':
         return 1;
-      case 'test-start':
-      case 'test-end':
+      case 'frame-start':
+      case 'frame-end':
         return 0;
       case 'describe-plan':
         return context.state.describes[step.describeId].parents.length + 1;
@@ -1045,8 +1045,8 @@ export class XTestRoot {
   static count(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'test-plan':
-        return context.state.tests[step.testId].children.length;
+      case 'frame-plan':
+        return context.state.frames[step.frameId].children.length;
       case 'describe-plan':
         return context.state.describes[step.describeId].children.length;
       case 'exit':

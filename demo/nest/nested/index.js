@@ -1,3 +1,3 @@
-import { test } from '../../../x-test.js';
+import { load } from '../../../x-test.js';
 
-test('./nested/index.html');
+load('./nested/index.html');
