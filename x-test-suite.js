@@ -117,22 +117,6 @@ export class XTestSuite {
   /**
    * @param {any} context
    * @param {any} href
-   * @param {any} goal
-   */
-  static coverage(context, href, goal) {
-    if (context && !context.state.bailed) {
-      if (!(goal >= 0 && goal <= 100)) {
-        throw new Error(`Unexpected goal percentage "${goal}".`);
-      }
-      const coverageId = context.uuid();
-      const url = new URL(href, context.state.href);
-      context.publish('x-test-suite-register', { type: 'coverage', coverageId, href: url.href, goal });
-    }
-  }
-
-  /**
-   * @param {any} context
-   * @param {any} href
    */
   static test(context, href) {
     if (context && !context.state.bailed && !context.state.ready) {

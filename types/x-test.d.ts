@@ -1,5 +1,4 @@
 export function assert(ok: unknown, text?: string): asserts ok;
-export function coverage(href: string, goal: number): void;
 export function waitFor(promise: Promise<unknown>): Promise<void>;
 export function test(href: string): void;
 export function describe(text: string, callback: () => void): void;

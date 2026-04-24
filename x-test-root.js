@@ -9,20 +9,11 @@ export class XTestRoot {
    */
   static initialize(context, href) {
     const url = new URL(href);
-    if (!url.searchParams.get('x-test-no-reporter')) {
-      context.state.reporter = new XTestReporter();
-      document.body.append(context.state.reporter);
-    }
-    context.state.coverage = url.searchParams.get('x-test-run-coverage') === '';
-    const nameParam = url.searchParams.get('x-test-name');
+    context.state.reporter = new XTestReporter();
+    document.body.append(context.state.reporter);
+    const nameParam = url.searchParams.get('x-test-name-pattern');
     context.state.filtering = !!nameParam;
     context.state.namePattern = nameParam ? new RegExp(nameParam) : null;
-    context.state.coverageValuePromise = new Promise(resolve => {
-      context.state.resolveCoverageValuePromise = (/** @type {any} */ value) => {
-        context.state.coverageValue = value;
-        resolve(context.state.coverageValue);
-      };
-    });
     const versionStepId = context.uuid();
     const exitStepId = context.uuid();
     context.state.stepIds.push(versionStepId, exitStepId);
@@ -30,12 +21,6 @@ export class XTestRoot {
     context.state.steps[exitStepId] = { stepId: exitStepId, type: 'exit', status: 'waiting' };
     context.subscribe((/** @type {any} */ event) => {
       switch (event.data.type) {
-        case 'x-test-client-ping':
-          XTestRoot.onPing(context);
-          break;
-        case 'x-test-client-coverage-result':
-          XTestRoot.onCoverageResult(context, event);
-          break;
         case 'x-test-root-defer':
           XTestRoot.onDefer(context, event);
           break;
@@ -59,16 +44,7 @@ export class XTestRoot {
     });
 
     // Run own tests in iframe.
-    url.searchParams.delete('x-test-no-reporter');
-    url.searchParams.delete('x-test-run-coverage');
     context.publish('x-test-suite-register', { type: 'test', testId: context.uuid(), href: url.href });
-  }
-
-  /**
-   * @param {any} context
-   */
-  static onPing(context) {
-    context.publish('x-test-root-pong', { ended: context.state.ended, waiting: context.state.waiting });
   }
 
   /**
@@ -146,13 +122,6 @@ export class XTestRoot {
         }
         return false;
       });
-      const coverageIndex = context.state.stepIds.findIndex((/** @type {any} */ candidateId) => {
-        const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'coverage') {
-          return true;
-        }
-        return false;
-      });
       const exitIndex = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
         if (candidate.type === 'exit') {
@@ -162,9 +131,7 @@ export class XTestRoot {
       });
       const index = siblingTestEndIndex === -1
         ? parentTestEndIndex === -1
-          ? coverageIndex === -1
-            ? exitIndex
-            : coverageIndex
+          ? exitIndex
           : parentTestEndIndex + 1
         : siblingTestEndIndex + 1;
       const lastSiblingChildrenIndex = context.state.children.findLastIndex((/** @type {any} */ candidate) => {
@@ -173,14 +140,9 @@ export class XTestRoot {
       const parentTestChildrenIndex = context.state.children.findLastIndex((/** @type {any} */ candidate) => {
         return candidate.type === 'test' && context.state.tests[candidate.testId].testId === initiatorTestId;
       });
-      const firstCoverageChildrenIndex = context.state.children.findIndex((/** @type {any} */ candidate) => {
-        return candidate.type === 'coverage';
-      });
       const childrenIndex = lastSiblingChildrenIndex === -1
         ? parentTestChildrenIndex === -1
-          ? firstCoverageChildrenIndex === -1
-            ? context.state.children.length
-            : firstCoverageChildrenIndex
+          ? context.state.children.length
           : parentTestChildrenIndex + 1
         : lastSiblingChildrenIndex + 1;
       const testStartStepId = context.uuid();
@@ -303,30 +265,6 @@ export class XTestRoot {
 
   /**
    * @param {any} context
-   * @param {any} data
-   */
-  static registerCoverage(context, data) {
-    if (!context.state.ended) {
-      // New "coverage" goal. Queue it up.
-      const stepId = context.uuid();
-      const coverageId = data.coverageId;
-      const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
-        const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'exit') {
-          return true;
-        }
-        return false;
-      });
-      context.state.stepIds.splice(index, 0, stepId);
-      context.state.steps[stepId] = { stepId, type: 'coverage', coverageId: coverageId, status: 'waiting' };
-      context.state.coverages[coverageId] = data;
-      const childrenIndex = context.state.children.length;
-      context.state.children.splice(childrenIndex, 0, { type: 'coverage', coverageId });
-    }
-  }
-
-  /**
-   * @param {any} context
    * @param {any} event
    */
   static onRegister(context, event) {
@@ -344,9 +282,6 @@ export class XTestRoot {
           break;
         case 'it':
           XTestRoot.registerIt(context, data);
-          break;
-        case 'coverage':
-          XTestRoot.registerCoverage(context, data);
           break;
         default:
           throw new Error(`Unexpected registration type "${data.type}".`);
@@ -456,16 +391,6 @@ export class XTestRoot {
          const errorTap = XTestTap.yaml(yaml.message, yaml.severity, yaml.data, level);
          XTestRoot.output(context, stepId, tap, errorTap);
       }
-    }
-  }
-
-  /**
-   * @param {any} context
-   * @param {any} event
-   */
-  static onCoverageResult(context, event) {
-    if (!context.state.ended) {
-      context.state.resolveCoverageValuePromise(event.data.data);
     }
   }
 
@@ -609,39 +534,6 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffCoverage(context, stepId) {
-    const step = context.state.steps[stepId];
-    const coverage = context.state.coverages[step.coverageId];
-    if (context.state.coverageValue) {
-      try {
-        const analysis = XTestRoot.analyzeHrefCoverage(context.state.coverageValue.js, coverage.href, coverage.goal);
-        Object.assign(coverage, { ok: analysis.ok, percent: analysis.percent, output: analysis.output });
-      } catch (error) {
-        Object.assign(coverage, { ok: false, percent: 0, output: '' });
-        XTestRoot.bail(context, error);
-      }
-    } else {
-      Object.assign(coverage, { ok: true, percent: 0, output: '', directive: 'SKIP' });
-    }
-    const ok = XTestRoot.ok(context, stepId);
-    const number = XTestRoot.number(context, stepId);
-    const text = XTestRoot.text(context, stepId);
-    const directive = XTestRoot.directive(context, stepId);
-    const level = XTestRoot.level(context, stepId);
-    const tap = XTestTap.testLine(ok, number, text, directive ?? undefined, level);
-    if (!ok) {
-      const errorTap = XTestTap.diagnostic(coverage.output, level);
-      XTestRoot.output(context, stepId, tap, errorTap);
-    } else {
-      XTestRoot.output(context, stepId, tap);
-    }
-    step.status = 'done';
-  }
-
-  /**
-   * @param {any} context
-   * @param {any} stepId
-   */
   static kickoffExit(context, stepId) {
     const count = XTestRoot.count(context, stepId);
     const planTap = XTestTap.plan(count);
@@ -656,7 +548,7 @@ export class XTestRoot {
         }
       }
     }
-    XTestRoot.output(context, stepId, planTap, ...failureTap);
+    XTestRoot.output(context, stepId, ...failureTap, planTap);
     context.state.steps[stepId].status = 'done';
     XTestRoot.end(context);
   }
@@ -707,17 +599,6 @@ export class XTestRoot {
   /**
    * @param {any} context
    */
-  static requestCoverageValue(context) {
-    context.state.waiting = true;
-    Promise.race([context.state.coverageValuePromise, context.timeout(5000)])
-      .then(() => { XTestRoot.check(context); })
-      .catch((/** @type {any} */ error) => { XTestRoot.bail(context, error); });
-    context.publish('x-test-root-coverage-request');
-  }
-
-  /**
-   * @param {any} context
-   */
   static check(context) {
     if (!context.state.ended) {
       // Look to see if any tests are running.
@@ -763,14 +644,6 @@ export class XTestRoot {
             case 'it':
               XTestRoot.kickoffIt(context, stepId);
               XTestRoot.check(context);
-              break;
-            case 'coverage':
-              if (!context.state.coverage || context.state.coverageValue) {
-                XTestRoot.kickoffCoverage(context, stepId);
-                XTestRoot.check(context);
-              } else if (!context.state.waiting) {
-                XTestRoot.requestCoverageValue(context);
-              }
               break;
             case 'exit':
               XTestRoot.kickoffExit(context, stepId);
@@ -885,9 +758,6 @@ export class XTestRoot {
           XTestRoot.queueOrOutput(context, tap, step.type);
         }
         break;
-      case 'coverage':
-        XTestRoot.handleCoverage(context, step);
-        break;
       case 'version':
         XTestRoot.log(context, ...tap);
         break;
@@ -948,20 +818,6 @@ export class XTestRoot {
       return true;
     }
     return false;
-  }
-
-  /**
-   * @param {any} context
-   * @param {any} step
-   * @returns {void}
-   */
-  static handleCoverage(context, step) {
-    const childIndex = context.state.children.findIndex((/** @type {any} */ child) =>
-      child.type === 'coverage' && child.coverageId === step.coverageId
-    );
-    if (childIndex !== -1) {
-      context.state.children.splice(childIndex, 1);
-    }
   }
 
   /**
@@ -1041,8 +897,6 @@ export class XTestRoot {
         return context.state.describes[child.describeId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
       case 'it':
         return context.state.its[child.itId].ok || options?.todoOk && context.state.its[child.itId].directive === 'TODO';
-      case 'coverage':
-        return context.state.coverages[child.coverageId].ok;
       default:
         throw new Error(`Unexpected type "${child.type}".`);
     }
@@ -1062,8 +916,6 @@ export class XTestRoot {
         return XTestRoot.childOk(context, { type: 'describe', describeId: step.describeId }, { todoOk: true });
       case 'it':
         return XTestRoot.childOk(context, { type: 'it', itId: step.itId });
-      case 'coverage':
-        return XTestRoot.childOk(context, { type: 'coverage', coverageId: step.coverageId });
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1098,11 +950,6 @@ export class XTestRoot {
         const index = context.state.children.findIndex((/** @type {any} */ candidate) => candidate.testId === test.testId);
         return index + 1;
       }
-      case 'coverage': {
-        const coverage = context.state.coverages[step.coverageId];
-        const index = context.state.children.findIndex((/** @type {any} */ candidate) => candidate.coverageId === coverage.coverageId);
-        return index + 1;
-      }
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1126,10 +973,6 @@ export class XTestRoot {
         return context.state.describes[step.describeId].text.replace(/#/g, '*');
       case 'it':
         return context.state.its[step.itId].text.replace(/#/g, '*');
-      case 'coverage': {
-        const coverage = context.state.coverages[step.coverageId];
-        return `${coverage.goal}% coverage goal for ${coverage.href} (got ${coverage.percent.toFixed(2)}%)`;
-      }
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1164,8 +1007,6 @@ export class XTestRoot {
         return null;
       case 'it':
         return context.state.its[step.itId].directive;
-      case 'coverage':
-        return context.state.coverages[step.coverageId].directive;
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1183,7 +1024,6 @@ export class XTestRoot {
         return 1;
       case 'test-start':
       case 'test-end':
-      case 'coverage':
         return 0;
       case 'describe-plan':
         return context.state.describes[step.describeId].parents.length + 1;
@@ -1258,66 +1098,5 @@ export class XTestRoot {
    */
   static end(context) {
     context.state.ended = true;
-    context.state.waiting = false;
-    context.publish('x-test-root-end');
-  }
-
-  /**
-   * @param {any} coverageValue
-   * @param {any} href
-   * @param {any} goal
-   * @returns {{ok: boolean, percent: number, output: string}}
-   */
-  static analyzeHrefCoverage(coverageValue, href, goal) {
-    const set = new Set();
-    let text = '';
-    for (const item of (coverageValue ?? [])) {
-      if (item.url === href) {
-        text = item.text;
-        for (const range of item.ranges) {
-          for (let i = range.start; i < range.end; i++) {
-            set.add(i);
-          }
-        }
-      }
-    }
-    const ranges = [];
-    const state = { used: set.has(0), start: 0 };
-    for (let index = 0; index < text.length; index++) {
-      const used = set.has(index);
-      if (used !== state.used) {
-        ranges.push({ used: state.used, start: state.start, end: index });
-        Object.assign(state, { used, start: index });
-      }
-    }
-    ranges.push({ used: state.used, start: state.start, end: text.length });
-    let output = '';
-    let lineNumber = 1;
-    for (const range of ranges) {
-      const splitLines = text.slice(range.start, range.end).split('\n');
-      const lines = [];
-      for (let iii = 0; iii < splitLines.length; iii++) {
-        const line = splitLines[iii];
-        if (lineNumber === 1 || iii > 0) {
-          lines.push(`${String(lineNumber++ + (range.used ? '' : ' !')).padEnd(8, ' ')}|  ${line}`);
-        } else {
-          lines.push(line);
-        }
-      }
-      let formattedLines = lines;
-      if (range.used) {
-        if (formattedLines.length > 3) {
-          formattedLines = [...formattedLines.slice(0, 1), '\u2026', ...formattedLines.slice(-1)];
-        }
-      } else {
-        if (formattedLines.length > 5) {
-          formattedLines = [...formattedLines.slice(0, 2), '\u2026', ...formattedLines.slice(-2)];
-        }
-      }
-      output += range.used ? `${formattedLines.join('\n')}` : `${formattedLines.join('\n')}`;
-    }
-    const percent = set.size / text.length * 100;
-    const ok = percent >= goal;
-    return { ok, percent, output };
   }
 }

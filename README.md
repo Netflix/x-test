@@ -9,7 +9,6 @@ a simple, tap-compliant test runner for the browser
 - nested sub-tests run in an iframe
 - has a recognizable testing interface (`it`, `describe`, `assert`)
 - can be used for automated testing
-- can be used to assert coverage goals
 
 ## Interface
 
@@ -22,41 +21,18 @@ The following are exposed in the testing interface:
 - `it.skip`: An `it` whose callback is not run and which will pass.
 - `it.only`: Skip all other `it` tests.
 - `it.todo`: An `it` whose callback _is_ run and is expected to fail.
-- `describe`: Simple grouping functionality.
+- `describe`: Simple synchronous grouping functionality.
 - `describe.skip`: Skip all `it` tests in this group.
 - `describe.only`: Skip all other `describe` groups and `it` tests.
 - `describe.todo`: Mark all `it` tests within this group as _todo_.
 - `waitFor`: Ensures test registration remains open until given promise settles.
 - `assert`: Simple assertion call that throws if the boolean input is false-y.
-- `coverage`: Sets a coverage goal for the given href.
-
-### Events
-
-Messages are posted to a `BroadcastChannel` channel with the name `x-test`.
-
-- `x-test-client-ping`: root responds (`x-test-root-pong`, { status: 'started'|'ended' waiting: true|false })
-- `x-test-root-pong`: response to `x-test-client-ping`
-- `x-test-root-coverage-request`: client should respond (`x-test-coverage-result`)
-- `x-test-client-coverage-result`: response to `x-test-root-coverage-request`
-- `x-test-root-end`: all tests have completed or we bailed out
-- (internal) `x-test-root-run`: all tests have completed or we bailed out
-- (internal) `x-test-root-defer`: defer work until round-trip through BroadcastChannel queue
-- (internal) `x-test-suite-initialize`: published the moment suite it boots for tracking load success
-- (internal) `x-test-suite-coverage`: signal to test for coverage on a particular file
-- (internal) `x-test-suite-register`: registers a new test / describe / it
-- (internal) `x-test-suite-ready`: signal that test suite is done with registration
-- (internal) `x-test-suite-result`: marks end of "it" test
-- (internal) `x-test-suite-bail`: signal to quit test early
 
 ### Parameters
 
 The following parameters can be passed in via query params on the url:
 
-- `x-test-no-reporter`: turns off custom reporting tool ui
-- `x-test-run-coverage`: turns on coverage reporting**
-- `x-test-name`: filters tests by name using regex pattern matching
-
-**See [Command Line Usage](#command-line-usage).
+- `x-test-name-pattern`: filters tests by name using regex pattern matching
 
 ## Execution
 
@@ -68,11 +44,11 @@ given html page in an iframe. Such iframes are run one-at-a-time. All invoked
 
 ## Test Filtering
 
-You can filter tests by name using the `x-test-name` query parameter, which accepts a regex pattern. This allows you to run only specific tests that match the pattern.
+You can filter tests by name using the `x-test-name-pattern` query parameter, which accepts a regex pattern. This allows you to run only specific tests that match the pattern.
 
 ### Browser Usage
 ```
-http://localhost:8080/test/?x-test-name=should%20validate
+http://localhost:8080/test/?x-test-name-pattern=should%20validate
 ```
 
 ### Command Line Usage

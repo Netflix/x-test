@@ -5,18 +5,12 @@ import { XTestRoot } from '../x-test-root.js';
 const getContext = () => {
   const state = {
     ended: false,
-    waiting: false,
     children: [],
     stepIds: [],
     steps: {},
     tests: {},
     describes: {},
     its: {},
-    coverage: false,
-    coverages: {},
-    resolveCoverageValuePromise: null,
-    coverageValuePromise: null,
-    coverageValue: null,
     reporter: null,
   };
   function publish(type, data) {
@@ -68,14 +62,6 @@ describe('level', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'test-end', testId: 'testTestId' };
-    const level = XTestRoot.level(context, 'testStepId');
-    assert(level === 0);
-  });
-
-  it('returns level = 0 for "coverage"', () => {
-    const { context } = getContext();
-    context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'coverage', coverageId: 'testCoverageId' };
     const level = XTestRoot.level(context, 'testStepId');
     assert(level === 0);
   });
@@ -138,72 +124,6 @@ describe('end', () => {
     XTestRoot.end(context);
     assert(context.state.ended === true);
   });
-
-  it('marks waiting as false', () => {
-    const { context } = getContext();
-    context.state.waiting = true;
-    assert(context.state.waiting === true);
-    XTestRoot.end(context);
-    assert(context.state.waiting === false);
-  });
-
-  it('publishes that the test has ended', () => {
-    const { context } = getContext();
-    XTestRoot.end(context);
-    assert(context.publish.calls.length === 1);
-    assert(context.publish.calls[0][0] === 'x-test-root-end');
-  });
-});
-
-describe('analyzeHrefCoverage', () => {
-  it('test coverage', () => {
-    const url = new URL('/fake.js', import.meta.url).href;
-    const text = `\
-// Fake file to test coverage on.
-class MyFakeClass {
-  fakeFunction(fake) {
-    if (fake) {
-      /*
-       *
-       *
-       *
-       *
-       *
-       */
-    } else {
-      /*
-       *
-       *
-       *
-       *
-       *
-       */
-    }
-  }
-}
-
-export default MyFakeClass;
-`;
-const expectedOutput = `\
-1       |  // Fake file to test coverage on.
-…
-12      |      } else {
-13 !    |        /*
-…
-19 !    |         */
-20 !    |      }
-…
-25      |  `;
-    const js = [{
-      url,
-      text,
-      ranges: [{ start: 0, end: 162 }, { start: 239, end: 275 }],
-    }];
-    const analysis = XTestRoot.analyzeHrefCoverage(js, url, 95);
-    assert(analysis.ok === false);
-    assert(analysis.output === expectedOutput);
-    assert(analysis.percent === 72);
-  });
 });
 
 describe('collectFailureStepIds', () => {
@@ -226,14 +146,6 @@ describe('collectFailureStepIds', () => {
     assert(ids[0] === 's2');
   });
 
-  it('does not include failing coverage steps', () => {
-    const { context } = getContext();
-    context.state.stepIds.push('s1');
-    context.state.steps = { s1: { type: 'coverage', coverageId: 'c1' } };
-    context.state.coverages = { c1: { ok: false } };
-    const ids = XTestRoot.collectFailureStepIds(context);
-    assert(ids.length === 0);
-  });
 });
 
 describe('formatFailure', () => {

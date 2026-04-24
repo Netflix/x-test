@@ -482,37 +482,6 @@ describe('itOnly', () => {
   });
 });
 
-describe('register', () => {
-  describe('coverage', () => {
-    it('publishes new coverage', () => {
-      const { context } = getContext();
-      context.state.testId = '123';
-      context.state.href = 'http://localhost:8080';
-      XTestSuite.coverage(context, './test.js', 99);
-      assert(context.publish.calls.length === 1);
-      assert(context.publish.calls[0][0] === 'x-test-suite-register');
-      assert(context.publish.calls[0][1].type === 'coverage');
-      assert(context.publish.calls[0][1].coverageId === '0');
-      assert(context.publish.calls[0][1].href === 'http://localhost:8080/test.js');
-      assert(context.publish.calls[0][1].goal === 99);
-    });
-
-    it('throws for bad goal value', () => {
-      const { context } = getContext();
-      context.state.href = 'http://localhost:8080';
-      const expected = `Unexpected goal percentage "101".`;
-      let actual;
-      try {
-        XTestSuite.coverage(context, './test.js', 101);
-      } catch (error) {
-        actual = error.message;
-      }
-      assert(context.publish.calls.length === 0);
-      assert(actual === expected, actual);
-    });
-  });
-});
-
 describe('waitFor', () => {
   it('adds a promise when called', () => {
     const { context } = getContext();
