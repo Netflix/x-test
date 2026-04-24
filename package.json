@@ -32,7 +32,7 @@
     "/x-test-reporter.css.js",
     "/x-test-reporter.js",
     "/x-test-root.js",
-    "/x-test-suite.js",
+    "/x-test-frame.js",
     "/x-test-tap.js",
     "/x-test.js",
     "/demo",
