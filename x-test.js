@@ -14,16 +14,6 @@ import { XTestSuite } from './x-test-suite.js';
 export const assert = (ok, text) => XTestSuite.assert(suiteContext, ok, text);
 
 /**
- * Register coverage percentage goal for a given file.
- * @example
- *   coverage('../foo.js', 87);
- * @param {string} href - The URL/path to the file to check coverage for
- * @param {number} goal - The coverage percentage goal (0-100)
- * @returns {void}
- */
-export const coverage = (href, goal) => XTestSuite.coverage(suiteContext, href, goal);
-
-/**
  * Force test suite registration to remain open until promise resolves.
  * @example
  *   const barsPromise = fetch('https://foo/api/v2/bars').then(response => response.json());
@@ -165,11 +155,9 @@ function addUnhandledrejectionListener(callback) {
 let suiteContext = null;
 if (!frameElement?.getAttribute('data-x-test-test-id')) {
   const state = {
-    ended: false, waiting: false, children: [], stepIds: [], steps: {},
-    tests: {}, describes: {}, its: {}, coverage: false, coverages: {},
-    resolveCoverageValuePromise: null, coverageValuePromise: null,
-    coverageValue: null, reporter: null, filtering: false, queue: [],
-    queueing: false,
+    ended: false, children: [], stepIds: [], steps: {},
+    tests: {}, describes: {}, its: {}, reporter: null,
+    filtering: false, queue: [], queueing: false,
   };
   const rootContext = {
     state, uuid, publish, subscribe, timeout: XTestCommon.timeout,

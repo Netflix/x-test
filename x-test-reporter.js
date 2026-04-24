@@ -22,8 +22,6 @@ export class XTestReporter extends HTMLElement {
   /** @type {References} */
   #references;
   /** @type {boolean} */
-  #postRun = false;
-  /** @type {boolean} */
   #inFailures = false;
 
   /**
@@ -68,7 +66,7 @@ export class XTestReporter extends HTMLElement {
     if (localStorage.getItem('x-test-reporter-closed') !== 'true') {
       this.setAttribute('open', '');
     }
-    this.#references.testName.value = new URL(location.href).searchParams.get('x-test-name') ?? '';
+    this.#references.testName.value = new URL(location.href).searchParams.get('x-test-name-pattern') ?? '';
     this.#references.toggle.addEventListener('click', () => {
       this.hasAttribute('open') ? this.removeAttribute('open') : this.setAttribute('open', '');
       localStorage.setItem('x-test-reporter-closed', String(!this.hasAttribute('open')));
@@ -85,7 +83,7 @@ export class XTestReporter extends HTMLElement {
     };
     this.#references.form.addEventListener('reset', () => {
       const url = new URL(location.href);
-      url.searchParams.delete('x-test-name');
+      url.searchParams.delete('x-test-name-pattern');
       location.href = url.href;
     });
     /**
@@ -97,9 +95,9 @@ export class XTestReporter extends HTMLElement {
       const testName = formData.get('testName');
       const url = new URL(location.href);
       if (testName && typeof testName === 'string') {
-        url.searchParams.set('x-test-name', testName);
+        url.searchParams.set('x-test-name-pattern', testName);
       } else {
-        url.searchParams.delete('x-test-name');
+        url.searchParams.delete('x-test-name-pattern');
       }
       location.href = url.href;
     };
@@ -134,7 +132,7 @@ export class XTestReporter extends HTMLElement {
   tap(...tap) {
     const items = [];
     for (const text of tap) {
-      if (this.#postRun && text === '# Failures:') {
+      if (text === '# Failures:') {
         this.#inFailures = true;
       }
       const { tag, properties, attributes, failed, done } = XTestReporter.parse(text, this.#inFailures);
@@ -145,7 +143,6 @@ export class XTestReporter extends HTMLElement {
       }
       if (done) {
         this.removeAttribute('testing');
-        this.#postRun = true;
       }
       if (failed) {
         this.removeAttribute('ok');

@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `x-test-name` URL parameter has been renamed to `x-test-name-pattern`
+  to more clearly signal that it accepts a regex pattern rather than a
+  literal name and matches Node’s test CLI argument naming (#99).
+
+### Removed
+
+- The `coverage()` API, the `x-test-run-coverage` URL
+  parameter, and all associated TAP output have been removed. Coverage
+  analysis is now the exclusive responsibility of `@netflix/x-test-cli` (#99).
+- The `x-test-no-reporter` URL parameter has been removed.
+  The reporter UI is now always rendered (#99).
+- The public `BroadcastChannel` events `x-test-client-ping`,
+  `x-test-root-pong`, `x-test-root-coverage-request`,
+  `x-test-client-coverage-result`, and `x-test-root-end` have been removed.
+  The CLI now observes a run solely by consuming TAP output from the
+  console (#99).
+
 ## [2.0.0-rc.7] - 2026-04-22
 
 ### Added
