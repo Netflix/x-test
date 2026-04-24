@@ -6,8 +6,8 @@ export default {
   coverageTargets: {
     './x-test.js':          { lines: 100 },
     './x-test-tap.js':      { lines: 100 },
-    './x-test-suite.js':    { lines: 96 },
-    './x-test-root.js':     { lines: 78 },
-    './x-test-reporter.js': { lines: 70 },
+    './x-test-suite.js':    { lines: 97 },
+    './x-test-root.js':     { lines: 77 },
+    './x-test-reporter.js': { lines: 71 },
   },
 };

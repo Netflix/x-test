@@ -6,7 +6,7 @@ export class XTestSuite {
    * @param {any} testId
    * @param {any} href
    */
-  static initialize(context, testId, href) {
+  static async initialize(context, testId, href) {
     Object.assign(context.state, { testId, href });
     context.publish('x-test-suite-initialize', { testId });
     context.state.parents.push({ type: 'test', testId });
@@ -33,8 +33,14 @@ export class XTestSuite {
       XTestSuite.bail(context, event.reason);
     });
 
-    // Keep registration open until _at least_ DOMContentLoaded.
-    XTestSuite.waitFor(context, context.domContentLoadedPromise);
+    // The registration window stays open until “DOMContentLoaded”, which allows
+    //  folks to import fixtures via JSON Modules and register tests before
+    //  registration ends. Note that this does _NOT_ support top-level awaits.
+    await context.domContentLoadedPromise;
+    if (!context.state.bailed) {
+      context.state.ready = true;
+      context.publish('x-test-suite-ready', { testId: context.state.testId });
+    }
   }
 
   /**
@@ -329,28 +335,5 @@ export class XTestSuite {
    */
   static itTodo(context, text, callback, interval) {
     XTestSuite.#itInner(context, text, callback, interval, 'TODO', null);
-  }
-
-  /**
-   * @param {any} context
-   * @param {any} promise
-   */
-  static async waitFor(context, promise) {
-    if (context && !context.state.bailed) {
-      if (!context.state.bailed) {
-        const waitForId = context.uuid();
-        context.state.waitForId = waitForId;
-        context.state.promises.push(promise);
-        try {
-          await Promise.all(context.state.promises);
-          if (context.state.waitForId === waitForId) {
-            context.state.ready = true;
-            context.publish('x-test-suite-ready', { testId: context.state.testId });
-          }
-        } catch (error) {
-          XTestSuite.bail(context, error);
-        }
-      }
-    }
   }
 }

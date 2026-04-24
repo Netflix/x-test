@@ -35,7 +35,7 @@ the separate `@netflix/x-test-cli` package.
 
 #### Browser Components
 1. **x-test.js** - Main library entry point containing:
-   - Public API exports (`it`, `describe`, `assert`, `test`, `coverage`, `waitFor`)
+   - Public API exports (`it`, `describe`, `assert`, `test`)
    - BroadcastChannel-based communication setup
    - Root/suite context initialization logic
    - UUID generation and utility functions
@@ -104,8 +104,7 @@ When writing tests:
 - Use `it(description, callback, timeout)` for individual test cases
 - Use `describe(description, callback)` for logical grouping
 - Use `assert(condition, message)` for assertions
-- Use `coverage(href, percentage)` to set coverage goals
-- Use `waitFor(promise)` to delay test completion until promise resolves
+- `it` callbacks may be async; `describe` callbacks must be synchronous
 - Use `.skip`, `.only`, `.todo` modifiers as needed on both `describe` and `it`
 
 ## Automation and CI/CD

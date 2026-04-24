@@ -8,9 +8,7 @@ const getContext = () => {
     href: null,
     callbacks: {},
     bailed: false,
-    waitForId: null,
     ready: false,
-    promises: [],
     parents: [],
   };
   function publish(type, data) {
@@ -74,7 +72,7 @@ const getContext = () => {
 describe('initialize', () => {
   it('sets up default state and publishes when ready', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     assert(context.state.testId === '123');
     assert(context.state.href === 'http://localhost:8080');
     assert(context.state.parents.length === 1);
@@ -82,31 +80,24 @@ describe('initialize', () => {
     assert(context.state.parents[0].testId === '123');
     assert(context.addErrorListener.calls.length === 1);
     assert(context.addUnhandledrejectionListener.calls.length === 1);
-    assert(context.publish.calls.length === 1);
-    assert(context.publish.calls[0][0] === 'x-test-suite-initialize');
-    assert(context.publish.calls[0][1].testId === '123');
-    assert(context.state.waitForId === '0');
-    assert(context.state.promises.length === 1);
-    assert(context.state.ready === false);
-    await Promise.all(context.state.promises);
     assert(context.state.ready === true);
     assert(context.publish.calls.length === 2);
+    assert(context.publish.calls[0][0] === 'x-test-suite-initialize');
+    assert(context.publish.calls[0][1].testId === '123');
     assert(context.publish.calls[1][0] === 'x-test-suite-ready');
     assert(context.publish.calls[1][1].testId === '123');
   });
 
   it('marks state as bailed when any test bails', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     context.publish('x-test-suite-bail');
     assert(context.state.bailed === true);
   });
 
   it('runs a test when told, ok', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     let called = false;
     context.state.callbacks['testItId'] = () => { called = true; };
     assert(called === false);
@@ -125,8 +116,7 @@ describe('initialize', () => {
 
   it('runs a test when told, skip', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     let called = false;
     context.state.callbacks['testItId'] = () => { called = true; };
     assert(called === false);
@@ -145,8 +135,7 @@ describe('initialize', () => {
 
   it('runs a test when told, not ok', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     let called = false;
     context.state.callbacks['testItId'] = () => {
       called = true;
@@ -168,8 +157,7 @@ describe('initialize', () => {
 
   it('runs a test when told, todo, ok', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     let called = false;
     context.state.callbacks['testItId'] = () => { called = true; };
     assert(called === false);
@@ -188,8 +176,7 @@ describe('initialize', () => {
 
   it('runs a test when told, todo, not ok', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     let called = false;
     context.state.callbacks['testItId'] = () => {
       called = true;
@@ -211,8 +198,7 @@ describe('initialize', () => {
 
   it('closes registration after it is ready', async () => {
     const { context } = getContext();
-    XTestSuite.initialize(context, '123', 'http://localhost:8080');
-    await Promise.all(context.state.promises);
+    await XTestSuite.initialize(context, '123', 'http://localhost:8080');
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-suite-initialize');
     assert(context.publish.calls[1][0] === 'x-test-suite-ready');
@@ -625,46 +611,6 @@ describe('deepEqual', () => {
 
   it('is a no-op when context is bailed', () => {
     XTestSuite.deepEqual({ state: { bailed: true } }, 1, 2, 'should not throw');
-  });
-});
-
-describe('waitFor', () => {
-  it('adds a promise when called', () => {
-    const { context } = getContext();
-    assert(context.state.promises.length === 0);
-    const promise = Promise.resolve();
-    XTestSuite.waitFor(context, promise);
-    assert(context.state.promises.length === 1);
-  });
-
-  it('publishes "x-test-ready" when resolved', async () => {
-    const { context } = getContext();
-    context.state.testId = '123';
-    const promise = Promise.resolve();
-    await XTestSuite.waitFor(context, promise);
-    assert(context.publish.calls.length === 1);
-    assert(context.publish.calls[0][0] === 'x-test-suite-ready');
-    assert(context.publish.calls[0][1].testId === '123');
-  });
-
-  it('awaits resolution of all promises to publish "x-test-ready"', async () => {
-    const { context } = getContext();
-    let resolvePromise1, resolvePromise2, resolvePromise3;
-    const promise1 = new Promise(resolve => { resolvePromise1 = resolve; });
-    const promise2 = new Promise(resolve => { resolvePromise2 = resolve; });
-    const promise3 = new Promise(resolve => { resolvePromise3 = resolve; });
-    XTestSuite.waitFor(context, promise1);
-    XTestSuite.waitFor(context, promise2);
-    XTestSuite.waitFor(context, promise3);
-    resolvePromise1();
-    await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 0);
-    resolvePromise2();
-    await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 0);
-    resolvePromise3();
-    await new Promise(resolve => setTimeout(resolve));
-    assert(context.publish.calls.length === 1);
   });
 });
 
