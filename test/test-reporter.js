@@ -1,8 +1,8 @@
-import { it, describe, assert } from '../x-test.js';
+import { test, suite, assert } from '../x-test.js';
 import { XTestReporter } from '../x-test-reporter.js';
 
-describe('render', () => {
-  it('prints out basic test', () => {
+suite('render', () => {
+  test('prints out basic test', () => {
     const tap = [
       'TAP version 14',
       '# Subtest: http://127.0.0.1:8080/test/',
@@ -35,7 +35,7 @@ describe('render', () => {
     element.remove();
   });
 
-  it('bails', () => {
+  test('bails', () => {
     const tap = [
       'TAP version 14',
       '# Subtest: http://127.0.0.1:8080/test/',
@@ -53,8 +53,8 @@ describe('render', () => {
   });
 });
 
-describe('parse', () => {
-  it('parses test', () => {
+suite('parse', () => {
+  test('parses test', () => {
     const output = '# Subtest: http://example.com/test.html';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'a');
@@ -68,7 +68,7 @@ describe('parse', () => {
     assert(result.failed === false);
   });
 
-  it('parses bail test', () => {
+  test('parses bail test', () => {
     const output = 'Bail out! http://example.com/test.html';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'a');
@@ -83,7 +83,7 @@ describe('parse', () => {
     assert(result.failed === true);
   });
 
-  it('parses diagnostic', () => {
+  test('parses diagnostic', () => {
     const output = '# something, anything';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -96,7 +96,7 @@ describe('parse', () => {
     assert(result.failed === false);
   });
 
-  it('parses test line', () => {
+  test('parses test line', () => {
     const output = 'ok 145 - this cool thing i tested';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -104,13 +104,13 @@ describe('parse', () => {
     assert(result.properties.innerText === output);
     assert(Object.keys(result.attributes).length === 3);
     assert(result.attributes.output === '');
-    assert(result.attributes.it === '');
+    assert(result.attributes.test === '');
     assert(result.attributes.ok === '');
     assert(result.done === false);
     assert(result.failed === false);
   });
 
-  it('parses "SKIP" test line', () => {
+  test('parses "SKIP" test line', () => {
     const output = 'ok 145 - this cool thing i tested # SKIP';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -118,14 +118,14 @@ describe('parse', () => {
     assert(result.properties.innerText === output);
     assert(Object.keys(result.attributes).length === 4);
     assert(result.attributes.output === '');
-    assert(result.attributes.it === '');
+    assert(result.attributes.test === '');
     assert(result.attributes.ok === '');
     assert(result.attributes.directive === 'skip');
     assert(result.done === false);
     assert(result.failed === false);
   });
 
-  it('parses "TODO" test line', () => {
+  test('parses "TODO" test line', () => {
     const output = 'ok 145 - this cool thing i tested # TODO';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -133,14 +133,14 @@ describe('parse', () => {
     assert(result.properties.innerText === output);
     assert(Object.keys(result.attributes).length === 4);
     assert(result.attributes.output === '');
-    assert(result.attributes.it === '');
+    assert(result.attributes.test === '');
     assert(result.attributes.ok === '');
     assert(result.attributes.directive === 'todo');
     assert(result.done === false);
     assert(result.failed === false);
   });
 
-  it('parses "not ok" test line', () => {
+  test('parses "not ok" test line', () => {
     const output = 'not ok 145 - this cool thing i tested';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -148,12 +148,12 @@ describe('parse', () => {
     assert(result.properties.innerText === output);
     assert(Object.keys(result.attributes).length === 2);
     assert(result.attributes.output === '');
-    assert(result.attributes.it === '');
+    assert(result.attributes.test === '');
     assert(result.done === false);
     assert(result.failed === true);
   });
 
-  it('parses "not ok", "TODO" test line', () => {
+  test('parses "not ok", "TODO" test line', () => {
     const output = 'not ok 145 - this cool thing i tested # TODO tbd...';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -161,13 +161,13 @@ describe('parse', () => {
     assert(result.properties.innerText === output);
     assert(Object.keys(result.attributes).length === 3);
     assert(result.attributes.output === '');
-    assert(result.attributes.it === '');
+    assert(result.attributes.test === '');
     assert(result.attributes.directive === 'todo');
     assert(result.done === false);
     assert(result.failed === false);
   });
 
-  it('parses version', () => {
+  test('parses version', () => {
     const output = 'TAP version 14';
     const result = XTestReporter.parse(output, false);
     assert(result.tag === 'div');
@@ -180,7 +180,7 @@ describe('parse', () => {
     assert(result.failed === false);
   });
 
-  it('parses in-failures bare URL as link', () => {
+  test('parses in-failures bare URL as link', () => {
     const output = '# http://example.com/test.html';
     const result = XTestReporter.parse(output, true);
     assert(result.tag === 'a');
@@ -188,26 +188,26 @@ describe('parse', () => {
     assert(result.attributes.failure === '');
   });
 
-  it('parses in-failures breadcrumb segment as failure', () => {
+  test('parses in-failures breadcrumb segment as failure', () => {
     const output = '# > this test failed';
     const result = XTestReporter.parse(output, true);
     assert(result.tag === 'div');
     assert(result.attributes.failure === '');
   });
 
-  it('parses in-failures yaml body as failure', () => {
+  test('parses in-failures yaml body as failure', () => {
     const output = '#     Error: nope';
     const result = XTestReporter.parse(output, true);
     assert(result.attributes.failure === '');
   });
 
-  it('tags in-failures blank separator as failure', () => {
+  test('tags in-failures blank separator as failure', () => {
     const output = '# ';
     const result = XTestReporter.parse(output, true);
     assert(result.attributes.failure === '');
   });
 
-  it('leaves pre-failures diagnostics untouched', () => {
+  test('leaves pre-failures diagnostics untouched', () => {
     const output = '# http://example.com/test.html';
     const result = XTestReporter.parse(output, false);
     assert(result.attributes.failure === undefined);

@@ -1,7 +1,7 @@
-import { it, describe, assert } from '../x-test.js';
+import { test, suite, assert } from '../x-test.js';
 
-describe('first <script type="module"> in <body>', () => {
-  it('registers tests', () => {
+suite('first <script type="module"> in <body>', () => {
+  test('registers tests', () => {
     assert(true);
   });
 });

@@ -14,8 +14,8 @@ export namespace assert {
     function deepEqual<T>(actual: unknown, expected: T, text?: string): asserts actual is T;
 }
 export function load(href: string): void;
-export function describe(text: string, callback: () => void): void;
-export namespace describe {
+export function suite(text: string, callback: () => void): void;
+export namespace suite {
     /**
      * Register a test group that will be skipped during execution.
      * @param {string} text - The description of the test group
@@ -38,8 +38,8 @@ export namespace describe {
      */
     function todo(text: string, callback: () => void): void;
 }
-export function it(text: string, callback: () => void | Promise<void>, interval?: number): void;
-export namespace it {
+export function test(text: string, callback: () => void | Promise<void>, interval?: number): void;
+export namespace test {
     /**
      * Register a test case that will be skipped during execution.
      * @param {string} text - The description of the test case

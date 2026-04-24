@@ -160,29 +160,29 @@ a[output]:any-link {
   cursor: pointer;
 }
 
-[it][ok]:not([directive]) {
+[test][ok]:not([directive]) {
   color: var(--ok);
 }
-[it]:not([ok]):not([directive]),
+[test]:not([ok]):not([directive]),
 [bail] {
   color: var(--not-ok);
 }
-[it][ok][directive="skip"] {
+[test][ok][directive="skip"] {
   color: var(--skip);
 }
-[it]:not([ok])[directive="todo"] {
+[test]:not([ok])[directive="todo"] {
   color: var(--todo);
 }
-[it][ok][directive="todo"] {
+[test][ok][directive="todo"] {
   color: var(--todone);
 }
 
 [plan][indent],
-[plan] + [it][ok]:not([directive]),
-[plan] + [it]:not([ok]):not([directive]),
-[plan] + [it][ok][directive="skip"],
-[plan] + [it]:not([ok])[directive="todo"],
-[plan] + [it][ok][directive="todo"] {
+[plan] + [test][ok]:not([directive]),
+[plan] + [test]:not([ok]):not([directive]),
+[plan] + [test][ok][directive="skip"],
+[plan] + [test]:not([ok])[directive="todo"],
+[plan] + [test][ok][directive="todo"] {
   color: var(--subdued);
 }
 

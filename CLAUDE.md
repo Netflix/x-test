@@ -7,7 +7,7 @@ code in this repository.
 
 The x-test utility is a simple, TAP-compliant test runner for the browser. It
 allows you to run tests directly in the browser using a familiar testing
-interface (`it`, `describe`, `assert`) while producing TAP Version 14 output.
+interface (`test`, `suite`, `assert`) while producing TAP Version 14 output.
 
 This repository contains the `@netflix/x-test` package - the browser-side test
 runner and utilities. For automated test execution and CI/CD integration, see
@@ -35,7 +35,7 @@ the separate `@netflix/x-test-cli` package.
 
 #### Browser Components
 1. **x-test.js** - Main library entry point containing:
-   - Public API exports (`it`, `describe`, `assert`, `load`)
+   - Public API exports (`test`, `suite`, `assert`, `load`)
    - BroadcastChannel-based communication setup
    - Root/suite context initialization logic
    - UUID generation and utility functions
@@ -49,7 +49,7 @@ the separate `@netflix/x-test-cli` package.
 3. **x-test-suite.js** - Individual test suite manager (`XTestSuite`) that:
    - Runs within iframes for isolated test execution
    - Handles test assertions, timeouts, and error catching
-   - Manages describe/it registration and callbacks
+   - Manages suite / test registration and callbacks
    - Communicates results back to root via BroadcastChannel
 
 4. **x-test-reporter.js** - Browser UI component (`XTestReporter`) that:
@@ -72,7 +72,7 @@ the separate `@netflix/x-test-cli` package.
 Each test defines an HTML document which runs in an iframe:
 - Root page coordinates overall test execution via BroadcastChannel
 - Each `load()` call creates a new iframe running that test file
-- Individual `it()` calls within each iframe execute sequentially with optional timeouts
+- Individual `test()` calls within each iframe execute sequentially with optional timeouts
 - Results bubble up through BroadcastChannel communication
 - Output is TAP Version 14 compliant
 
@@ -80,7 +80,7 @@ Each test defines an HTML document which runs in an iframe:
 
 - **Event-driven communication**: Uses BroadcastChannel for cross-context messaging
 - **TAP compliance**: All output follows TAP Version 14 specification
-- **Sequential execution**: Both `load()` and `it()` calls run in declared order
+- **Sequential execution**: Both `load()` and `test()` calls run in declared order
 - **Iframe isolation**: Each test runs in its own isolated iframe context
 - **Error handling**: Global error/rejection handlers with proper TAP bailout
 
@@ -101,11 +101,11 @@ Each test defines an HTML document which runs in an iframe:
 
 When writing tests:
 - Use `load('https://fully-qualified/path.html')` for iframe-based sub-tests
-- Use `it(description, callback, timeout)` for individual test cases
-- Use `describe(description, callback)` for logical grouping
+- Use `test(description, callback, timeout)` for individual test cases
+- Use `suite(description, callback)` for logical grouping
 - Use `assert(condition, message)` for assertions
-- `it` callbacks may be async; `describe` callbacks must be synchronous
-- Use `.skip`, `.only`, `.todo` modifiers as needed on both `describe` and `it`
+- `test` callbacks may be async; `suite` callbacks must be synchronous
+- Use `.skip`, `.only`, `.todo` modifiers as needed on both `suite` and `test`
 
 ## Automation and CI/CD
 

@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renamed `it` to `test` and `describe` to `suite` across the entire public API
+  and all internal concepts. `import { test, suite, assert, load }` is now the
+  canonical import.
 - Renamed `test(href)` load function to `load(href)`. Conceptually, when you
   call this function you “load a new frame with this href” (#99).
 - The `x-test-name` URL parameter has been renamed to `x-test-name-pattern`
@@ -24,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Asynchronous registration via `waitFor` is removed — synchronous imports
-  (including `import ... with { type: 'json' }`) handle fixture data, and `it`
+  (including `import ... with { type: 'json' }`) handle fixture data, and `test`
   callbacks may still be async for per-test work (#80).
 - The `coverage()` API, the `x-test-run-coverage` URL
   parameter, and all associated TAP output have been removed. Coverage

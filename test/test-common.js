@@ -1,4 +1,4 @@
-import { it, describe, assert } from '../x-test.js';
+import { test, suite, assert } from '../x-test.js';
 import { XTestCommon } from '../x-test-common.js';
 
 // A minimal fake target that records handlers so tests can fire events
@@ -13,21 +13,21 @@ const makeFakeTarget = (extra = {}) => {
   };
 };
 
-describe('timeout', () => {
-  it('resolves with XTestCommon.TIMEOUT after the interval', async () => {
+suite('timeout', () => {
+  test('resolves with XTestCommon.TIMEOUT after the interval', async () => {
     const result = await XTestCommon.timeout(1);
     assert(result === XTestCommon.TIMEOUT);
   });
 });
 
-describe('domContentLoadedPromise', () => {
-  it('resolves immediately when readyState is "complete"', async () => {
+suite('domContentLoadedPromise', () => {
+  test('resolves immediately when readyState is "complete"', async () => {
     const fake = makeFakeTarget({ readyState: 'complete' });
     const result = await XTestCommon.domContentLoadedPromise(/** @type {Document} */ (fake));
     assert(result === undefined);
   });
 
-  it('resolves on DOMContentLoaded when readyState is not "complete"', async () => {
+  test('resolves on DOMContentLoaded when readyState is not "complete"', async () => {
     const fake = makeFakeTarget({ readyState: 'loading' });
     const promise = XTestCommon.domContentLoadedPromise(/** @type {Document} */ (fake));
     fake.handlers.DOMContentLoaded();
@@ -36,8 +36,8 @@ describe('domContentLoadedPromise', () => {
   });
 });
 
-describe('iframeError', () => {
-  it('resolves with XTestCommon.IFRAME_ERROR when the error event fires', async () => {
+suite('iframeError', () => {
+  test('resolves with XTestCommon.IFRAME_ERROR when the error event fires', async () => {
     const fake = makeFakeTarget();
     const promise = XTestCommon.iframeError(fake);
     fake.handlers.error();
@@ -46,8 +46,8 @@ describe('iframeError', () => {
   });
 });
 
-describe('iframeLoad', () => {
-  it('resolves with XTestCommon.IFRAME_LOAD when the load event fires', async () => {
+suite('iframeLoad', () => {
+  test('resolves with XTestCommon.IFRAME_LOAD when the load event fires', async () => {
     const fake = makeFakeTarget();
     const promise = XTestCommon.iframeLoad(fake);
     fake.handlers.load();

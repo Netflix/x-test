@@ -185,14 +185,14 @@ export class XTestReporter extends HTMLElement {
       } else if (text.match(/^(?: {4})*# /)) {
         result.attributes.diagnostic = '';
       } else if (text.match(/^(?: {4})*ok /)) {
-        Object.assign(result.attributes, { it: '', ok: '' });
+        Object.assign(result.attributes, { test: '', ok: '' });
         if (text.match(/^(?: {4})*[^ #][^#]* # SKIP/)) {
           result.attributes.directive = 'skip';
         } else if (text.match(/^(?: {4})*[^ #][^#]* # TODO/)) {
           result.attributes.directive = 'todo';
         }
       } else if (text.match(/^(?: {4})*not ok /)) {
-        result.attributes.it = '';
+        result.attributes.test = '';
         if (text.match(/^(?: {4})*[^ #][^#]* # TODO/)) {
           result.attributes.directive = 'todo';
         } else {

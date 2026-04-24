@@ -1,9 +1,9 @@
-import { assert, it } from '../../x-test.js';
+import { assert, test } from '../../x-test.js';
 
-it('bad assertion', () => {
+test('bad assertion', () => {
   assert(true === false); // eslint-disable-line no-constant-binary-expression
 });
 
-it('unexpected error', () => {
+test('unexpected error', () => {
   throw new Error('Oops!');
 });

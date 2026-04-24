@@ -1,6 +1,6 @@
-import { it, assert } from '../../x-test.js';
+import { test, assert } from '../../x-test.js';
 
-it.todo('debuggable', () => {
+test.todo('debuggable', () => {
   const element = document.createElement('div');
   element.textContent = 'this should be green.';
   element.style.color = 'red';
