@@ -115,6 +115,77 @@ export class XTestSuite {
   }
 
   /**
+   * Strict deep-equality check. Only supports primitives, plain objects, and
+   * arrays. Throws a non-assertion error for unsupported types (Map, Set, Date,
+   * class instances, functions, etc.) so the behavior can safely be expanded
+   * later. This is meant to be a _strict_ subset of what is provided by
+   * node:assert/strict#deepEqual (https://nodejs.org/api/assert.html).
+   * @param {any} context
+   * @param {any} actual
+   * @param {any} expected
+   * @param {any} [text]
+   */
+  static deepEqual(context, actual, expected, text) {
+    XTestSuite.assert(context, XTestSuite.#deepEqual(actual, expected), text ?? 'not deep equal');
+  }
+
+  /**
+   * @param {any} a
+   * @param {any} b
+   * @returns {boolean}
+   */
+  static #deepEqual(a, b) {
+    if (Object.is(a, b)) {
+      // If the objects are equal, we exit early.
+      // Note: Object.is(NaN, NaN) === true, Object.is(+0, -0) === false;
+      return true;
+    } else if (
+      (a === null || (typeof a !== 'object' && typeof a !== 'function')) ||
+      (b === null || (typeof b !== 'object' && typeof b !== 'function'))
+    ) {
+      // If not equal, and one is a primitive value, we exit early.
+      return false;
+    }
+
+    // Fail for mixed array/object.
+    if (Array.isArray(a) !== Array.isArray(b)) {
+      return false;
+    }
+
+    // Throw if object is not a plain object or array (Map, Set, Date, RegExp, etc).
+    for (const value of [a, b]) {
+      const prototype = Object.getPrototypeOf(value);
+      if (prototype !== Object.prototype && prototype !== null && prototype !== Array.prototype) {
+        throw new Error(`deepEqual only supports primitives, plain objects, and arrays (got ${value?.constructor?.name})`);
+      }
+    }
+
+    // Fail if prototypes differ (e.g. Object.create(null) vs {}).
+    if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) {
+      return false;
+    }
+
+    // Throw if either object has symbol-keyed properties.
+    if (Object.getOwnPropertySymbols(a).length > 0 || Object.getOwnPropertySymbols(b).length > 0) {
+      throw new Error('deepEqual does not support symbol-keyed properties.');
+    }
+
+    // Exit early if key length doesn’t match.
+    if (Object.keys(a).length !== Object.keys(b).length) {
+      return false;
+    }
+
+    // Compare nested values / recurse.
+    for (const key of Object.keys(a)) {
+      if (!Object.hasOwn(b, key) || !XTestSuite.#deepEqual(a[key], b[key])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * @param {any} context
    * @param {any} href
    */
