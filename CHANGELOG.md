@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `assert.deepEqual(actual, expected, message?)` for strict deep-equality
+  comparison of primitives, plain objects, and arrays. Unsupported types
+  (Map, Set, Date, RegExp, class instances, functions) throw rather than
+  compare, so support can be broadened later without breaking callers (#99).
+
 ### Changed
 
 - The `x-test-name` URL parameter has been renamed to `x-test-name-pattern`

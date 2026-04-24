@@ -482,6 +482,152 @@ describe('itOnly', () => {
   });
 });
 
+describe('assert', () => {
+  const makeContext = () => ({ state: { bailed: false } });
+
+  it('defaults message to "not ok"', () => {
+    let message;
+    try {
+      XTestSuite.assert(makeContext(), false);
+    } catch (error) {
+      message = error.message;
+    }
+    assert(message === 'not ok');
+  });
+});
+
+describe('deepEqual', () => {
+  const makeContext = () => ({ state: { bailed: false } });
+  const expectOk = (actual, expected) => {
+    XTestSuite.deepEqual(makeContext(), actual, expected);
+  };
+  const expectNotEqual = (actual, expected) => {
+    let message;
+    try {
+      XTestSuite.deepEqual(makeContext(), actual, expected, 'boom');
+    } catch (error) {
+      message = error.message;
+    }
+    assert(message === 'boom', `expected "boom", got ${JSON.stringify(message)}`);
+  };
+  const expectThrows = (actual, expected, matcher) => {
+    let message;
+    try {
+      XTestSuite.deepEqual(makeContext(), actual, expected);
+    } catch (error) {
+      message = error.message;
+    }
+    assert(typeof message === 'string' && matcher.test(message), `got ${JSON.stringify(message)}`);
+  };
+
+  it('passes for equal primitives', () => {
+    expectOk(1, 1);
+    expectOk('a', 'a');
+    expectOk(true, true);
+    expectOk(null, null);
+    expectOk(undefined, undefined);
+    expectOk(NaN, NaN); // Object.is treats NaN as equal.
+    expectOk(0n, 0n);
+  });
+
+  it('distinguishes +0 and -0', () => {
+    expectNotEqual(0, -0);
+  });
+
+  it('fails for unequal primitives', () => {
+    expectNotEqual(1, 2);
+    expectNotEqual('a', 'b');
+    expectNotEqual(true, false);
+    expectNotEqual(null, undefined);
+  });
+
+  it('compares plain objects by own keys', () => {
+    expectOk({ a: 1, b: 2 }, { b: 2, a: 1 });
+    expectNotEqual({ a: 1 }, { a: 1, b: 2 });
+    expectNotEqual({ a: 1 }, { a: 2 });
+    expectNotEqual({ a: 1 }, { b: 1 });
+  });
+
+  it('compares arrays strictly by length and index', () => {
+    expectOk([1, 2, 3], [1, 2, 3]);
+    expectNotEqual([1, 2], [1, 2, 3]);
+    expectNotEqual([1, 2, 3], [3, 2, 1]);
+  });
+
+  it('distinguishes sparse arrays from arrays with explicit undefined', () => {
+    // eslint-disable-next-line no-sparse-arrays
+    expectNotEqual([1,,3], [1, undefined, 3]);
+  });
+
+  it('compares named properties on arrays', () => {
+    const a = Object.assign([1, 2], { foo: 'bar' });
+    const b = [1, 2];
+    expectNotEqual(a, b);
+  });
+
+  it('recurses into nested structures', () => {
+    expectOk({ a: [1, { b: 2 }] }, { a: [1, { b: 2 }] });
+    expectNotEqual({ a: [1, { b: 2 }] }, { a: [1, { b: 3 }] });
+  });
+
+  it('supports null-prototype objects', () => {
+    const a = Object.assign(Object.create(null), { x: 1 });
+    const b = Object.assign(Object.create(null), { x: 1 });
+    expectOk(a, b);
+  });
+
+  it('fails for mixed null-prototype vs Object.prototype', () => {
+    expectNotEqual(Object.create(null), {});
+    expectNotEqual({}, Object.create(null));
+  });
+
+  it('throws if either object has symbol-keyed properties', () => {
+    const sym = Symbol('x');
+    expectThrows({ [sym]: 1 }, {}, /deepEqual does not support symbol-keyed properties/);
+    expectThrows({}, { [sym]: 1 }, /deepEqual does not support symbol-keyed properties/);
+    expectThrows({ [sym]: 1 }, { [sym]: 1 }, /deepEqual does not support symbol-keyed properties/);
+  });
+
+  it('rejects mixed object vs array', () => {
+    expectNotEqual({ 0: 'a', length: 1 }, ['a']);
+  });
+
+  it('throws for unsupported class instances', () => {
+    expectThrows(new Map(), new Map(), /deepEqual only supports/);
+    expectThrows(new Set(), new Set(), /deepEqual only supports/);
+    expectThrows(new Date(0), new Date(0), /deepEqual only supports/);
+    expectThrows(/a/, /a/, /deepEqual only supports/);
+  });
+
+  it('throws for functions', () => {
+    expectThrows(() => {}, () => {}, /deepEqual only supports/);
+  });
+
+  it('uses custom message when provided', () => {
+    let message;
+    try {
+      XTestSuite.deepEqual({ state: { bailed: false } }, { a: 1 }, { a: 2 }, 'custom');
+    } catch (error) {
+      message = error.message;
+    }
+    assert(message === 'custom');
+  });
+
+  it('defaults message to "not deep equal"', () => {
+    let message;
+    try {
+      XTestSuite.deepEqual({ state: { bailed: false } }, 1, 2);
+    } catch (error) {
+      message = error.message;
+    }
+    assert(message === 'not deep equal');
+  });
+
+  it('is a no-op when context is bailed', () => {
+    XTestSuite.deepEqual({ state: { bailed: true } }, 1, 2, 'should not throw');
+  });
+});
+
 describe('waitFor', () => {
   it('adds a promise when called', () => {
     const { context } = getContext();

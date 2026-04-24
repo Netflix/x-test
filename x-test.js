@@ -14,6 +14,19 @@ import { XTestSuite } from './x-test-suite.js';
 export const assert = (ok, text) => XTestSuite.assert(suiteContext, ok, text);
 
 /**
+ * Strict deep-equality assertion. Supports primitives, plain objects, and arrays.
+ * Throws (not an assertion failure) for unsupported types like Map/Set/Date/classes.
+ * @example
+ *   assert.deepEqual({ a: 1 }, { a: 1 });
+ * @template T
+ * @param {unknown} actual - The actual value
+ * @param {T} expected - The expected value
+ * @param {string} [text] - The assertion message
+ * @returns {asserts actual is T} Throws if values are not deeply equal.
+ */
+assert.deepEqual = (actual, expected, text) => XTestSuite.deepEqual(suiteContext, actual, expected, text);
+
+/**
  * Force test suite registration to remain open until promise resolves.
  * @example
  *   const barsPromise = fetch('https://foo/api/v2/bars').then(response => response.json());

@@ -1,4 +1,18 @@
 export function assert(ok: unknown, text?: string): asserts ok;
+export namespace assert {
+    /**
+     * Strict deep-equality assertion. Supports primitives, plain objects, and arrays.
+     * Throws (not an assertion failure) for unsupported types like Map/Set/Date/classes.
+     * @example
+     *   assert.deepEqual({ a: 1 }, { a: 1 });
+     * @template T
+     * @param {unknown} actual - The actual value
+     * @param {T} expected - The expected value
+     * @param {string} [text] - The assertion message
+     * @returns {asserts actual is T} Throws if values are not deeply equal.
+     */
+    function deepEqual<T>(actual: unknown, expected: T, text?: string): asserts actual is T;
+}
 export function waitFor(promise: Promise<unknown>): Promise<void>;
 export function test(href: string): void;
 export function describe(text: string, callback: () => void): void;

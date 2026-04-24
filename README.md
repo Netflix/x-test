@@ -27,6 +27,7 @@ The following are exposed in the testing interface:
 - `describe.todo`: Mark all `it` tests within this group as _todo_.
 - `waitFor`: Ensures test registration remains open until given promise settles.
 - `assert`: Simple assertion call that throws if the boolean input is false-y.
+- `assert.deepEqual`: Strict deep-equality assertion for primitives, plain objects, and arrays.
 
 ### Parameters
 

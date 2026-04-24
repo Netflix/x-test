@@ -27,6 +27,12 @@ describe.only('this wrapper exercises describe only logic', () => {
   });
 });
 
+describe.only('assert.deepEqual', () => {
+  it('exercises the public assert.deepEqual export', () => {
+    assert.deepEqual({ a: [1, 2] }, { a: [1, 2] });
+  });
+});
+
 describe.only('interval', () => {
   it.todo('times out after interval - this is supposed to fail', async () => {
     await new Promise(resolve => setTimeout(resolve, 1_000));
