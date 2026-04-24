@@ -27,16 +27,6 @@ export const assert = (ok, text) => XTestSuite.assert(suiteContext, ok, text);
 assert.deepEqual = (actual, expected, text) => XTestSuite.deepEqual(suiteContext, actual, expected, text);
 
 /**
- * Force test suite registration to remain open until promise resolves.
- * @example
- *   const barsPromise = fetch('https://foo/api/v2/bars').then(response => response.json());
- *   waitFor(barsPromise);
- * @param {Promise<unknown>} promise - The promise to wait for before completing the test suite
- * @returns {Promise<void>}
- */
-export const waitFor = promise => XTestSuite.waitFor(suiteContext, promise);
-
-/**
  * Register a test to be run as a subsequent test suite.
  * @example
  *   test('./test-sibling.html');
@@ -179,8 +169,8 @@ if (!frameElement?.getAttribute('data-x-test-test-id')) {
   XTestRoot.initialize(rootContext, location.href);
 } else {
   const state = {
-    testId: null, href: null, callbacks: {}, bailed: false, waitForId: null,
-    ready: false, promises: [], parents: [],
+    testId: null, href: null, callbacks: {}, bailed: false,
+    ready: false, parents: [],
   };
   const domContentLoadedPromise = XTestCommon.domContentLoadedPromise(document);
   suiteContext = {

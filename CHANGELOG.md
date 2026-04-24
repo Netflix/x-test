@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Asynchronous registration via `waitFor` is removed — synchronous imports
+  (including `import ... with { type: 'json' }`) handle fixture data, and `it`
+  callbacks may still be async for per-test work (#80).
 - The `coverage()` API, the `x-test-run-coverage` URL
   parameter, and all associated TAP output have been removed. Coverage
   analysis is now the exclusive responsibility of `@netflix/x-test-cli` (#99).

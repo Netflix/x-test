@@ -13,7 +13,6 @@ export namespace assert {
      */
     function deepEqual<T>(actual: unknown, expected: T, text?: string): asserts actual is T;
 }
-export function waitFor(promise: Promise<unknown>): Promise<void>;
 export function test(href: string): void;
 export function describe(text: string, callback: () => void): void;
 export namespace describe {
