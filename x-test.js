@@ -41,7 +41,7 @@ export const load = href => XTestFrame.load(suiteContext, href);
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-export const describe = (text, callback) => XTestFrame.describe(suiteContext, text, callback);
+export const suite = (text, callback) => XTestFrame.suite(suiteContext, text, callback);
 
 /**
  * Register a test group that will be skipped during execution.
@@ -49,7 +49,7 @@ export const describe = (text, callback) => XTestFrame.describe(suiteContext, te
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-describe.skip = (text, callback) => XTestFrame.describeSkip(suiteContext, text, callback);
+suite.skip = (text, callback) => XTestFrame.suiteSkip(suiteContext, text, callback);
 
 /**
  * Register a test group that will run exclusively (skips other non-only tests).
@@ -57,7 +57,7 @@ describe.skip = (text, callback) => XTestFrame.describeSkip(suiteContext, text, 
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-describe.only = (text, callback) => XTestFrame.describeOnly(suiteContext, text, callback);
+suite.only = (text, callback) => XTestFrame.suiteOnly(suiteContext, text, callback);
 
 /**
  * Register a placeholder test group for future implementation.
@@ -65,7 +65,7 @@ describe.only = (text, callback) => XTestFrame.describeOnly(suiteContext, text, 
  * @param {() => void} callback - The callback function containing nested tests
  * @returns {void}
  */
-describe.todo = (text, callback) => XTestFrame.describeTodo(suiteContext, text, callback);
+suite.todo = (text, callback) => XTestFrame.suiteTodo(suiteContext, text, callback);
 
 /**
  * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
@@ -74,7 +74,7 @@ describe.todo = (text, callback) => XTestFrame.describeTodo(suiteContext, text, 
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-export const it = (text, callback, interval) => XTestFrame.it(suiteContext, text, callback, interval);
+export const test = (text, callback, interval) => XTestFrame.test(suiteContext, text, callback, interval);
 
 /**
  * Register a test case that will be skipped during execution.
@@ -83,7 +83,7 @@ export const it = (text, callback, interval) => XTestFrame.it(suiteContext, text
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-it.skip = (text, callback, interval) => XTestFrame.itSkip(suiteContext, text, callback, interval);
+test.skip = (text, callback, interval) => XTestFrame.testSkip(suiteContext, text, callback, interval);
 
 /**
  * Register a test case that will run exclusively (skips other non-only tests).
@@ -92,7 +92,7 @@ it.skip = (text, callback, interval) => XTestFrame.itSkip(suiteContext, text, ca
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-it.only = (text, callback, interval) => XTestFrame.itOnly(suiteContext, text, callback, interval);
+test.only = (text, callback, interval) => XTestFrame.testOnly(suiteContext, text, callback, interval);
 
 /**
  * Register a placeholder test case for future implementation.
@@ -101,7 +101,7 @@ it.only = (text, callback, interval) => XTestFrame.itOnly(suiteContext, text, ca
  * @param {number} [interval] - Optional timeout in milliseconds
  * @returns {void}
  */
-it.todo = (text, callback, interval) => XTestFrame.itTodo(suiteContext, text, callback, interval);
+test.todo = (text, callback, interval) => XTestFrame.testTodo(suiteContext, text, callback, interval);
 
 // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 /**
@@ -159,7 +159,7 @@ let suiteContext = null;
 if (!frameElement?.getAttribute('data-x-test-frame-id')) {
   const state = {
     ended: false, children: [], stepIds: [], steps: {},
-    frames: {}, describes: {}, its: {}, reporter: null,
+    frames: {}, suites: {}, tests: {}, reporter: null,
     filtering: false, queue: [], queueing: false,
   };
   const rootContext = {

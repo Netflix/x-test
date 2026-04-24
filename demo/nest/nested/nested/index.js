@@ -1,9 +1,9 @@
-import { assert, it, describe } from '../../../../x-test.js';
+import { assert, test, suite } from '../../../../x-test.js';
 
-describe('nest', () => {
-  describe('within', () => {
-    describe('tests', () => {
-      it('nested tests should be found', () => {
+suite('nest', () => {
+  suite('within', () => {
+    suite('tests', () => {
+      test('nested tests should be found', () => {
         assert(true);
       });
     });

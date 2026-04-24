@@ -1,4 +1,4 @@
-import { it, describe, assert } from '../x-test.js';
+import { test, suite, assert } from '../x-test.js';
 import { XTestRoot } from '../x-test-root.js';
 
 // Dependency injection.
@@ -9,8 +9,8 @@ const getContext = () => {
     stepIds: [],
     steps: {},
     frames: {},
-    describes: {},
-    its: {},
+    suites: {},
+    tests: {},
     reporter: null,
   };
   function publish(type, data) {
@@ -41,8 +41,8 @@ const getContext = () => {
   return { context };
 };
 
-describe('level', () => {
-  it('returns level = 1 for "load-plan"', () => {
+suite('level', () => {
+  test('returns level = 1 for "load-plan"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'frame-plan', frameId: 'testTestId' };
@@ -50,7 +50,7 @@ describe('level', () => {
     assert(level === 1);
   });
 
-  it('returns level = 0 for "load-start"', () => {
+  test('returns level = 0 for "load-start"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'frame-start', frameId: 'testTestId' };
@@ -58,7 +58,7 @@ describe('level', () => {
     assert(level === 0);
   });
 
-  it('returns level = 0 for "load-end"', () => {
+  test('returns level = 0 for "load-end"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'frame-end', frameId: 'testTestId' };
@@ -66,17 +66,17 @@ describe('level', () => {
     assert(level === 0);
   });
 
-  it.skip('returns level for "describe-plan"', () => {});
+  test.skip('returns level for "suite-plan"', () => {});
 
-  it.skip('returns level for "describe-start"', () => {});
+  test.skip('returns level for "suite-start"', () => {});
 
-  it.skip('returns level for "describe-end"', () => {});
+  test.skip('returns level for "suite-end"', () => {});
 
-  it.skip('returns level for "it"', () => {});
+  test.skip('returns level for "test"', () => {});
 });
 
-describe('count', () => {
-  it('returns count for "load-plan"', () => {
+suite('count', () => {
+  test('returns count for "load-plan"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'frame-plan', frameId: 'testTestId' };
@@ -85,16 +85,16 @@ describe('count', () => {
     assert(count === 3);
   });
 
-  it('returns count for "describe-plan"', () => {
+  test('returns count for "suite-plan"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'describe-plan', describeId: 'testDescribeId' };
-    context.state.describes['testDescribeId'] = { children: [{}, {}, {}] };
+    context.state.steps['testStepId'] = { type: 'suite-plan', suiteId: 'testSuiteId' };
+    context.state.suites['testSuiteId'] = { children: [{}, {}, {}] };
     const count = XTestRoot.count(context, 'testStepId');
     assert(count === 3);
   });
 
-  it('returns count for "exit"', () => {
+  test('returns count for "exit"', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
     context.state.steps['testStepId'] = { type: 'exit' };
@@ -104,12 +104,12 @@ describe('count', () => {
   });
 });
 
-describe('yaml', () => {
-  it('finds the given "it" step and returns a yaml object', () => {
+suite('yaml', () => {
+  test('finds the given "test" step and returns a yaml object', () => {
     const { context } = getContext();
     context.state.stepIds.push('testStepId');
-    context.state.steps['testStepId'] = { type: 'it', itId: 'testItId' };
-    context.state.its['testItId'] = { ok: false, error: { message: 'test failure', stack: 'test error stack' } };
+    context.state.steps['testStepId'] = { type: 'test', testId: 'testTestId' };
+    context.state.tests['testTestId'] = { ok: false, error: { message: 'test failure', stack: 'test error stack' } };
     const yaml = XTestRoot.yaml(context, 'testStepId');
     assert(yaml.message === 'test failure');
     assert(yaml.severity === 'fail');
@@ -117,8 +117,8 @@ describe('yaml', () => {
   });
 });
 
-describe('end', () => {
-  it('marks state as ended', () => {
+suite('end', () => {
+  test('marks state as ended', () => {
     const { context } = getContext();
     assert(context.state.ended === false);
     XTestRoot.end(context);
@@ -126,20 +126,20 @@ describe('end', () => {
   });
 });
 
-describe('collectFailureStepIds', () => {
-  it('returns failing it step ids in order, excluding TODO and passing', () => {
+suite('collectFailureStepIds', () => {
+  test('returns failing test step ids in order, excluding TODO and passing', () => {
     const { context } = getContext();
     context.state.stepIds.push('s1', 's2', 's3', 's4');
     context.state.steps = {
-      s1: { type: 'it', itId: 'passIt' },
-      s2: { type: 'it', itId: 'failIt' },
-      s3: { type: 'it', itId: 'todoIt' },
+      s1: { type: 'test', testId: 'passTest' },
+      s2: { type: 'test', testId: 'failTest' },
+      s3: { type: 'test', testId: 'todoTest' },
       s4: { type: 'version' },
     };
-    context.state.its = {
-      passIt: { ok: true },
-      failIt: { ok: false },
-      todoIt: { ok: false, directive: 'TODO' },
+    context.state.tests = {
+      passTest: { ok: true },
+      failTest: { ok: false },
+      todoTest: { ok: false, directive: 'TODO' },
     };
     const ids = XTestRoot.collectFailureStepIds(context);
     assert(ids.length === 1);
@@ -148,24 +148,24 @@ describe('collectFailureStepIds', () => {
 
 });
 
-describe('formatFailure', () => {
-  it('formats a failing "it" with arrow-joined breadcrumb and raw stack', () => {
+suite('formatFailure', () => {
+  test('formats a failing "test" with arrow-joined breadcrumb and raw stack', () => {
     const { context } = getContext();
     context.state.stepIds.push('s1');
-    context.state.steps['s1'] = { stepId: 's1', type: 'it', itId: 'i1' };
-    context.state.frames['t1'] = { href: 'http://example.com/test.html', children: [{ type: 'describe', describeId: 'd1' }] };
-    context.state.describes['d1'] = {
+    context.state.steps['s1'] = { stepId: 's1', type: 'test', testId: 'i1' };
+    context.state.frames['t1'] = { href: 'http://example.com/test.html', children: [{ type: 'suite', suiteId: 'd1' }] };
+    context.state.suites['d1'] = {
       text: 'outer',
       parents: [{ type: 'frame', frameId: 't1' }],
-      children: [{ type: 'it', itId: 'i1' }],
+      children: [{ type: 'test', testId: 'i1' }],
     };
-    context.state.its['i1'] = {
-      itId: 'i1',
+    context.state.tests['i1'] = {
+      testId: 'i1',
       text: 'does the thing',
       ok: false,
       directive: null,
       error: { message: 'nope', stack: 'Error: nope\n    at foo' },
-      parents: [{ type: 'frame', frameId: 't1' }, { type: 'describe', describeId: 'd1' }],
+      parents: [{ type: 'frame', frameId: 't1' }, { type: 'suite', suiteId: 'd1' }],
     };
     const block = XTestRoot.formatFailure(context, 's1');
     const lines = block.split('\n');
@@ -176,13 +176,13 @@ describe('formatFailure', () => {
     assert(lines[4] === '    at foo');
   });
 
-  it('falls back to "Error: <message>" when stack is missing', () => {
+  test('falls back to "Error: <message>" when stack is missing', () => {
     const { context } = getContext();
     context.state.stepIds.push('s1');
-    context.state.steps['s1'] = { stepId: 's1', type: 'it', itId: 'i1' };
+    context.state.steps['s1'] = { stepId: 's1', type: 'test', testId: 'i1' };
     context.state.frames['t1'] = { href: 'http://example.com/test.html', children: [] };
-    context.state.its['i1'] = {
-      itId: 'i1',
+    context.state.tests['i1'] = {
+      testId: 'i1',
       text: 'the test',
       ok: false,
       directive: null,
@@ -196,8 +196,8 @@ describe('formatFailure', () => {
 
 });
 
-describe('check', () => {
-  it('does not kick off the exit step once the run has ended (e.g. after a bail)', () => {
+suite('check', () => {
+  test('does not kick off the exit step once the run has ended (e.g. after a bail)', () => {
     const { context } = getContext();
     context.state.stepIds.push('exitStep');
     context.state.steps = { exitStep: { type: 'exit', status: 'waiting' } };

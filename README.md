@@ -2,12 +2,32 @@
 
 a simple, tap-compliant test runner for the browser
 
+```js
+import { load, suite, test, assert } from '@netflix/x-test';
+
+load('./test-other-important-things.html');
+
+suite('important feature', () => {
+  test('should work synchronously', () => {
+    assert(MyFeature.works() === 'worked', 'it did not work');
+  });
+
+  test('should work asynchronously', async () => {
+    assert(await MyFeature.isAwesome() === 'awesome', 'it is not awesome');
+  });
+
+  test('should match interface', () => {
+    assert.deepEqual(MyFeature.interface, { version: '123' }, 'does not match');
+  });
+});
+```
+
 ## Spec
 
 - importable as `type="module"`
 - is interoperable with TAP Version 14
 - nested sub-tests run in an iframe
-- has a recognizable testing interface (`it`, `describe`, `assert`)
+- has a recognizable testing interface (`suite`, `test`, `assert`)
 - can be used for automated testing
 
 ## Interface
@@ -16,15 +36,15 @@ a simple, tap-compliant test runner for the browser
 
 The following are exposed in the testing interface:
 
-- `load`: Creates a sub-test in an `iframe` based on given `src` html page.
-- `it`: The smallest testing unit — can be asynchronous.
-- `it.skip`: An `it` whose callback is not run and which will pass.
-- `it.only`: Skip all other `it` tests.
-- `it.todo`: An `it` whose callback _is_ run and is expected to fail.
-- `describe`: Simple synchronous grouping functionality.
-- `describe.skip`: Skip all `it` tests in this group.
-- `describe.only`: Skip all other `describe` groups and `it` tests.
-- `describe.todo`: Mark all `it` tests within this group as _todo_.
+- `load`: Creates a sub-test in an `iframe` based on given html `href`.
+- `test`: The smallest testing unit — can be asynchronous.
+- `test.skip`: A `test` whose callback is not run and which will pass.
+- `test.only`: Skip all other `test` tests.
+- `test.todo`: A `test` whose callback _is_ run and is expected to fail.
+- `suite`: Simple synchronous grouping functionality.
+- `suite.skip`: Skip all `test` tests in this group.
+- `suite.only`: Skip all other `suite` groups and `test` tests.
+- `suite.todo`: Mark all `test` tests within this group as _todo_.
 - `assert`: Simple assertion call that throws if the boolean input is false-y.
 - `assert.deepEqual`: Strict deep-equality assertion for primitives, plain objects, and arrays.
 
@@ -36,47 +56,47 @@ The following parameters can be passed in via query params on the url:
 
 ## Execution
 
-Both `load` and `it` calls will execute _in order_. `load` calls will boot the
+Both `load` and `test` calls will execute _in order_. `load` calls will boot the
 given html page in an iframe. Such iframes are run one-at-a-time. All invoked
-`it` calls await the completion of previously-invoked `it` calls.
+`test` calls await the completion of previously-invoked `test` calls.
 
 ## Recipes
 
 ### Data-driven tests from a JSON fixture
 
 Use [Import Attributes / JSON Modules][json-modules] to pull fixture data
-synchronously at module-load time. Because the data is available before any `it`
-call, you can declare one test per row without any async bookkeeping:
+synchronously at module-load time. Because the data is available before any
+`test` call, you can declare one test per row without any async bookkeeping:
 
 ```js
 import data from './my-fixture.json' with { type: 'json' };
-import { it, assert } from '../x-test.js';
+import { test, assert } from '../x-test.js';
 
 for (const testCase of data) {
-  it(`testing ${testCase.name}`, () => {
+  test(`testing ${testCase.name}`, () => {
     assert(testCase.expected === testCase.actual, testCase.name);
   });
 }
 ```
 
-### Shared async fixture across multiple `it`s
+### Shared async fixture across multiple `test`s
 
 If multiple tests need the same result of an async operation, kick off one
-promise at module scope and `await` it inside each `it`. The promise resolves
-once; every `it` that awaits it gets the same value. Registration stays
+promise at module scope and `await` it inside each `test`. The promise resolves
+once; every `test` that awaits it gets the same value. Registration stays
 synchronous — only the test bodies do async work.
 
 ```js
-import { it, assert } from '../x-test.js';
+import { test, assert } from '../x-test.js';
 
 const fetchPromise = fetch('/api/widgets').then(response => response.text());
 
-it('has widgets', async () => {
+test('has widgets', async () => {
   const body = await fetchPromise;
   assert(body.length > 0);
 });
 
-it('body mentions a known widget', async () => {
+test('body mentions a known widget', async () => {
   const body = await fetchPromise;
   assert(body.includes('sprocket'));
 });

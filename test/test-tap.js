@@ -1,92 +1,92 @@
-import { it, describe, assert } from '../x-test.js';
+import { test, suite, assert } from '../x-test.js';
 import { XTestTap } from '../x-test-tap.js';
 
-describe('version', () => {
-  it('renders "TAP version 14"', () => {
+suite('version', () => {
+  test('renders "TAP version 14"', () => {
     assert(XTestTap.version() === 'TAP version 14');
   });
 });
 
-describe('diagnostic', () => {
-  it('basic', () => {
+suite('diagnostic', () => {
+  test('basic', () => {
     assert(XTestTap.diagnostic('my message') === '# my message');
   });
 
-  it('basic, indented', () => {
+  test('basic, indented', () => {
     assert(XTestTap.diagnostic('my message', 1) === '    # my message');
   });
 
-  it('multiline', () => {
+  test('multiline', () => {
     assert(XTestTap.diagnostic('one\ntwo\nthree') === '# one\n# two\n# three');
   });
 
-  it('multiline, indented', () => {
+  test('multiline, indented', () => {
     assert(XTestTap.diagnostic('one\ntwo\nthree', 1) === '    # one\n    # two\n    # three');
   });
 });
 
-describe('testLine', () => {
-  it('basic, passing', () => {
+suite('testLine', () => {
+  test('basic, passing', () => {
     assert(XTestTap.testLine(true, 1, 'first test') === 'ok 1 - first test');
   });
 
-  it('basic, passing, indented', () => {
+  test('basic, passing, indented', () => {
     assert(XTestTap.testLine(true, 1, 'first test', null, 1) === '    ok 1 - first test');
   });
 
-  it('basic, failing', () => {
+  test('basic, failing', () => {
     assert(XTestTap.testLine(false, 1, 'first test') === 'not ok 1 - first test');
   });
 
-  it('basic, failing, indented', () => {
+  test('basic, failing, indented', () => {
     assert(XTestTap.testLine(false, 1, 'first test', null, 1) === '    not ok 1 - first test');
   });
 
-  it('multiline', () => {
+  test('multiline', () => {
     assert(XTestTap.testLine(true, 1, 'first\ntest') === 'ok 1 - first test');
   });
 
-  it('multiline, indented', () => {
+  test('multiline, indented', () => {
     assert(XTestTap.testLine(true, 1, 'first\ntest', null, 1) === '    ok 1 - first test');
   });
 
-  it('skip', () => {
+  test('skip', () => {
     assert(XTestTap.testLine(true, 1, 'first test', 'SKIP') === 'ok 1 - first test # SKIP');
   });
 
-  it('skip, indented', () => {
+  test('skip, indented', () => {
     assert(XTestTap.testLine(true, 1, 'first test', 'SKIP', 1) === '    ok 1 - first test # SKIP');
   });
 
-  it('todo, passing', () => {
+  test('todo, passing', () => {
     assert(XTestTap.testLine(true, 1, 'first test', 'TODO') === 'ok 1 - first test # TODO');
   });
 
-  it('todo, passing, indented', () => {
+  test('todo, passing, indented', () => {
     assert(XTestTap.testLine(true, 1, 'first test', 'TODO', 1) === '    ok 1 - first test # TODO');
   });
 
-  it('todo, failing', () => {
+  test('todo, failing', () => {
     assert(XTestTap.testLine(false, 1, 'first test', 'TODO') === 'not ok 1 - first test # TODO');
   });
 
-  it('todo, failing, indented', () => {
+  test('todo, failing, indented', () => {
     assert(XTestTap.testLine(false, 1, 'first test', 'TODO', 1) === '    not ok 1 - first test # TODO');
   });
 });
 
-describe('subtest', () => {
-  it('basic', () => {
+suite('subtest', () => {
+  test('basic', () => {
     assert(XTestTap.subtest('my subtest') === '# Subtest: my subtest');
   });
 
-  it('basic, indented', () => {
+  test('basic, indented', () => {
     assert(XTestTap.subtest('my subtest', 1) === '    # Subtest: my subtest');
   });
 });
 
-describe('yaml', () => {
-  it('basic', () => {
+suite('yaml', () => {
+  test('basic', () => {
     const expected = `\
   ---
   message: my message
@@ -99,7 +99,7 @@ describe('yaml', () => {
     assert(XTestTap.yaml('my message', 'error', { stack: 'one\ntwo\nthree' }) === expected);
   });
 
-  it('indented', () => {
+  test('indented', () => {
     const expected = `\
       ---
       message: my message
@@ -113,20 +113,20 @@ describe('yaml', () => {
   });
 });
 
-describe('bailOut', () => {
-  it('basic', () => {
+suite('bailOut', () => {
+  test('basic', () => {
     assert(XTestTap.bailOut('oh no!') === 'Bail out! oh no!');
   });
 
-  it('without message', () => {
+  test('without message', () => {
     assert(XTestTap.bailOut() === 'Bail out!');
     assert(XTestTap.bailOut(null) === 'Bail out!');
     assert(XTestTap.bailOut('') === 'Bail out!');
   });
 });
 
-describe('plan', () => {
-  it('basic', () => {
+suite('plan', () => {
+  test('basic', () => {
     assert(XTestTap.plan(999) === '1..999');
   });
 });

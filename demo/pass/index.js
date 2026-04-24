@@ -1,5 +1,5 @@
-import { assert, it } from '../../x-test.js';
+import { assert, test } from '../../x-test.js';
 
-it('good assertion', () => {
+test('good assertion', () => {
   assert(true);
 });

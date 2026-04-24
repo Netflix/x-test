@@ -1,11 +1,11 @@
-import { it, describe } from '../../x-test.js';
+import { test, suite } from '../../x-test.js';
 
-it.skip('not to self: remember to write this test', () => {});
+test.skip('not to self: remember to write this test', () => {});
 
-it.skip('not to self: remember to write this other test', () => {});
+test.skip('not to self: remember to write this other test', () => {});
 
-describe.skip('skip all this stuff for now', () => {
-  it('foo', () => {});
-  it('bar', () => {});
-  it('baz', () => {});
+suite.skip('skip all this stuff for now', () => {
+  test('foo', () => {});
+  test('bar', () => {});
+  test('baz', () => {});
 });

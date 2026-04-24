@@ -161,11 +161,11 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} data
    */
-  static registerDescribeStart(context, data) {
+  static registerSuiteStart(context, data) {
     if (!context.state.ended) {
-      // New "describe-start" (to mark the start of a subtest). Queue it up.
+      // New “suite-start” (to mark the start of a subtest). Queue it up.
       const stepId = context.uuid();
-      const describeId = data.describeId;
+      const suiteId = data.suiteId;
       const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
         if (candidate.type === 'frame-plan' && candidate.frameId === data.parents[0].frameId) {
@@ -174,12 +174,12 @@ export class XTestRoot {
         return false;
       });
       context.state.stepIds.splice(index, 0, stepId);
-      context.state.steps[stepId] = { stepId, type: 'describe-start', describeId: data.describeId, status: 'waiting' };
-      context.state.describes[describeId] = { ...data, children: [] };
-      if (data.parents.at(-1)?.type === 'describe') {
-        context.state.describes[data.parents.at(-1).describeId].children.push({ type: 'describe', describeId });
+      context.state.steps[stepId] = { stepId, type: 'suite-start', suiteId: data.suiteId, status: 'waiting' };
+      context.state.suites[suiteId] = { ...data, children: [] };
+      if (data.parents.at(-1)?.type === 'suite') {
+        context.state.suites[data.parents.at(-1).suiteId].children.push({ type: 'suite', suiteId });
       } else {
-        context.state.frames[data.parents.at(-1).frameId].children.push({ type: 'describe', describeId });
+        context.state.frames[data.parents.at(-1).frameId].children.push({ type: 'suite', suiteId });
       }
     }
   }
@@ -188,22 +188,22 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} data
    */
-  static registerDescribeEnd(context, data) {
+  static registerSuiteEnd(context, data) {
     if (!context.state.ended) {
-      // Completed "describe-end" (to mark the end of a subtest). Queue it up.
+      // Completed “suite-end” (to mark the end of a subtest). Queue it up.
       const planStepId = context.uuid();
       const endStepId = context.uuid();
-      const describe = context.state.describes[data.describeId];
+      const suite = context.state.suites[data.suiteId];
       const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        if (candidate.type === 'frame-plan' && candidate.frameId === describe.parents[0].frameId) {
+        if (candidate.type === 'frame-plan' && candidate.frameId === suite.parents[0].frameId) {
           return true;
         }
         return false;
       });
       context.state.stepIds.splice(index, 0, planStepId, endStepId);
-      context.state.steps[planStepId] = { stepId: planStepId, type: 'describe-plan', describeId: data.describeId, status: 'waiting' };
-      context.state.steps[endStepId] = { stepId: endStepId, type: 'describe-end', describeId: data.describeId, status: 'waiting' };
+      context.state.steps[planStepId] = { stepId: planStepId, type: 'suite-plan', suiteId: data.suiteId, status: 'waiting' };
+      context.state.steps[endStepId] = { stepId: endStepId, type: 'suite-end', suiteId: data.suiteId, status: 'waiting' };
     }
   }
 
@@ -211,7 +211,7 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} data
    */
-  static registerIt(context, data) {
+  static registerTest(context, data) {
     if (!context.state.ended) {
       // Apply name pattern filtering if present
       if (context.state.namePattern) {
@@ -221,9 +221,9 @@ export class XTestRoot {
         }
       }
 
-      // New "it" (to be run as part of a test suite). Queue it up.
+      // New “test” (to be run as part of a test suite). Queue it up.
       const stepId = context.uuid();
-      const itId = data.itId;
+      const testId = data.testId;
       const index = context.state.stepIds.findLastIndex((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
         if (candidate.type === 'frame-plan' && candidate.frameId === data.parents[0].frameId) {
@@ -232,33 +232,33 @@ export class XTestRoot {
         return false;
       });
       context.state.stepIds.splice(index, 0, stepId);
-      context.state.steps[stepId] = { stepId, type: 'it', itId: data.itId, status: 'waiting' };
-      context.state.its[itId] = data;
-      if (data.parents.at(-1)?.type === 'describe') {
-        context.state.describes[data.parents.at(-1).describeId].children.push({ type: 'it', itId });
+      context.state.steps[stepId] = { stepId, type: 'test', testId: data.testId, status: 'waiting' };
+      context.state.tests[testId] = data;
+      if (data.parents.at(-1)?.type === 'suite') {
+        context.state.suites[data.parents.at(-1).suiteId].children.push({ type: 'test', testId });
       } else {
-        context.state.frames[data.parents.at(-1).frameId].children.push({ type: 'it', itId });
+        context.state.frames[data.parents.at(-1).frameId].children.push({ type: 'test', testId });
       }
     }
   }
 
   /**
    * @param {any} context
-   * @param {any} it
+   * @param {any} test
    * @returns {string}
    */
-  static buildFullTestName(context, it) {
+  static buildFullTestName(context, test) {
     const parts = [];
 
-    // Add parent describe names in order
-    const describeParents = it.parents.filter((/** @type {any} */ parent) => parent.type === 'describe');
-    for (const parent of describeParents) {
-      const describe = context.state.describes[parent.describeId];
-      parts.push(describe.text);
+    // Add parent suite names in order
+    const suiteParents = test.parents.filter((/** @type {any} */ parent) => parent.type === 'suite');
+    for (const parent of suiteParents) {
+      const suite = context.state.suites[parent.suiteId];
+      parts.push(suite.text);
     }
 
     // Add the test name itself
-    parts.push(it.text);
+    parts.push(test.text);
 
     return parts.join(' ');
   }
@@ -274,14 +274,14 @@ export class XTestRoot {
         case 'frame':
           XTestRoot.registerFrame(context, data);
           break;
-        case 'describe-start':
-          XTestRoot.registerDescribeStart(context, data);
+        case 'suite-start':
+          XTestRoot.registerSuiteStart(context, data);
           break;
-        case 'describe-end':
-          XTestRoot.registerDescribeEnd(context, data);
+        case 'suite-end':
+          XTestRoot.registerSuiteEnd(context, data);
           break;
-        case 'it':
-          XTestRoot.registerIt(context, data);
+        case 'test':
+          XTestRoot.registerTest(context, data);
           break;
         default:
           throw new Error(`Unexpected registration type "${data.type}".`);
@@ -303,42 +303,42 @@ export class XTestRoot {
         readyFrame.ready = true;
       }
       const only = (
-        Object.values(context.state.its).some((/** @type {any} */ candidate) => {
+        Object.values(context.state.tests).some((/** @type {any} */ candidate) => {
           return candidate.only && candidate.parents[0].frameId === data.frameId;
         }) ||
-        Object.values(context.state.describes).some((/** @type {any} */ candidate) => {
+        Object.values(context.state.suites).some((/** @type {any} */ candidate) => {
           return candidate.only && candidate.parents[0].frameId === data.frameId;
         })
       );
       if (only) {
-        for (const it of Object.values(context.state.its)) {
-          if (it.parents[0].frameId === data.frameId) {
-            if (!it.only) {
-              const describeParents = it.parents
-                .filter((/** @type {any} */ candidate) => candidate.type === 'describe')
-                .map((/** @type {any} */ parent) => context.state.describes[parent.describeId]);
-              const hasOnlyDescribeParent = describeParents.some((/** @type {any} */ candidate) => candidate.only);
-              if (!hasOnlyDescribeParent) {
-                it.directive = 'SKIP';
-              } else if (!it.directive) {
-                const lastDescribeParentWithDirective = describeParents.findLast((/** @type {any} */ candidate) => !!candidate.directive);
-                if (lastDescribeParentWithDirective) {
-                  it.directive = lastDescribeParentWithDirective.directive;
+        for (const test of Object.values(context.state.tests)) {
+          if (test.parents[0].frameId === data.frameId) {
+            if (!test.only) {
+              const suiteParents = test.parents
+                .filter((/** @type {any} */ candidate) => candidate.type === 'suite')
+                .map((/** @type {any} */ parent) => context.state.suites[parent.suiteId]);
+              const hasOnlySuiteParent = suiteParents.some((/** @type {any} */ candidate) => candidate.only);
+              if (!hasOnlySuiteParent) {
+                test.directive = 'SKIP';
+              } else if (!test.directive) {
+                const lastSuiteParentWithDirective = suiteParents.findLast((/** @type {any} */ candidate) => !!candidate.directive);
+                if (lastSuiteParentWithDirective) {
+                  test.directive = lastSuiteParentWithDirective.directive;
                 }
               }
             }
           }
         }
       } else {
-        for (const it of Object.values(context.state.its)) {
-          if (it.parents[0].frameId === data.frameId) {
-            if (!it.directive) {
-              const describeParents = it.parents
-                .filter((/** @type {any} */ candidate) => candidate.type === 'describe')
-                .map((/** @type {any} */ parent) => context.state.describes[parent.describeId]);
-              const lastDescribeParentWithDirective = describeParents.findLast((/** @type {any} */ candidate) => !!candidate.directive);
-              if (lastDescribeParentWithDirective) {
-                it.directive = lastDescribeParentWithDirective.directive;
+        for (const test of Object.values(context.state.tests)) {
+          if (test.parents[0].frameId === data.frameId) {
+            if (!test.directive) {
+              const suiteParents = test.parents
+                .filter((/** @type {any} */ candidate) => candidate.type === 'suite')
+                .map((/** @type {any} */ parent) => context.state.suites[parent.suiteId]);
+              const lastSuiteParentWithDirective = suiteParents.findLast((/** @type {any} */ candidate) => !!candidate.directive);
+              if (lastSuiteParentWithDirective) {
+                test.directive = lastSuiteParentWithDirective.directive;
               }
             }
           }
@@ -367,16 +367,16 @@ export class XTestRoot {
   static onResult(context, event) {
     if (!context.state.ended) {
       const data = event.data.data;
-      const it = context.state.its[data.itId];
+      const test = context.state.tests[data.testId];
       const stepId = context.state.stepIds.find((/** @type {any} */ candidateId) => {
         const candidate = context.state.steps[candidateId];
-        return candidate.type === 'it' && candidate.itId === it.itId;
+        return candidate.type === 'test' && candidate.testId === test.testId;
       });
       const step = context.state.steps[stepId];
       if (step.status !== 'running') {
         throw new Error('step to complete is not running');
       }
-      Object.assign(it, { ok: data.ok, error: data.error });
+      Object.assign(test, { ok: data.ok, error: data.error });
       step.status = 'done';
       const ok = XTestRoot.ok(context, stepId);
       const number = XTestRoot.number(context, stepId);
@@ -408,7 +408,7 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffDescribeStart(context, stepId) {
+  static kickoffSuiteStart(context, stepId) {
     const level = XTestRoot.level(context, stepId);
     const text = XTestRoot.text(context, stepId);
     const tap = XTestTap.subtest(text, level);
@@ -420,7 +420,7 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffDescribePlan(context, stepId) {
+  static kickoffSuitePlan(context, stepId) {
     const level = XTestRoot.level(context, stepId);
     const count = XTestRoot.count(context, stepId);
     const tap = XTestTap.plan(count, level);
@@ -432,7 +432,7 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffDescribeEnd(context, stepId) {
+  static kickoffSuiteEnd(context, stepId) {
     const number = XTestRoot.number(context, stepId);
     const ok = XTestRoot.ok(context, stepId);
     const text = XTestRoot.text(context, stepId);
@@ -523,10 +523,10 @@ export class XTestRoot {
    * @param {any} context
    * @param {any} stepId
    */
-  static kickoffIt(context, stepId) {
+  static kickoffTest(context, stepId) {
     const step = context.state.steps[stepId];
-    const { itId, directive, interval } = context.state.its[step.itId];
-    context.publish('x-test-root-run', { itId, directive, interval });
+    const { testId, directive, interval } = context.state.tests[step.testId];
+    context.publish('x-test-root-run', { testId, directive, interval });
     step.status = 'running';
   }
 
@@ -561,9 +561,9 @@ export class XTestRoot {
     const failureStepIds = [];
     for (const stepId of context.state.stepIds) {
       const step = context.state.steps[stepId];
-      if (step.type === 'it') {
-        const it = context.state.its[step.itId];
-        if (it.ok === false && it.directive !== 'TODO') {
+      if (step.type === 'test') {
+        const test = context.state.tests[step.testId];
+        if (test.ok === false && test.directive !== 'TODO') {
           failureStepIds.push(stepId);
         }
       }
@@ -578,20 +578,20 @@ export class XTestRoot {
    */
   static formatFailure(context, stepId) {
     const step = context.state.steps[stepId];
-    const it = context.state.its[step.itId];
-    const frame = context.state.frames[it.parents[0].frameId];
+    const test = context.state.tests[step.testId];
+    const frame = context.state.frames[test.parents[0].frameId];
     const lines = [frame.href];
-    const describeParents = it.parents.filter((/** @type {any} */ parent) => parent.type === 'describe');
-    for (const parent of describeParents) {
-      lines.push(`> ${context.state.describes[parent.describeId].text.replace(/#/g, '*')}`);
+    const suiteParents = test.parents.filter((/** @type {any} */ parent) => parent.type === 'suite');
+    for (const parent of suiteParents) {
+      lines.push(`> ${context.state.suites[parent.suiteId].text.replace(/#/g, '*')}`);
     }
-    lines.push(`> ${it.text.replace(/#/g, '*')}`);
-    if (it.error.stack) {
-      for (const stackLine of it.error.stack.split('\n')) {
+    lines.push(`> ${test.text.replace(/#/g, '*')}`);
+    if (test.error.stack) {
+      for (const stackLine of test.error.stack.split('\n')) {
         lines.push(stackLine);
       }
     } else {
-      lines.push(`Error: ${it.error.message}`);
+      lines.push(`Error: ${test.error.message}`);
     }
     return lines.join('\n');
   }
@@ -606,7 +606,7 @@ export class XTestRoot {
         return context.state.steps[candidateId].status === 'running';
       });
       if (!runningStepId) {
-        // If nothing's running, find the first step that's waiting and run that.
+        // If nothing’s running, find the first step that’s waiting and run that.
         const stepId = context.state.stepIds.find((/** @type {any} */ candidateId) => {
           return context.state.steps[candidateId].status === 'waiting';
         });
@@ -617,16 +617,16 @@ export class XTestRoot {
               XTestRoot.kickoffVersion(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'describe-start':
-              XTestRoot.kickoffDescribeStart(context, stepId);
+            case 'suite-start':
+              XTestRoot.kickoffSuiteStart(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'describe-plan':
-              XTestRoot.kickoffDescribePlan(context, stepId);
+            case 'suite-plan':
+              XTestRoot.kickoffSuitePlan(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'describe-end':
-              XTestRoot.kickoffDescribeEnd(context, stepId);
+            case 'suite-end':
+              XTestRoot.kickoffSuiteEnd(context, stepId);
               XTestRoot.check(context);
               break;
             case 'frame-start':
@@ -641,8 +641,8 @@ export class XTestRoot {
               XTestRoot.kickoffFrameEnd(context, stepId);
               XTestRoot.check(context);
               break;
-            case 'it':
-              XTestRoot.kickoffIt(context, stepId);
+            case 'test':
+              XTestRoot.kickoffTest(context, stepId);
               XTestRoot.check(context);
               break;
             case 'exit':
@@ -713,7 +713,7 @@ export class XTestRoot {
     if (lastIndex !== index) {
       let tap;
       if (index === -1) {
-        // We're done!
+        // We’re done!
         tap = context.state.stepIds.slice(lastIndex).map((/** @type {any} */ targetId) => context.state.steps[targetId].tap);
       } else {
         tap = context.state.stepIds.slice(lastIndex, index).map((/** @type {any} */ targetId) => context.state.steps[targetId].tap);
@@ -735,12 +735,12 @@ export class XTestRoot {
     const step = context.state.steps[stepId];
 
     switch (step.type) {
-      case 'describe-start':
+      case 'suite-start':
       case 'frame-start':
         context.state.queueing = true;
         XTestRoot.queueOrOutput(context, tap, step.type);
         break;
-      case 'describe-plan':
+      case 'suite-plan':
       case 'frame-plan':
         if (XTestRoot.count(context, stepId) === 0) {
           XTestRoot.handleEmptyPlan(context);
@@ -748,8 +748,8 @@ export class XTestRoot {
           XTestRoot.queueOrOutput(context, tap, step.type);
         }
         break;
-      case 'describe-end':
-        if (!XTestRoot.handleEmptyDescribe(context, step)) {
+      case 'suite-end':
+        if (!XTestRoot.handleEmptySuite(context, step)) {
           XTestRoot.queueOrOutput(context, tap, step.type);
         }
         break;
@@ -764,7 +764,7 @@ export class XTestRoot {
       case 'exit':
         XTestRoot.handleExit(context, tap);
         break;
-      case 'it':
+      case 'test':
         XTestRoot.queueOrOutput(context, tap, step.type);
         break;
       default:
@@ -792,10 +792,10 @@ export class XTestRoot {
    * @param {any} step
    * @returns {boolean}
    */
-  static handleEmptyDescribe(context, step) {
-    const describe = context.state.describes[step.describeId];
-    if (describe.children.length === 0) {
-      XTestRoot.removeFromParent(describe.parents, 'describe', step.describeId, context);
+  static handleEmptySuite(context, step) {
+    const suite = context.state.suites[step.suiteId];
+    if (suite.children.length === 0) {
+      XTestRoot.removeFromParent(suite.parents, 'suite', step.suiteId, context);
       return true;
     }
     return false;
@@ -843,13 +843,13 @@ export class XTestRoot {
    */
   static removeFromParent(parents, childType, childId, context) {
     const parentType = parents.at(-1)?.type;
-    if (parentType === 'describe') {
-      const parentDescribe = context.state.describes[parents.at(-1).describeId];
-      const childIndex = parentDescribe.children.findIndex((/** @type {any} */ child) =>
+    if (parentType === 'suite') {
+      const parentSuite = context.state.suites[parents.at(-1).suiteId];
+      const childIndex = parentSuite.children.findIndex((/** @type {any} */ child) =>
         child.type === childType && child[`${childType}Id`] === childId
       );
       if (childIndex !== -1) {
-        parentDescribe.children.splice(childIndex, 1);
+        parentSuite.children.splice(childIndex, 1);
       }
     } else if (parentType === 'frame') {
       const parentFrame = context.state.frames[parents.at(-1).frameId];
@@ -873,7 +873,7 @@ export class XTestRoot {
       context.state.queue.push(...tap);
 
       // Flush queue and stop queueing for end steps
-      if (stepType === 'it' || stepType === 'describe-end' || stepType === 'frame-end') {
+      if (stepType === 'test' || stepType === 'suite-end' || stepType === 'frame-end') {
         context.state.queueing = false;
         XTestRoot.log(context, ...context.state.queue);
         context.state.queue.length = 0;
@@ -893,10 +893,10 @@ export class XTestRoot {
     switch (child.type) {
       case 'frame':
         return context.state.frames[child.frameId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
-      case 'describe':
-        return context.state.describes[child.describeId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
-      case 'it':
-        return context.state.its[child.itId].ok || options?.todoOk && context.state.its[child.itId].directive === 'TODO';
+      case 'suite':
+        return context.state.suites[child.suiteId].children.every((/** @type {any} */ candidate) => XTestRoot.childOk(context, candidate, options));
+      case 'test':
+        return context.state.tests[child.testId].ok || options?.todoOk && context.state.tests[child.testId].directive === 'TODO';
       default:
         throw new Error(`Unexpected type "${child.type}".`);
     }
@@ -912,10 +912,10 @@ export class XTestRoot {
     switch (step.type) {
       case 'frame-end':
         return XTestRoot.childOk(context, { type: 'frame', frameId: step.frameId }, { todoOk: true });
-      case 'describe-end':
-        return XTestRoot.childOk(context, { type: 'describe', describeId: step.describeId }, { todoOk: true });
-      case 'it':
-        return XTestRoot.childOk(context, { type: 'it', itId: step.itId });
+      case 'suite-end':
+        return XTestRoot.childOk(context, { type: 'suite', suiteId: step.suiteId }, { todoOk: true });
+      case 'test':
+        return XTestRoot.childOk(context, { type: 'test', testId: step.testId });
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -929,20 +929,20 @@ export class XTestRoot {
   static number(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'it': {
-        const it = context.state.its[step.itId];
-        const parentChildren = it.parents.at(-1)?.type === 'describe'
-          ? context.state.describes[it.parents.at(-1).describeId].children
-          : context.state.frames[it.parents.at(-1).frameId].children;
-        const index = parentChildren.findIndex((/** @type {any} */ candidate) => candidate.itId === it.itId);
+      case 'test': {
+        const test = context.state.tests[step.testId];
+        const parentChildren = test.parents.at(-1)?.type === 'suite'
+          ? context.state.suites[test.parents.at(-1).suiteId].children
+          : context.state.frames[test.parents.at(-1).frameId].children;
+        const index = parentChildren.findIndex((/** @type {any} */ candidate) => candidate.testId === test.testId);
         return index + 1;
       }
-      case 'describe-end': {
-        const describe = context.state.describes[step.describeId];
-        const parentChildren = describe.parents.at(-1)?.type === 'describe'
-          ? context.state.describes[describe.parents.at(-1).describeId].children
-          : context.state.frames[describe.parents.at(-1).frameId].children;
-        const index = parentChildren.findIndex((/** @type {any} */ candidate) => candidate.describeId === describe.describeId);
+      case 'suite-end': {
+        const suite = context.state.suites[step.suiteId];
+        const parentChildren = suite.parents.at(-1)?.type === 'suite'
+          ? context.state.suites[suite.parents.at(-1).suiteId].children
+          : context.state.frames[suite.parents.at(-1).frameId].children;
+        const index = parentChildren.findIndex((/** @type {any} */ candidate) => candidate.suiteId === suite.suiteId);
         return index + 1;
       }
       case 'frame-end': {
@@ -962,17 +962,17 @@ export class XTestRoot {
    */
   static text(context, stepId) {
     // The regex-replace prevents usage of the special `#` character which is
-    //  meaningful in TAP. It's overly-conservative now — it could be less
+    //  meaningful in TAP. It’s overly-conservative now — it could be less
     //  restrictive in the future.
     const step = context.state.steps[stepId];
     switch (step.type) {
       case 'frame-end':
         return context.state.frames[step.frameId].href;
-      case 'describe-start':
-      case 'describe-end':
-        return context.state.describes[step.describeId].text.replace(/#/g, '*');
-      case 'it':
-        return context.state.its[step.itId].text.replace(/#/g, '*');
+      case 'suite-start':
+      case 'suite-end':
+        return context.state.suites[step.suiteId].text.replace(/#/g, '*');
+      case 'test':
+        return context.state.tests[step.testId].text.replace(/#/g, '*');
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1002,11 +1002,11 @@ export class XTestRoot {
   static directive(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'describe-end':
+      case 'suite-end':
       case 'frame-end':
         return null;
-      case 'it':
-        return context.state.its[step.itId].directive;
+      case 'test':
+        return context.state.tests[step.testId].directive;
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1025,13 +1025,13 @@ export class XTestRoot {
       case 'frame-start':
       case 'frame-end':
         return 0;
-      case 'describe-plan':
-        return context.state.describes[step.describeId].parents.length + 1;
-      case 'describe-start':
-      case 'describe-end':
-        return context.state.describes[step.describeId].parents.length;
-      case 'it':
-        return context.state.its[step.itId].parents.length;
+      case 'suite-plan':
+        return context.state.suites[step.suiteId].parents.length + 1;
+      case 'suite-start':
+      case 'suite-end':
+        return context.state.suites[step.suiteId].parents.length;
+      case 'test':
+        return context.state.tests[step.testId].parents.length;
       default:
         throw new Error(`Unexpected type "${step.type}".`);
     }
@@ -1047,8 +1047,8 @@ export class XTestRoot {
     switch (step.type) {
       case 'frame-plan':
         return context.state.frames[step.frameId].children.length;
-      case 'describe-plan':
-        return context.state.describes[step.describeId].children.length;
+      case 'suite-plan':
+        return context.state.suites[step.suiteId].children.length;
       case 'exit':
         return context.state.children.length;
       default:
@@ -1064,9 +1064,9 @@ export class XTestRoot {
   static yaml(context, stepId) {
     const step = context.state.steps[stepId];
     switch (step.type) {
-      case 'it': {
-        const it = context.state.its[step.itId];
-        const { ok, directive, error } = it;
+      case 'test': {
+        const test = context.state.tests[step.testId];
+        const { ok, directive, error } = test;
         const yaml = { message: 'ok', severity: 'comment', data: /** @type {Record<string, any>} */ ({}) };
         if (ok) {
           if (directive === 'SKIP') {

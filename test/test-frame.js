@@ -1,4 +1,4 @@
-import { it, describe, assert } from '../x-test.js';
+import { test, suite, assert } from '../x-test.js';
 import { XTestFrame } from '../x-test-frame.js';
 
 // Dependency injection.
@@ -69,8 +69,8 @@ const getContext = () => {
   return { context, injectError, injectUnhandledrejection };
 };
 
-describe('initialize', () => {
-  it('sets up default state and publishes when ready', async () => {
+suite('initialize', () => {
+  test('sets up default state and publishes when ready', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     assert(context.state.frameId === '123');
@@ -88,20 +88,20 @@ describe('initialize', () => {
     assert(context.publish.calls[1][1].frameId === '123');
   });
 
-  it('marks state as bailed when any test bails', async () => {
+  test('marks state as bailed when any test bails', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     context.publish('x-test-frame-bail');
     assert(context.state.bailed === true);
   });
 
-  it('runs a test when told, ok', async () => {
+  test('runs a test when told, ok', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     let called = false;
-    context.state.callbacks['testItId'] = () => { called = true; };
+    context.state.callbacks['testTestId'] = () => { called = true; };
     assert(called === false);
-    context.publish('x-test-root-run', { itId: 'testItId' });
+    context.publish('x-test-root-run', { testId: 'testTestId' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
     assert(context.publish.calls.length === 4);
@@ -109,18 +109,18 @@ describe('initialize', () => {
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
     assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
     assert(context.publish.calls[3][0] === 'x-test-frame-result');
-    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].testId === 'testTestId');
     assert(context.publish.calls[3][1].ok === true);
     assert(context.publish.calls[3][1].error === null);
   });
 
-  it('runs a test when told, skip', async () => {
+  test('runs a test when told, skip', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     let called = false;
-    context.state.callbacks['testItId'] = () => { called = true; };
+    context.state.callbacks['testTestId'] = () => { called = true; };
     assert(called === false);
-    context.publish('x-test-root-run', { itId: 'testItId', directive: 'SKIP' });
+    context.publish('x-test-root-run', { testId: 'testTestId', directive: 'SKIP' });
     assert(called === false);
     await new Promise(resolve => setTimeout(resolve));
     assert(context.publish.calls.length === 4);
@@ -128,21 +128,21 @@ describe('initialize', () => {
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
     assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
     assert(context.publish.calls[3][0] === 'x-test-frame-result');
-    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].testId === 'testTestId');
     assert(context.publish.calls[3][1].ok === true);
     assert(context.publish.calls[3][1].error === null);
   });
 
-  it('runs a test when told, not ok', async () => {
+  test('runs a test when told, not ok', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     let called = false;
-    context.state.callbacks['testItId'] = () => {
+    context.state.callbacks['testTestId'] = () => {
       called = true;
       throw new Error('test failure');
     };
     assert(called === false);
-    context.publish('x-test-root-run', { itId: 'testItId' });
+    context.publish('x-test-root-run', { testId: 'testTestId' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
     assert(context.publish.calls.length === 4);
@@ -150,18 +150,18 @@ describe('initialize', () => {
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
     assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
     assert(context.publish.calls[3][0] === 'x-test-frame-result');
-    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].testId === 'testTestId');
     assert(context.publish.calls[3][1].ok === false);
     assert(context.publish.calls[3][1].error.message === 'test failure');
   });
 
-  it('runs a test when told, todo, ok', async () => {
+  test('runs a test when told, todo, ok', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     let called = false;
-    context.state.callbacks['testItId'] = () => { called = true; };
+    context.state.callbacks['testTestId'] = () => { called = true; };
     assert(called === false);
-    context.publish('x-test-root-run', { itId: 'testItId', directive: 'TODO' });
+    context.publish('x-test-root-run', { testId: 'testTestId', directive: 'TODO' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
     assert(context.publish.calls.length === 4);
@@ -169,21 +169,21 @@ describe('initialize', () => {
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
     assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
     assert(context.publish.calls[3][0] === 'x-test-frame-result');
-    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].testId === 'testTestId');
     assert(context.publish.calls[3][1].ok === true);
     assert(context.publish.calls[3][1].error === null);
   });
 
-  it('runs a test when told, todo, not ok', async () => {
+  test('runs a test when told, todo, not ok', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     let called = false;
-    context.state.callbacks['testItId'] = () => {
+    context.state.callbacks['testTestId'] = () => {
       called = true;
       throw new Error('test failure');
     };
     assert(called === false);
-    context.publish('x-test-root-run', { itId: 'testItId', directive: 'TODO' });
+    context.publish('x-test-root-run', { testId: 'testTestId', directive: 'TODO' });
     assert(called === true);
     await new Promise(resolve => setTimeout(resolve));
     assert(context.publish.calls.length === 4);
@@ -191,26 +191,26 @@ describe('initialize', () => {
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
     assert(context.publish.calls[2][0] === 'x-test-root-run'); // This is from our test.
     assert(context.publish.calls[3][0] === 'x-test-frame-result');
-    assert(context.publish.calls[3][1].itId === 'testItId');
+    assert(context.publish.calls[3][1].testId === 'testTestId');
     assert(context.publish.calls[3][1].ok === false);
     assert(context.publish.calls[3][1].error.message === 'test failure');
   });
 
-  it('closes registration after it is ready', async () => {
+  test('closes registration after it is ready', async () => {
     const { context } = getContext();
     await XTestFrame.initialize(context, '123', 'http://localhost:8080');
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-frame-initialize');
     assert(context.publish.calls[1][0] === 'x-test-frame-ready');
     XTestFrame.load(context, './test.html');
-    XTestFrame.describe(context, 'nope', () => {});
-    XTestFrame.it(context, 'nope', () => {});
+    XTestFrame.suite(context, 'nope', () => {});
+    XTestFrame.test(context, 'nope', () => {});
     assert(context.publish.calls.length === 2); // doesn't get registered.
   });
 });
 
-describe('load', () => {
-  it('publishes new test', () => {
+suite('load', () => {
+  test('publishes new test', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.href = 'http://localhost:8080';
@@ -224,129 +224,129 @@ describe('load', () => {
   });
 });
 
-describe('describe', () => {
-  it('publishes new describe-start and describe-end', () => {
+suite('suite', () => {
+  test('publishes new suite-start and suite-end', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {};
-    XTestFrame.describe(context, 'description', callback);
+    XTestFrame.suite(context, 'description', callback);
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'describe-start');
-    assert(context.publish.calls[0][1].describeId === '0');
+    assert(context.publish.calls[0][1].type === 'suite-start');
+    assert(context.publish.calls[0][1].suiteId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
     assert(context.publish.calls[0][1].text === 'description');
 
     assert(context.publish.calls[1][0] === 'x-test-frame-register');
-    assert(context.publish.calls[1][1].type === 'describe-end');
-    assert(context.publish.calls[1][1].describeId === '0');
+    assert(context.publish.calls[1][1].type === 'suite-end');
+    assert(context.publish.calls[1][1].suiteId === '0');
   });
 
-  it('respects current describe for multi-level nesting', () => {
+  test('respects current suite for multi-level nesting', () => {
     const { context } = getContext();
     context.state.frameId = '123';
-    context.state.parents = [{ type: 'frame', frameId: '123' }, { type: 'describe', describeId: '999' }];
+    context.state.parents = [{ type: 'frame', frameId: '123' }, { type: 'suite', suiteId: '999' }];
     const callback = () => {};
-    XTestFrame.describe(context, 'description', callback);
+    XTestFrame.suite(context, 'description', callback);
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'describe-start');
-    assert(context.publish.calls[0][1].describeId === '0');
+    assert(context.publish.calls[0][1].type === 'suite-start');
+    assert(context.publish.calls[0][1].suiteId === '0');
     assert(context.publish.calls[0][1].parents.length === 2);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
-    assert(context.publish.calls[0][1].parents[1].type === 'describe');
-    assert(context.publish.calls[0][1].parents[1].describeId === '999');
+    assert(context.publish.calls[0][1].parents[1].type === 'suite');
+    assert(context.publish.calls[0][1].parents[1].suiteId === '999');
     assert(context.publish.calls[0][1].text === 'description');
 
     assert(context.publish.calls[1][0] === 'x-test-frame-register');
-    assert(context.publish.calls[1][1].type === 'describe-end');
-    assert(context.publish.calls[1][1].describeId === '0');
+    assert(context.publish.calls[1][1].type === 'suite-end');
+    assert(context.publish.calls[1][1].suiteId === '0');
   });
 
-  it('publishes nested describe registered in callback', () => {
+  test('publishes nested suite registered in callback', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {
       const innerCallback = () => {};
-      XTestFrame.describe(context, 'inner-description', innerCallback);
+      XTestFrame.suite(context, 'inner-description', innerCallback);
     };
-    XTestFrame.describe(context, 'description', callback);
+    XTestFrame.suite(context, 'description', callback);
     assert(context.publish.calls.length === 4);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'describe-start');
-    assert(context.publish.calls[0][1].describeId === '0');
+    assert(context.publish.calls[0][1].type === 'suite-start');
+    assert(context.publish.calls[0][1].suiteId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
     assert(context.publish.calls[0][1].text === 'description');
 
     assert(context.publish.calls[1][0] === 'x-test-frame-register');
-    assert(context.publish.calls[1][1].type === 'describe-start');
-    assert(context.publish.calls[1][1].describeId === '1');
+    assert(context.publish.calls[1][1].type === 'suite-start');
+    assert(context.publish.calls[1][1].suiteId === '1');
     assert(context.publish.calls[1][1].parents.length === 2);
     assert(context.publish.calls[1][1].parents[0].type === 'frame');
     assert(context.publish.calls[1][1].parents[0].frameId === '123');
-    assert(context.publish.calls[1][1].parents[1].type === 'describe');
-    assert(context.publish.calls[1][1].parents[1].describeId === '0');
+    assert(context.publish.calls[1][1].parents[1].type === 'suite');
+    assert(context.publish.calls[1][1].parents[1].suiteId === '0');
     assert(context.publish.calls[1][1].text === 'inner-description');
 
     assert(context.publish.calls[2][0] === 'x-test-frame-register');
-    assert(context.publish.calls[2][1].type === 'describe-end');
-    assert(context.publish.calls[2][1].describeId === '1');
+    assert(context.publish.calls[2][1].type === 'suite-end');
+    assert(context.publish.calls[2][1].suiteId === '1');
 
     assert(context.publish.calls[3][0] === 'x-test-frame-register');
-    assert(context.publish.calls[3][1].type === 'describe-end');
-    assert(context.publish.calls[3][1].describeId === '0');
+    assert(context.publish.calls[3][1].type === 'suite-end');
+    assert(context.publish.calls[3][1].suiteId === '0');
   });
 
-  it('publishes nested it registered in callback', () => {
+  test('publishes nested test registered in callback', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {
       const innerCallback = () => {};
-      XTestFrame.it(context, 'inner-description', innerCallback);
+      XTestFrame.test(context, 'inner-description', innerCallback);
     };
-    XTestFrame.describe(context, 'description', callback);
+    XTestFrame.suite(context, 'description', callback);
     assert(context.publish.calls.length === 3);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'describe-start');
-    assert(context.publish.calls[0][1].describeId === '0');
+    assert(context.publish.calls[0][1].type === 'suite-start');
+    assert(context.publish.calls[0][1].suiteId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
     assert(context.publish.calls[0][1].text === 'description');
 
     assert(context.publish.calls[1][0] === 'x-test-frame-register');
-    assert(context.publish.calls[1][1].type === 'it');
-    assert(context.publish.calls[1][1].itId === '1');
+    assert(context.publish.calls[1][1].type === 'test');
+    assert(context.publish.calls[1][1].testId === '1');
     assert(context.publish.calls[1][1].parents.length === 2);
     assert(context.publish.calls[1][1].parents[0].type === 'frame');
     assert(context.publish.calls[1][1].parents[0].frameId === '123');
-    assert(context.publish.calls[1][1].parents[1].type === 'describe');
-    assert(context.publish.calls[1][1].parents[1].describeId === '0');
+    assert(context.publish.calls[1][1].parents[1].type === 'suite');
+    assert(context.publish.calls[1][1].parents[1].suiteId === '0');
     assert(context.publish.calls[1][1].text === 'inner-description');
 
     assert(context.publish.calls[2][0] === 'x-test-frame-register');
-    assert(context.publish.calls[2][1].type === 'describe-end');
-    assert(context.publish.calls[2][1].describeId === '0');
+    assert(context.publish.calls[2][1].type === 'suite-end');
+    assert(context.publish.calls[2][1].suiteId === '0');
   });
 
-  it('bails for failures during describe callback', () => {
+  test('bails for failures during suite callback', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => { throw new Error('test failure'); };
-    XTestFrame.describe(context, 'description', callback);
+    XTestFrame.suite(context, 'description', callback);
     assert(context.publish.calls.length === 2);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'describe-start');
-    assert(context.publish.calls[0][1].describeId === '0');
+    assert(context.publish.calls[0][1].type === 'suite-start');
+    assert(context.publish.calls[0][1].suiteId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
@@ -357,13 +357,13 @@ describe('describe', () => {
     assert(context.publish.calls[1][1].error.message === 'test failure');
   });
 
-  it('throws if callback is not a function', () => {
+  test('throws if callback is not a function', () => {
     const { context } = getContext();
     const callback = null;
     const expected = 'Unexpected callback value "null".';
     let actual;
     try {
-      XTestFrame.describe(context, 'description', callback);
+      XTestFrame.suite(context, 'description', callback);
     } catch (error) {
       actual = error.message;
     }
@@ -372,17 +372,17 @@ describe('describe', () => {
   });
 });
 
-describe('it', () => {
-  it('publishes new it', () => {
+suite('test', () => {
+  test('publishes new test', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {};
-    XTestFrame.it(context, 'description', callback);
+    XTestFrame.test(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'it');
-    assert(context.publish.calls[0][1].itId === '0');
+    assert(context.publish.calls[0][1].type === 'test');
+    assert(context.publish.calls[0][1].testId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
@@ -395,27 +395,27 @@ describe('it', () => {
   let message = 'no error thrown';
   let passed = false;
   try {
-    it('this will break', 'this is expected to fail');
+    test('this will break', 'this is expected to fail');
   } catch (error) {
     message = error.message;
     passed = error.message === 'Unexpected callback value "this is expected to fail".';
   }
-  it('throws if “it” is not given a function as a callback', () => {
+  test('throws if "test" is not given a function as a callback', () => {
     assert(passed, message);
   });
 });
 
-describe('itSkip', () => {
-  it('publishes new skip', () => {
+suite('testSkip', () => {
+  test('publishes new skip', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {};
-    XTestFrame.itSkip(context, 'description', callback);
+    XTestFrame.testSkip(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'it');
-    assert(context.publish.calls[0][1].itId === '0');
+    assert(context.publish.calls[0][1].type === 'test');
+    assert(context.publish.calls[0][1].testId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
@@ -426,17 +426,17 @@ describe('itSkip', () => {
   });
 });
 
-describe('itTodo', () => {
-  it('publishes new todo', () => {
+suite('testTodo', () => {
+  test('publishes new todo', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {};
-    XTestFrame.itTodo(context, 'description', callback);
+    XTestFrame.testTodo(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'it');
-    assert(context.publish.calls[0][1].itId === '0');
+    assert(context.publish.calls[0][1].type === 'test');
+    assert(context.publish.calls[0][1].testId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
@@ -447,17 +447,17 @@ describe('itTodo', () => {
   });
 });
 
-describe('itOnly', () => {
-  it('publishes new only', () => {
+suite('testOnly', () => {
+  test('publishes new only', () => {
     const { context } = getContext();
     context.state.frameId = '123';
     context.state.parents = [{ type: 'frame', frameId: '123' }];
     const callback = () => {};
-    XTestFrame.itOnly(context, 'description', callback);
+    XTestFrame.testOnly(context, 'description', callback);
     assert(context.publish.calls.length === 1);
     assert(context.publish.calls[0][0] === 'x-test-frame-register');
-    assert(context.publish.calls[0][1].type === 'it');
-    assert(context.publish.calls[0][1].itId === '0');
+    assert(context.publish.calls[0][1].type === 'test');
+    assert(context.publish.calls[0][1].testId === '0');
     assert(context.publish.calls[0][1].parents.length === 1);
     assert(context.publish.calls[0][1].parents[0].type === 'frame');
     assert(context.publish.calls[0][1].parents[0].frameId === '123');
@@ -468,10 +468,10 @@ describe('itOnly', () => {
   });
 });
 
-describe('assert', () => {
+suite('assert', () => {
   const makeContext = () => ({ state: { bailed: false } });
 
-  it('defaults message to "not ok"', () => {
+  test('defaults message to "not ok"', () => {
     let message;
     try {
       XTestFrame.assert(makeContext(), false);
@@ -482,7 +482,7 @@ describe('assert', () => {
   });
 });
 
-describe('deepEqual', () => {
+suite('deepEqual', () => {
   const makeContext = () => ({ state: { bailed: false } });
   const expectOk = (actual, expected) => {
     XTestFrame.deepEqual(makeContext(), actual, expected);
@@ -506,7 +506,7 @@ describe('deepEqual', () => {
     assert(typeof message === 'string' && matcher.test(message), `got ${JSON.stringify(message)}`);
   };
 
-  it('passes for equal primitives', () => {
+  test('passes for equal primitives', () => {
     expectOk(1, 1);
     expectOk('a', 'a');
     expectOk(true, true);
@@ -516,80 +516,80 @@ describe('deepEqual', () => {
     expectOk(0n, 0n);
   });
 
-  it('distinguishes +0 and -0', () => {
+  test('distinguishes +0 and -0', () => {
     expectNotEqual(0, -0);
   });
 
-  it('fails for unequal primitives', () => {
+  test('fails for unequal primitives', () => {
     expectNotEqual(1, 2);
     expectNotEqual('a', 'b');
     expectNotEqual(true, false);
     expectNotEqual(null, undefined);
   });
 
-  it('compares plain objects by own keys', () => {
+  test('compares plain objects by own keys', () => {
     expectOk({ a: 1, b: 2 }, { b: 2, a: 1 });
     expectNotEqual({ a: 1 }, { a: 1, b: 2 });
     expectNotEqual({ a: 1 }, { a: 2 });
     expectNotEqual({ a: 1 }, { b: 1 });
   });
 
-  it('compares arrays strictly by length and index', () => {
+  test('compares arrays strictly by length and index', () => {
     expectOk([1, 2, 3], [1, 2, 3]);
     expectNotEqual([1, 2], [1, 2, 3]);
     expectNotEqual([1, 2, 3], [3, 2, 1]);
   });
 
-  it('distinguishes sparse arrays from arrays with explicit undefined', () => {
+  test('distinguishes sparse arrays from arrays with explicit undefined', () => {
     // eslint-disable-next-line no-sparse-arrays
     expectNotEqual([1,,3], [1, undefined, 3]);
   });
 
-  it('compares named properties on arrays', () => {
+  test('compares named properties on arrays', () => {
     const a = Object.assign([1, 2], { foo: 'bar' });
     const b = [1, 2];
     expectNotEqual(a, b);
   });
 
-  it('recurses into nested structures', () => {
+  test('recurses into nested structures', () => {
     expectOk({ a: [1, { b: 2 }] }, { a: [1, { b: 2 }] });
     expectNotEqual({ a: [1, { b: 2 }] }, { a: [1, { b: 3 }] });
   });
 
-  it('supports null-prototype objects', () => {
+  test('supports null-prototype objects', () => {
     const a = Object.assign(Object.create(null), { x: 1 });
     const b = Object.assign(Object.create(null), { x: 1 });
     expectOk(a, b);
   });
 
-  it('fails for mixed null-prototype vs Object.prototype', () => {
+  test('fails for mixed null-prototype vs Object.prototype', () => {
     expectNotEqual(Object.create(null), {});
     expectNotEqual({}, Object.create(null));
   });
 
-  it('throws if either object has symbol-keyed properties', () => {
+  test('throws if either object has symbol-keyed properties', () => {
     const sym = Symbol('x');
     expectThrows({ [sym]: 1 }, {}, /deepEqual does not support symbol-keyed properties/);
     expectThrows({}, { [sym]: 1 }, /deepEqual does not support symbol-keyed properties/);
     expectThrows({ [sym]: 1 }, { [sym]: 1 }, /deepEqual does not support symbol-keyed properties/);
   });
 
-  it('rejects mixed object vs array', () => {
+  test('rejects mixed object vs array', () => {
     expectNotEqual({ 0: 'a', length: 1 }, ['a']);
   });
 
-  it('throws for unsupported class instances', () => {
+  test('throws for unsupported class instances', () => {
     expectThrows(new Map(), new Map(), /deepEqual only supports/);
     expectThrows(new Set(), new Set(), /deepEqual only supports/);
     expectThrows(new Date(0), new Date(0), /deepEqual only supports/);
     expectThrows(/a/, /a/, /deepEqual only supports/);
   });
 
-  it('throws for functions', () => {
+  test('throws for functions', () => {
     expectThrows(() => {}, () => {}, /deepEqual only supports/);
   });
 
-  it('uses custom message when provided', () => {
+  test('uses custom message when provided', () => {
     let message;
     try {
       XTestFrame.deepEqual({ state: { bailed: false } }, { a: 1 }, { a: 2 }, 'custom');
@@ -599,7 +599,7 @@ describe('deepEqual', () => {
     assert(message === 'custom');
   });
 
-  it('defaults message to "not deep equal"', () => {
+  test('defaults message to "not deep equal"', () => {
     let message;
     try {
       XTestFrame.deepEqual({ state: { bailed: false } }, 1, 2);
@@ -609,13 +609,13 @@ describe('deepEqual', () => {
     assert(message === 'not deep equal');
   });
 
-  it('is a no-op when context is bailed', () => {
+  test('is a no-op when context is bailed', () => {
     XTestFrame.deepEqual({ state: { bailed: true } }, 1, 2, 'should not throw');
   });
 });
 
-describe('bail', () => {
-  it('marks state as ended', () => {
+suite('bail', () => {
+  test('marks state as ended', () => {
     const error = new Error('error test');
     const { context } = getContext();
     assert(context.state.bailed === false);
@@ -623,7 +623,7 @@ describe('bail', () => {
     assert(context.state.bailed === true);
   });
 
-  it('publishes to parent frame', () => {
+  test('publishes to parent frame', () => {
     const error = new Error('error test');
     const { context } = getContext();
     context.state.frameId = '123';
@@ -635,14 +635,14 @@ describe('bail', () => {
   });
 });
 
-describe('error', () => {
-  it('turns error into basic object', () => {
+suite('error', () => {
+  test('turns error into basic object', () => {
     const testError = new Error('error test');
     const error = XTestFrame.createError(testError);
     assert(error.message = testError.toString());
     assert(error.stack = testError.stack);
   });
-  it('handles string errors', () => {
+  test('handles string errors', () => {
     const testError = 'error test';
     const error = XTestFrame.createError(testError);
     assert(error.message = testError.toString());

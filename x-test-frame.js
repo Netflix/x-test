@@ -33,7 +33,7 @@ export class XTestFrame {
       XTestFrame.bail(context, event.reason);
     });
 
-    // The registration window stays open until “DOMContentLoaded”, which allows
+    // The registration window stays open until "DOMContentLoaded", which allows
     //  folks to import fixtures via JSON Modules and register tests before
     //  registration ends. Note that this does _NOT_ support top-level awaits.
     await context.domContentLoadedPromise;
@@ -59,22 +59,22 @@ export class XTestFrame {
   static async onRun(context, event) {
     if (
       !context.state.bailed &&
-      context.state.callbacks[event.data.data.itId]
+      context.state.callbacks[event.data.data.testId]
     ) {
-      const { itId, directive, interval } = event.data.data;
+      const { testId, directive, interval } = event.data.data;
       try {
         if (directive !== 'SKIP') {
-          const callback = context.state.callbacks[itId];
+          const callback = context.state.callbacks[testId];
           const resolvedInterval = interval ?? 30_000;
           const timeout = await Promise.race([callback(), context.timeout(resolvedInterval)]);
           if (timeout === XTestCommon.TIMEOUT) {
             throw new Error(`timeout after ${resolvedInterval.toLocaleString()}ms`);
           }
         }
-        context.publish('x-test-frame-result', { itId, ok: true, error: null });
+        context.publish('x-test-frame-result', { testId, ok: true, error: null });
       } catch (error) {
         error = XTestFrame.createError(error); // eslint-disable-line no-ex-assign
-        context.publish('x-test-frame-result', { itId, ok: false, error });
+        context.publish('x-test-frame-result', { testId, ok: false, error });
       }
     }
   }
@@ -176,7 +176,7 @@ export class XTestFrame {
       throw new Error('deepEqual does not support symbol-keyed properties.');
     }
 
-    // Exit early if key length doesn’t match.
+    // Exit early if key length doesn't match.
     if (Object.keys(a).length !== Object.keys(b).length) {
       return false;
     }
@@ -211,24 +211,24 @@ export class XTestFrame {
    * @param {any} directive
    * @param {any} only
    */
-  static #describerInner(context, text, callback, directive, only) {
+  static #suiteInner(context, text, callback, directive, only) {
     if (context && !context.state.bailed && !context.state.ready) {
       if (!(callback instanceof Function)) {
         throw new Error(`Unexpected callback value "${callback}".`);
       }
-      const describeId = context.uuid();
+      const suiteId = context.uuid();
       const parents = [...context.state.parents];
       directive = directive ?? null;
       only = only ?? false;
       context.publish(
         'x-test-frame-register',
-        { type: 'describe-start', describeId, parents, text, directive, only }
+        { type: 'suite-start', suiteId, parents, text, directive, only }
       );
       try {
-        context.state.parents.push({ type: 'describe', describeId });
+        context.state.parents.push({ type: 'suite', suiteId });
         callback();
         context.state.parents.pop();
-        context.publish('x-test-frame-register', { type: 'describe-end', describeId });
+        context.publish('x-test-frame-register', { type: 'suite-end', suiteId });
       } catch (error) {
         XTestFrame.bail(context, error);
       }
@@ -240,8 +240,8 @@ export class XTestFrame {
    * @param {any} text
    * @param {any} callback
    */
-  static describe(context, text, callback) {
-    XTestFrame.#describerInner(context, text, callback, null, null);
+  static suite(context, text, callback) {
+    XTestFrame.#suiteInner(context, text, callback, null, null);
   }
 
   /**
@@ -249,8 +249,8 @@ export class XTestFrame {
    * @param {any} text
    * @param {any} callback
    */
-  static describeSkip(context, text, callback) {
-    XTestFrame.#describerInner(context, text, callback, 'SKIP', null);
+  static suiteSkip(context, text, callback) {
+    XTestFrame.#suiteInner(context, text, callback, 'SKIP', null);
   }
 
   /**
@@ -258,8 +258,8 @@ export class XTestFrame {
    * @param {any} text
    * @param {any} callback
    */
-  static describeOnly(context, text, callback) {
-    XTestFrame.#describerInner(context, text, callback, null, true);
+  static suiteOnly(context, text, callback) {
+    XTestFrame.#suiteInner(context, text, callback, null, true);
   }
 
   /**
@@ -267,8 +267,8 @@ export class XTestFrame {
    * @param {any} text
    * @param {any} callback
    */
-  static describeTodo(context, text, callback) {
-    XTestFrame.#describerInner(context, text, callback, 'TODO', null);
+  static suiteTodo(context, text, callback) {
+    XTestFrame.#suiteInner(context, text, callback, 'TODO', null);
   }
 
   /**
@@ -279,20 +279,20 @@ export class XTestFrame {
    * @param {any} directive
    * @param {any} only
    */
-  static #itInner(context, text, callback, interval, directive, only) {
+  static #testInner(context, text, callback, interval, directive, only) {
     if (context && !context.state.bailed && !context.state.ready) {
       if (!(callback instanceof Function)) {
         throw new Error(`Unexpected callback value "${callback}".`);
       }
-      const itId = context.uuid();
+      const testId = context.uuid();
       const parents = [...context.state.parents];
       interval = interval ?? null;
       directive = directive ?? null;
       only = only ?? false;
-      context.state.callbacks[itId] = callback;
+      context.state.callbacks[testId] = callback;
       context.publish(
         'x-test-frame-register',
-        { type: 'it', itId, parents, text, interval, directive, only }
+        { type: 'test', testId, parents, text, interval, directive, only }
       );
     }
   }
@@ -303,8 +303,8 @@ export class XTestFrame {
    * @param {any} callback
    * @param {any} interval
    */
-  static it(context, text, callback, interval) {
-    XTestFrame.#itInner(context, text, callback, interval, null, null);
+  static test(context, text, callback, interval) {
+    XTestFrame.#testInner(context, text, callback, interval, null, null);
   }
 
   /**
@@ -313,8 +313,8 @@ export class XTestFrame {
    * @param {any} callback
    * @param {any} interval
    */
-  static itSkip(context, text, callback, interval) {
-    XTestFrame.#itInner(context, text, callback, interval, 'SKIP', null);
+  static testSkip(context, text, callback, interval) {
+    XTestFrame.#testInner(context, text, callback, interval, 'SKIP', null);
   }
 
   /**
@@ -323,8 +323,8 @@ export class XTestFrame {
    * @param {any} callback
    * @param {any} interval
    */
-  static itOnly(context, text, callback, interval) {
-    XTestFrame.#itInner(context, text, callback, interval, null, true);
+  static testOnly(context, text, callback, interval) {
+    XTestFrame.#testInner(context, text, callback, interval, null, true);
   }
 
   /**
@@ -333,7 +333,7 @@ export class XTestFrame {
    * @param {any} callback
    * @param {any} interval
    */
-  static itTodo(context, text, callback, interval) {
-    XTestFrame.#itInner(context, text, callback, interval, 'TODO', null);
+  static testTodo(context, text, callback, interval) {
+    XTestFrame.#testInner(context, text, callback, interval, 'TODO', null);
   }
 }
