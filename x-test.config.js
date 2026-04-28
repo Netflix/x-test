@@ -3,7 +3,7 @@ export default {
   client: 'puppeteer',
   browser: 'chromium',
   coverage: true,
-  coverageTargets: {
+  coverageGoals: {
     './x-test.js':          { lines: 100 },
     './x-test-tap.js':      { lines: 100 },
     './x-test-frame.js':    { lines: 97 },

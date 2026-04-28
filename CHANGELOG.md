@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The `# Failures:` summary block is removed from TAP output. It is now the
+  responsibility of `@netflix/x-test-cli` (#106).
 - Assertion failures now show only user code in the stack trace. Internal
   x-test frames are stripped via `Error.captureStackTrace` (Chromium / V8), and
   callbacks are deferred to a fresh micro task so that BroadcastChannel

@@ -537,63 +537,9 @@ export class XTestRoot {
   static kickoffExit(context, stepId) {
     const count = XTestRoot.count(context, stepId);
     const planTap = XTestTap.plan(count);
-    const failureTap = [];
-    const failureStepIds = XTestRoot.collectFailureStepIds(context);
-    if (failureStepIds.length > 0) {
-      failureTap.push(XTestTap.diagnostic('Failures:'));
-      for (const failureStepId of failureStepIds) {
-        failureTap.push(XTestTap.diagnostic(''));
-        for (const line of XTestRoot.formatFailure(context, failureStepId).split('\n')) {
-          failureTap.push(XTestTap.diagnostic(line));
-        }
-      }
-    }
-    XTestRoot.output(context, stepId, ...failureTap, planTap);
+    XTestRoot.output(context, stepId, planTap);
     context.state.steps[stepId].status = 'done';
     XTestRoot.end(context);
-  }
-
-  /**
-   * @param {any} context
-   * @returns {string[]}
-   */
-  static collectFailureStepIds(context) {
-    const failureStepIds = [];
-    for (const stepId of context.state.stepIds) {
-      const step = context.state.steps[stepId];
-      if (step.type === 'test') {
-        const test = context.state.tests[step.testId];
-        if (test.ok === false && test.directive !== 'TODO') {
-          failureStepIds.push(stepId);
-        }
-      }
-    }
-    return failureStepIds;
-  }
-
-  /**
-   * @param {any} context
-   * @param {any} stepId
-   * @returns {string}
-   */
-  static formatFailure(context, stepId) {
-    const step = context.state.steps[stepId];
-    const test = context.state.tests[step.testId];
-    const frame = context.state.frames[test.parents[0].frameId];
-    const lines = [frame.href];
-    const suiteParents = test.parents.filter((/** @type {any} */ parent) => parent.type === 'suite');
-    for (const parent of suiteParents) {
-      lines.push(`> ${context.state.suites[parent.suiteId].text.replace(/#/g, '*')}`);
-    }
-    lines.push(`> ${test.text.replace(/#/g, '*')}`);
-    if (test.error.stack) {
-      for (const stackLine of test.error.stack.split('\n')) {
-        lines.push(stackLine);
-      }
-    } else {
-      lines.push(`Error: ${test.error.message}`);
-    }
-    return lines.join('\n');
   }
 
   /**
