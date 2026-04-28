@@ -24,6 +24,7 @@ export class XTestFrame {
     });
 
     // Setup global error / rejection handlers.
+    /* x-test:coverage disable */ // Cannot test top-level error handlers.
     context.addErrorListener((/** @type {any} */ event) => {
       event.preventDefault();
       XTestFrame.bail(context, event.error);
@@ -32,6 +33,7 @@ export class XTestFrame {
       event.preventDefault();
       XTestFrame.bail(context, event.reason);
     });
+    /* x-test:coverage enable */
 
     // The registration window stays open until "DOMContentLoaded", which allows
     //  folks to import fixtures via JSON Modules and register tests before
