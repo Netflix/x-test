@@ -11,7 +11,7 @@ import { XTestFrame } from './x-test-frame.js';
  * @param {string} [text] - The assertion message
  * @returns {asserts ok} Throws if condition is falsy.
  */
-export const assert = (ok, text) => XTestFrame.assert(suiteContext, ok, text);
+export const assert = (ok, text) => XTestFrame.assert(suiteContext, assert, ok, text);
 
 /**
  * Strict deep-equality assertion. Supports primitives, plain objects, and arrays.
@@ -24,7 +24,7 @@ export const assert = (ok, text) => XTestFrame.assert(suiteContext, ok, text);
  * @param {string} [text] - The assertion message
  * @returns {asserts actual is T} Throws if values are not deeply equal.
  */
-assert.deepEqual = (actual, expected, text) => XTestFrame.deepEqual(suiteContext, actual, expected, text);
+assert.deepEqual = (actual, expected, text) => XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected, text);
 
 /**
  * Load a new frame.

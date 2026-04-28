@@ -66,7 +66,8 @@ export class XTestFrame {
         if (directive !== 'SKIP') {
           const callback = context.state.callbacks[testId];
           const resolvedInterval = interval ?? 30_000;
-          const timeout = await Promise.race([callback(), context.timeout(resolvedInterval)]);
+          // Create a new stack to remove some internal noise from stack trace on error.
+          const timeout = await Promise.race([Promise.resolve().then(() => callback()), context.timeout(resolvedInterval)]);
           if (timeout === XTestCommon.TIMEOUT) {
             throw new Error(`timeout after ${resolvedInterval.toLocaleString()}ms`);
           }
@@ -109,13 +110,16 @@ export class XTestFrame {
 
   /**
    * @param {any} context
+   * @param {any} caller
    * @param {any} ok
    * @param {any} text
    */
-  static assert(context, ok, text) {
+  static assert(context, caller, ok, text) {
     if (context && !context.state.bailed) {
       if (!ok) {
-        throw new Error(text ?? 'not ok');
+        const error = new Error(text ?? 'not ok');
+        /** @type {any} */ (Error).captureStackTrace?.(error, caller);
+        throw error;
       }
     }
   }
@@ -127,12 +131,13 @@ export class XTestFrame {
    * later. This is meant to be a _strict_ subset of what is provided by
    * node:assert/strict#deepEqual (https://nodejs.org/api/assert.html).
    * @param {any} context
+   * @param {any} caller
    * @param {any} actual
    * @param {any} expected
    * @param {any} [text]
    */
-  static deepEqual(context, actual, expected, text) {
-    XTestFrame.assert(context, XTestFrame.#deepEqual(actual, expected), text ?? 'not deep equal');
+  static deepEqual(context, caller, actual, expected, text) {
+    XTestFrame.assert(context, caller, XTestFrame.#deepEqual(actual, expected), text ?? 'not deep equal');
   }
 
   /**
