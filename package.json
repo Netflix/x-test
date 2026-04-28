@@ -41,7 +41,7 @@
   ],
   "devDependencies": {
     "@netflix/eslint-config": "3.0.0",
-    "@netflix/x-test-cli": "1.0.0-rc.5",
+    "@netflix/x-test-cli": "1.0.0-rc.6",
     "eslint": "10.1.0",
     "eslint-plugin-jsdoc": "62.8.0",
     "globals": "17.4.0",

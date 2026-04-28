@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Assertion failures now show only user code in the stack trace. Internal
+  x-test frames are stripped via `Error.captureStackTrace` (Chromium / V8), and
+  callbacks are deferred to a fresh micro task so that BroadcastChannel
+  machinery does not appear below user frames (#106).
+
 ## [2.0.0-rc.8] - 2026-04-24
 
 ### Added

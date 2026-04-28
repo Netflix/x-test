@@ -57,6 +57,7 @@ const getContext = () => {
   publish.calls = [];
   subscribe.calls = [];
   subscribe.callbacks = [];
+  timeout.calls = [];
   timeout.callbacks = [];
   addErrorListener.calls = [];
   addErrorListener.callbacks = [];
@@ -102,8 +103,9 @@ suite('initialize', () => {
     context.state.callbacks['testTestId'] = () => { called = true; };
     assert(called === false);
     context.publish('x-test-root-run', { testId: 'testTestId' });
-    assert(called === true);
+    assert(called === false);
     await new Promise(resolve => setTimeout(resolve));
+    assert(called === true);
     assert(context.publish.calls.length === 4);
     assert(context.publish.calls[0][0] === 'x-test-frame-initialize'); // From initialization (sync).
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
@@ -143,8 +145,9 @@ suite('initialize', () => {
     };
     assert(called === false);
     context.publish('x-test-root-run', { testId: 'testTestId' });
-    assert(called === true);
+    assert(called === false);
     await new Promise(resolve => setTimeout(resolve));
+    assert(called === true);
     assert(context.publish.calls.length === 4);
     assert(context.publish.calls[0][0] === 'x-test-frame-initialize'); // From initialization (sync).
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
@@ -162,8 +165,9 @@ suite('initialize', () => {
     context.state.callbacks['testTestId'] = () => { called = true; };
     assert(called === false);
     context.publish('x-test-root-run', { testId: 'testTestId', directive: 'TODO' });
-    assert(called === true);
+    assert(called === false);
     await new Promise(resolve => setTimeout(resolve));
+    assert(called === true);
     assert(context.publish.calls.length === 4);
     assert(context.publish.calls[0][0] === 'x-test-frame-initialize'); // From initialization (sync).
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
@@ -184,8 +188,9 @@ suite('initialize', () => {
     };
     assert(called === false);
     context.publish('x-test-root-run', { testId: 'testTestId', directive: 'TODO' });
-    assert(called === true);
+    assert(called === false);
     await new Promise(resolve => setTimeout(resolve));
+    assert(called === true);
     assert(context.publish.calls.length === 4);
     assert(context.publish.calls[0][0] === 'x-test-frame-initialize'); // From initialization (sync).
     assert(context.publish.calls[1][0] === 'x-test-frame-ready'); // From initialization (async).
@@ -474,7 +479,7 @@ suite('assert', () => {
   test('defaults message to "not ok"', () => {
     let message;
     try {
-      XTestFrame.assert(makeContext(), false);
+      XTestFrame.assert(makeContext(), null, false);
     } catch (error) {
       message = error.message;
     }
@@ -485,12 +490,12 @@ suite('assert', () => {
 suite('deepEqual', () => {
   const makeContext = () => ({ state: { bailed: false } });
   const expectOk = (actual, expected) => {
-    XTestFrame.deepEqual(makeContext(), actual, expected);
+    XTestFrame.deepEqual(makeContext(), null, actual, expected);
   };
   const expectNotEqual = (actual, expected) => {
     let message;
     try {
-      XTestFrame.deepEqual(makeContext(), actual, expected, 'boom');
+      XTestFrame.deepEqual(makeContext(), null, actual, expected, 'boom');
     } catch (error) {
       message = error.message;
     }
@@ -499,7 +504,7 @@ suite('deepEqual', () => {
   const expectThrows = (actual, expected, matcher) => {
     let message;
     try {
-      XTestFrame.deepEqual(makeContext(), actual, expected);
+      XTestFrame.deepEqual(makeContext(), null, actual, expected);
     } catch (error) {
       message = error.message;
     }
@@ -592,7 +597,7 @@ suite('deepEqual', () => {
   test('uses custom message when provided', () => {
     let message;
     try {
-      XTestFrame.deepEqual({ state: { bailed: false } }, { a: 1 }, { a: 2 }, 'custom');
+      XTestFrame.deepEqual({ state: { bailed: false } }, null, { a: 1 }, { a: 2 }, 'custom');
     } catch (error) {
       message = error.message;
     }
@@ -602,7 +607,7 @@ suite('deepEqual', () => {
   test('defaults message to "not deep equal"', () => {
     let message;
     try {
-      XTestFrame.deepEqual({ state: { bailed: false } }, 1, 2);
+      XTestFrame.deepEqual({ state: { bailed: false } }, null, 1, 2);
     } catch (error) {
       message = error.message;
     }
@@ -610,7 +615,7 @@ suite('deepEqual', () => {
   });
 
   test('is a no-op when context is bailed', () => {
-    XTestFrame.deepEqual({ state: { bailed: true } }, 1, 2, 'should not throw');
+    XTestFrame.deepEqual({ state: { bailed: true } }, null, 1, 2, 'should not throw');
   });
 });
 
