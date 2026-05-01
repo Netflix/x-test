@@ -2,29 +2,29 @@ import { XTestCommon } from './x-test-common.js';
 import { XTestRoot } from './x-test-root.js';
 import { XTestFrame } from './x-test-frame.js';
 
-// TODO: #67: Consider requiring explicit boolean conversion.
 /**
- * Simple assertion which throws exception when not "ok".
+ * Simple assertion which throws exception when value is not truthy.
  * @example
  *   assert('foo' === 'bar', 'foo does not equal bar');
- * @param {unknown} ok - The condition to assert (truthy/falsy)
- * @param {string} [text] - The assertion message
- * @returns {asserts ok} Throws if condition is falsy.
+ * @param {unknown} value - The condition to assert (truthy/falsy)
+ * @param {string} [message] - The assertion message
+ * @returns {asserts value} Throws if condition is falsy.
  */
-export const assert = (ok, text) => XTestFrame.assert(suiteContext, assert, ok, text);
+export const assert = (value, message) => XTestFrame.assert(suiteContext, assert, value, message);
 
 /**
- * Strict deep-equality assertion. Supports primitives, plain objects, and arrays.
- * Throws (not an assertion failure) for unsupported types like Map/Set/Date/classes.
+ * Strict deep-equality assertion. Supports primitives, plain objects, and
+ * arrays. Throws (not an assertion failure) for unsupported types like Map,
+ * Set, Date, and other classes.
  * @example
  *   assert.deepEqual({ a: 1 }, { a: 1 });
  * @template T
  * @param {unknown} actual - The actual value
  * @param {T} expected - The expected value
- * @param {string} [text] - The assertion message
+ * @param {string} [message] - The assertion message
  * @returns {asserts actual is T} Throws if values are not deeply equal.
  */
-assert.deepEqual = (actual, expected, text) => XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected, text);
+assert.deepEqual = (actual, expected, message) => XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected, message);
 
 /**
  * Load a new frame.

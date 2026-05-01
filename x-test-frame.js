@@ -113,13 +113,13 @@ export class XTestFrame {
   /**
    * @param {any} context
    * @param {any} caller
-   * @param {any} ok
-   * @param {any} text
+   * @param {any} value
+   * @param {any} message
    */
-  static assert(context, caller, ok, text) {
+  static assert(context, caller, value, message) {
     if (context && !context.state.bailed) {
-      if (!ok) {
-        const error = new Error(text ?? 'not ok');
+      if (!value) {
+        const error = new Error(message ?? 'not ok');
         /** @type {any} */ (Error).captureStackTrace?.(error, caller);
         throw error;
       }
@@ -136,10 +136,10 @@ export class XTestFrame {
    * @param {any} caller
    * @param {any} actual
    * @param {any} expected
-   * @param {any} [text]
+   * @param {any} [message]
    */
-  static deepEqual(context, caller, actual, expected, text) {
-    XTestFrame.assert(context, caller, XTestFrame.#deepEqual(actual, expected), text ?? 'not deep equal');
+  static deepEqual(context, caller, actual, expected, message) {
+    XTestFrame.assert(context, caller, XTestFrame.#deepEqual(actual, expected), message ?? 'not deep equal');
   }
 
   /**
