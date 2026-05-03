@@ -56,7 +56,7 @@ suite('render', () => {
 suite('parse', () => {
   test('parses test', () => {
     const output = '# Subtest: http://example.com/test.html';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'a');
     assert(Object.keys(result.properties).length === 2);
     assert(result.properties.href === 'http://example.com/test.html');
@@ -70,7 +70,7 @@ suite('parse', () => {
 
   test('parses bail test', () => {
     const output = 'Bail out! http://example.com/test.html';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'a');
     assert(Object.keys(result.properties).length === 2);
     assert(result.properties.href === 'http://example.com/test.html');
@@ -85,7 +85,7 @@ suite('parse', () => {
 
   test('parses diagnostic', () => {
     const output = '# something, anything';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -98,7 +98,7 @@ suite('parse', () => {
 
   test('parses test line', () => {
     const output = 'ok 145 - this cool thing i tested';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -112,7 +112,7 @@ suite('parse', () => {
 
   test('parses "SKIP" test line', () => {
     const output = 'ok 145 - this cool thing i tested # SKIP';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -127,7 +127,7 @@ suite('parse', () => {
 
   test('parses "TODO" test line', () => {
     const output = 'ok 145 - this cool thing i tested # TODO';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -142,7 +142,7 @@ suite('parse', () => {
 
   test('parses "not ok" test line', () => {
     const output = 'not ok 145 - this cool thing i tested';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -155,7 +155,7 @@ suite('parse', () => {
 
   test('parses "not ok", "TODO" test line', () => {
     const output = 'not ok 145 - this cool thing i tested # TODO tbd...';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -169,7 +169,7 @@ suite('parse', () => {
 
   test('parses version', () => {
     const output = 'TAP version 14';
-    const result = XTestReporter.parse(output, false);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
     assert(Object.keys(result.properties).length === 1);
     assert(result.properties.innerText === output);
@@ -180,38 +180,66 @@ suite('parse', () => {
     assert(result.failed === false);
   });
 
-  test('parses in-failures bare URL as link', () => {
+  test('parses diagnostic that looks like a URL', () => {
     const output = '# http://example.com/test.html';
-    const result = XTestReporter.parse(output, true);
-    assert(result.tag === 'a');
-    assert(result.properties.href === 'http://example.com/test.html');
-    assert(result.attributes.failure === '');
-  });
-
-  test('parses in-failures breadcrumb segment as failure', () => {
-    const output = '# > this test failed';
-    const result = XTestReporter.parse(output, true);
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
-    assert(result.attributes.failure === '');
-  });
-
-  test('parses in-failures yaml body as failure', () => {
-    const output = '#     Error: nope';
-    const result = XTestReporter.parse(output, true);
-    assert(result.attributes.failure === '');
-  });
-
-  test('tags in-failures blank separator as failure', () => {
-    const output = '# ';
-    const result = XTestReporter.parse(output, true);
-    assert(result.attributes.failure === '');
-  });
-
-  test('leaves pre-failures diagnostics untouched', () => {
-    const output = '# http://example.com/test.html';
-    const result = XTestReporter.parse(output, false);
-    assert(result.attributes.failure === undefined);
     assert(result.attributes.diagnostic === '');
+    assert(result.attributes.failure === undefined);
+  });
+
+  test('parses non-URL "Bail out!" line', () => {
+    const output = 'Bail out! something went wrong';
+    const result = XTestReporter.parse(output);
     assert(result.tag === 'div');
+    assert(result.attributes.output === '');
+    assert(result.attributes.bail === '');
+    assert(result.done === false);
+    assert(result.failed === true);
+  });
+});
+
+suite('interactions', () => {
+  test('toggle opens and closes', () => {
+    const element = document.createElement('x-test-reporter');
+    document.body.append(element);
+    const toggle = element.shadowRoot.getElementById('toggle');
+    // connectedCallback opens it by default; close then reopen
+    assert(element.hasAttribute('open'), 'starts open');
+    toggle.click();
+    assert(!element.hasAttribute('open'), 'closes on click');
+    toggle.click();
+    assert(element.hasAttribute('open'), 'reopens on click');
+    element.remove();
+  });
+
+  test('tap marks done when plan is at root level', () => {
+    const element = document.createElement('x-test-reporter');
+    document.body.append(element);
+    element.tap('TAP version 14', '1..1', 'ok 1 - test');
+    assert(!element.hasAttribute('testing'), 'testing attribute removed after root plan');
+    assert(element.hasAttribute('ok'), 'ok attribute present');
+    element.remove();
+  });
+
+  test('tap marks not-ok on failed test', () => {
+    const element = document.createElement('x-test-reporter');
+    document.body.append(element);
+    element.tap('TAP version 14', 'not ok 1 - bad test', '1..1');
+    assert(!element.hasAttribute('ok'), 'ok attribute removed after failure');
+    element.remove();
+  });
+
+  test('resize via pointermove changes height', () => {
+    const element = document.createElement('x-test-reporter');
+    document.body.append(element);
+    element.setAttribute('open', '');
+    const header = element.shadowRoot.getElementById('header');
+    header.dispatchEvent(new PointerEvent('pointerdown', { clientY: 100, bubbles: true }));
+    assert(element.hasAttribute('dragging'), 'dragging attribute set on pointerdown');
+    dispatchEvent(new PointerEvent('pointermove', { clientY: 90, bubbles: true }));
+    dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    assert(!element.hasAttribute('dragging'), 'dragging attribute removed on pointerup');
+    element.remove();
   });
 });
