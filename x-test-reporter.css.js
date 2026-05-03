@@ -202,15 +202,6 @@ a[subtest]:not([bail]) {
   color: var(--subdued);
 }
 
-[failure] {
-  color: var(--not-ok);
-}
-
-a[failure]:any-link {
-  color: var(--not-ok);
-  text-decoration: underline;
-}
-
 [indent] {
   position: relative;
 }

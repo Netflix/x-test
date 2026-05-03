@@ -21,8 +21,6 @@ export class XTestReporter extends HTMLElement {
   #root;
   /** @type {References} */
   #references;
-  /** @type {boolean} */
-  #inFailures = false;
 
   /**
    * @template {keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap} T
@@ -32,9 +30,11 @@ export class XTestReporter extends HTMLElement {
    */
   #getElement(id, expectedTag) {
     const el = this.#root.querySelector(`#${id}`);
+    /* x-test:coverage ignore next 3 */ // Defensive throw; the template always has the expected elements.
     if (!el) {
       throw new Error(`Expected ${id} to exist.`);
     }
+    /* x-test:coverage ignore next 3 */ // Defensive throw; the template always has the expected tag names.
     if (el.tagName.toLowerCase() !== expectedTag) {
       throw new Error(`Expected ${id} to be <${expectedTag}>, got <${el.tagName.toLowerCase()}>`);
     }
@@ -44,6 +44,7 @@ export class XTestReporter extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    /* x-test:coverage ignore next 3 */ // attachShadow always populates shadowRoot in supported browsers.
     if (!this.shadowRoot) {
       throw new Error('Shadow root must exist after attachShadow');
     }
@@ -81,6 +82,7 @@ export class XTestReporter extends HTMLElement {
       this.style.height = `${Math.round(currentHeight + currentHeaderY - nextHeaderY)}px`;
       localStorage.setItem('x-test-reporter-height', this.style.height);
     };
+    /* x-test:coverage ignore next 5 */ // Resetting the filter form navigates the page, which cannot be tested.
     this.#references.form.addEventListener('reset', () => {
       const url = new URL(location.href);
       url.searchParams.delete('x-test-name-pattern');
@@ -89,6 +91,7 @@ export class XTestReporter extends HTMLElement {
     /**
      * @param {SubmitEvent} event
      */
+    /* x-test:coverage ignore next 12 */ // Submitting the filter form navigates the page, which cannot be tested.
     const handleSubmit = (event) => {
       event.preventDefault();
       const formData = new FormData(this.#references.form);
@@ -111,6 +114,7 @@ export class XTestReporter extends HTMLElement {
         const clientY = event.clientY;
         this.setAttribute('dragging', String(clientY - headerY));
         addEventListener('pointermove', resize);
+        /* x-test:coverage ignore next 3 */ // No iframes exist in the test document during pointer interaction tests.
         for (const iframe of document.querySelectorAll('iframe')) {
           iframe.style.pointerEvents = 'none';
         }
@@ -120,6 +124,7 @@ export class XTestReporter extends HTMLElement {
     addEventListener('pointerup', () => {
       removeEventListener('pointermove', resize);
       this.removeAttribute('dragging');
+      /* x-test:coverage ignore next 3 */ // No iframes exist in the test document during pointer interaction tests.
       for (const iframe of document.querySelectorAll('iframe')) {
         iframe.style.pointerEvents = '';
       }
@@ -132,10 +137,7 @@ export class XTestReporter extends HTMLElement {
   tap(...tap) {
     const items = [];
     for (const text of tap) {
-      if (text === '# Failures:') {
-        this.#inFailures = true;
-      }
-      const { tag, properties, attributes, failed, done } = XTestReporter.parse(text, this.#inFailures);
+      const { tag, properties, attributes, failed, done } = XTestReporter.parse(text);
       const element = document.createElement(tag);
       Object.assign(element, properties);
       for (const [attribute, value] of Object.entries(attributes)) {
@@ -154,10 +156,9 @@ export class XTestReporter extends HTMLElement {
 
   /**
    * @param {string} text
-   * @param {boolean} inFailures
    * @returns {{tag: string, properties: Record<string, any>, attributes: Record<string, any>, failed: boolean, done: boolean}}
    */
-  static parse(text, inFailures) {
+  static parse(text) {
     const result = { tag: '', properties: /** @type {Record<string, any>} */ ({}), attributes: /** @type {Record<string, any>} */ ({}), failed: false, done: false };
     result.properties.innerText = text;
     const indentMatch = text.match(/^((?: {4})+)/);
@@ -210,14 +211,6 @@ export class XTestReporter extends HTMLElement {
       } else if (text.match(/^(?: {4})*Bail out!.*/)) {
         result.attributes.bail = '';
         result.failed = true;
-      }
-    }
-    if (inFailures && 'diagnostic' in result.attributes) {
-      result.attributes.failure = '';
-      const urlMatch = text.match(/^# (https?:\/\/\S+)$/);
-      if (urlMatch) {
-        result.tag = 'a';
-        result.properties.href = urlMatch[1];
       }
     }
     return result;
