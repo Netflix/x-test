@@ -1,6 +1,5 @@
 import { test, suite, assert } from '../x-test.js';
 import { XTestRoot } from '../x-test-root.js';
-import { assertThrows } from './shared.js';
 
 // Dependency injection.
 const getContext = () => {
@@ -170,7 +169,8 @@ suite('onDefer', () => {
   test('throws on unknown defer type', () => {
     const { context } = getContext();
     const event = { data: { data: { type: 'unknown' } } };
-    assertThrows(() => XTestRoot.onDefer(context, event), /Unexpected defer type "unknown"\./);
+    const fn = () => XTestRoot.onDefer(context, event);
+    assert.throws(fn, /Unexpected defer type "unknown"\./);
   });
 });
 
@@ -207,7 +207,8 @@ suite('handleEmptyPlan', () => {
   test('throws when no subtest line is in the queue', () => {
     const { context } = getContext();
     context.state.queue = [];
-    assertThrows(() => XTestRoot.handleEmptyPlan(context), /Expected to find matching subtest/);
+    const fn = () => XTestRoot.handleEmptyPlan(context);
+    assert.throws(fn, /Expected to find matching subtest/);
   });
 });
 
@@ -336,7 +337,8 @@ suite('handleFilteredOutput', () => {
     context.state.queue = [];
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.handleFilteredOutput(context, [], 's'), /Unexpected step type "unknown"/);
+    const fn = () => XTestRoot.handleFilteredOutput(context, [], 's');
+    assert.throws(fn, /Unexpected step type "unknown"/);
   });
 });
 
@@ -347,7 +349,8 @@ suite('onResult', () => {
     context.state.stepIds.push('ts');
     context.state.steps['ts'] = { type: 'test', testId: 't', status: 'waiting' };
     const event = { data: { data: { testId: 't' } } };
-    assertThrows(() => XTestRoot.onResult(context, event), /step to complete is not running/);
+    const fn = () => XTestRoot.onResult(context, event);
+    assert.throws(fn, /step to complete is not running/);
   });
 });
 
@@ -368,7 +371,8 @@ suite('onReady', () => {
     context.state.frames['f'] = { href: 'http://test.html', children: [] };
     context.state.stepIds.push('fs');
     context.state.steps['fs'] = { type: 'frame-start', frameId: 'f', status: 'waiting' };
-    assertThrows(() => XTestRoot.onReady(context, { data: { data: { frameId: 'f' } } }), /frame to ready is not running/);
+    const fn = () => XTestRoot.onReady(context, { data: { data: { frameId: 'f' } } });
+    assert.throws(fn, /frame to ready is not running/);
   });
 
   test('inherits suite directive onto tests without one', () => {
@@ -387,7 +391,8 @@ suite('onRegister', () => {
   test('throws on unknown registration type', () => {
     const { context } = getContext();
     const event = { data: { data: { type: 'unknown' } } };
-    assertThrows(() => XTestRoot.onRegister(context, event), /Unexpected registration type "unknown"\./);
+    const fn = () => XTestRoot.onRegister(context, event);
+    assert.throws(fn, /Unexpected registration type "unknown"\./);
   });
 });
 
@@ -470,7 +475,8 @@ suite('registerTest', () => {
 suite('childOk', () => {
   test('throws on unknown child type', () => {
     const { context } = getContext();
-    assertThrows(() => XTestRoot.childOk(context, { type: 'unknown' }), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.childOk(context, { type: 'unknown' });
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -479,7 +485,8 @@ suite('href', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.href(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.href(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -488,7 +495,8 @@ suite('directive', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.directive(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.directive(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -497,7 +505,8 @@ suite('level', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.level(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.level(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -506,7 +515,8 @@ suite('count', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.count(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.count(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -515,7 +525,8 @@ suite('yaml', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.yaml(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.yaml(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -524,7 +535,8 @@ suite('text', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.text(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.text(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -533,7 +545,8 @@ suite('number', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.number(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.number(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 
   test('returns position for a test whose direct parent is a frame', () => {
@@ -551,7 +564,8 @@ suite('ok', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown' };
-    assertThrows(() => XTestRoot.ok(context, 's'), /Unexpected type "unknown"/);
+    const fn = () => XTestRoot.ok(context, 's');
+    assert.throws(fn, /Unexpected type "unknown"/);
   });
 });
 
@@ -569,7 +583,8 @@ suite('check', () => {
     const { context } = getContext();
     context.state.stepIds.push('s');
     context.state.steps['s'] = { type: 'unknown', status: 'waiting' };
-    assertThrows(() => XTestRoot.check(context), /Unexpected step type "unknown"/);
+    const fn = () => XTestRoot.check(context);
+    assert.throws(fn, /Unexpected step type "unknown"/);
   });
 
   test('does not kick off the exit step once the run has ended (e.g. after a bail)', () => {

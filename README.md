@@ -19,6 +19,14 @@ suite('important feature', () => {
   test('should match interface', () => {
     assert.deepEqual(MyFeature.interface, { version: '123' }, 'does not match');
   });
+
+  test('should throw on bad input', () => {
+    assert.throws(() => MyFeature.doThing(null), /^Error: bad input$/);
+  });
+
+  test('should reject on bad async input', async () => {
+    await assert.rejects(() => MyFeature.doThingAsync(null), /^Error: bad input$/);
+  });
 });
 ```
 
@@ -47,6 +55,8 @@ The following are exposed in the testing interface:
 - `suite.todo`: Mark all `test` tests within this group as _todo_.
 - `assert`: Simple assertion call that throws if the boolean input is false-y.
 - `assert.deepEqual`: Strict deep-equality assertion for primitives, plain objects, and arrays.
+- `assert.throws`: Asserts that a function throws, matching the thrown value against a RegExp.
+- `assert.rejects`: Asserts that an async function rejects, matching the rejection against a RegExp.
 
 ### Parameters
 

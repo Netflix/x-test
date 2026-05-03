@@ -13,6 +13,28 @@ export namespace assert {
      * @returns {asserts actual is T} Throws if values are not deeply equal.
      */
     function deepEqual<T>(actual: unknown, expected: T, message?: string): asserts actual is T;
+    /**
+     * Asserts that a function throws, testing the thrown value against a RegExp via `String(thrown)`.
+     * @example
+     *   assert.throws(() => { throw new Error('boom'); }, /^Error: boom$/);
+     *   assert.throws(() => { throw new Error('boom'); }, new RegExp('.*')); // match anything — just assert it throws
+     * @param {() => void} fn - The function expected to throw
+     * @param {RegExp} error - Tested against `String(thrown)`
+     * @param {string} [message] - The assertion message
+     * @returns {void}
+     */
+    function throws(fn: () => void, error: RegExp, message?: string): void;
+    /**
+     * Asserts that an async function rejects, testing the rejection against a RegExp via `String(thrown)`.
+     * @example
+     *   await assert.rejects(async () => { throw new Error('boom'); }, /^Error: boom$/);
+     *   await assert.rejects(() => Promise.reject(new Error('boom')), new RegExp('.*')); // match anything — just assert it rejects
+     * @param {() => Promise<unknown>} fn - The function expected to reject
+     * @param {RegExp} error - Tested against `String(thrown)`
+     * @param {string} [message] - The assertion message
+     * @returns {Promise<void>}
+     */
+    function rejects(fn: () => Promise<unknown>, error: RegExp, message?: string): Promise<void>;
 }
 export function load(href: string): void;
 export function suite(text: string, callback: () => void): void;

@@ -127,6 +127,64 @@ export class XTestFrame {
   }
 
   /**
+   * @param {any} context
+   * @param {any} caller
+   * @param {any} fn
+   * @param {any} error
+   * @param {any} [message]
+   */
+  static throws(context, caller, fn, error, message) {
+    if (!(fn instanceof Function)) {
+      throw new Error(`unexpected fn value "${fn}"`);
+    }
+    if (!(error instanceof RegExp)) {
+      throw new Error(`unexpected error value "${error}"`);
+    }
+    let threw = false;
+    let thrownValue;
+    try {
+      fn();
+    } catch (e) {
+      threw = true;
+      thrownValue = e;
+    }
+    if (!threw) {
+      XTestFrame.assert(context, caller, false, message ?? 'expected function to throw');
+    } else {
+      XTestFrame.assert(context, caller, error.test(String(thrownValue)), message ?? `expected thrown value to match "${error}"`);
+    }
+  }
+
+  /**
+   * @param {any} context
+   * @param {any} caller
+   * @param {any} fn
+   * @param {any} error
+   * @param {any} [message]
+   */
+  static async rejects(context, caller, fn, error, message) {
+    if (!(fn instanceof Function)) {
+      throw new Error(`unexpected fn value "${fn}"`);
+    }
+    if (!(error instanceof RegExp)) {
+      throw new Error(`unexpected error value "${error}"`);
+    }
+    let rejected = false;
+    let rejectionValue;
+    try {
+      await fn();
+    } catch (e) {
+      rejected = true;
+      rejectionValue = e;
+    }
+    if (!rejected) {
+      XTestFrame.assert(context, caller, false, message ?? 'expected function to reject');
+    } else {
+      XTestFrame.assert(context, caller, error.test(String(rejectionValue)), message ?? `expected rejection value to match "${error}"`);
+    }
+  }
+
+  /**
    * Strict deep-equality check. Only supports primitives, plain objects, and
    * arrays. Throws a non-assertion error for unsupported types (Map, Set, Date,
    * class instances, functions, etc.) so the behavior can safely be expanded

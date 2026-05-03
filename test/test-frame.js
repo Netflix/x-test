@@ -619,6 +619,79 @@ suite('deepEqual', () => {
   });
 });
 
+suite('throws', () => {
+  const makeContext = () => ({ state: { bailed: false } });
+  const expectFail = (fn) => {
+    let message;
+    try { fn(); } catch (error) { message = error.message; }
+    return message;
+  };
+
+  test('fails when function does not throw', () => {
+    const message = expectFail(() => XTestFrame.throws(makeContext(), null, () => {}, /foo/));
+    assert(message === 'expected function to throw');
+  });
+
+  test('passes when RegExp matches', () => {
+    XTestFrame.throws(makeContext(), null, () => { throw new Error('boom'); }, /boom/);
+  });
+
+  test('fails when RegExp does not match', () => {
+    const message = expectFail(() => XTestFrame.throws(makeContext(), null, () => { throw new Error('boom'); }, /nope/));
+    assert(message === 'expected thrown value to match "/nope/"');
+  });
+
+  test('uses custom message on failure', () => {
+    const message = expectFail(() => XTestFrame.throws(makeContext(), null, () => {}, /foo/, 'custom'));
+    assert(message === 'custom');
+  });
+
+  test('matches non-Error throws via String()', () => {
+    XTestFrame.throws(makeContext(), null, () => { throw 2; }, /2/);
+    XTestFrame.throws(makeContext(), null, () => { throw undefined; }, /undefined/);
+  });
+
+  test('is a no-op when context is bailed', () => {
+    XTestFrame.throws({ state: { bailed: true } }, null, () => {}, /anything/, 'should not throw');
+  });
+});
+
+suite('rejects', () => {
+  const makeContext = () => ({ state: { bailed: false } });
+  const expectFail = async (fn) => {
+    let message;
+    try { await fn(); } catch (error) { message = error.message; }
+    return message;
+  };
+
+  test('fails when function does not reject', async () => {
+    const message = await expectFail(() => XTestFrame.rejects(makeContext(), null, async () => {}, /foo/));
+    assert(message === 'expected function to reject');
+  });
+
+  test('passes when RegExp matches', async () => {
+    await XTestFrame.rejects(makeContext(), null, async () => { throw new Error('boom'); }, /boom/);
+  });
+
+  test('fails when RegExp does not match', async () => {
+    const message = await expectFail(() => XTestFrame.rejects(makeContext(), null, async () => { throw new Error('boom'); }, /nope/));
+    assert(message === 'expected rejection value to match "/nope/"');
+  });
+
+  test('uses custom message on failure', async () => {
+    const message = await expectFail(() => XTestFrame.rejects(makeContext(), null, async () => {}, /foo/, 'custom'));
+    assert(message === 'custom');
+  });
+
+  test('works with a function returning a rejected Promise', async () => {
+    await XTestFrame.rejects(makeContext(), null, () => Promise.reject(new Error('boom')), /boom/);
+  });
+
+  test('is a no-op when context is bailed', async () => {
+    await XTestFrame.rejects({ state: { bailed: true } }, null, async () => {}, /anything/, 'should not throw');
+  });
+});
+
 suite('bail', () => {
   test('marks state as ended', () => {
     const error = new Error('error test');

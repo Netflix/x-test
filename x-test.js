@@ -27,6 +27,30 @@ export const assert = (value, message) => XTestFrame.assert(suiteContext, assert
 assert.deepEqual = (actual, expected, message) => XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected, message);
 
 /**
+ * Asserts that a function throws, testing the thrown value against a RegExp via `String(thrown)`.
+ * @example
+ *   assert.throws(() => { throw new Error('boom'); }, /^Error: boom$/);
+ *   assert.throws(() => { throw new Error('boom'); }, new RegExp('.*')); // match anything — just assert it throws
+ * @param {() => void} fn - The function expected to throw
+ * @param {RegExp} error - Tested against `String(thrown)`
+ * @param {string} [message] - The assertion message
+ * @returns {void}
+ */
+assert.throws = (fn, error, message) => XTestFrame.throws(suiteContext, assert.throws, fn, error, message);
+
+/**
+ * Asserts that an async function rejects, testing the rejection against a RegExp via `String(thrown)`.
+ * @example
+ *   await assert.rejects(async () => { throw new Error('boom'); }, /^Error: boom$/);
+ *   await assert.rejects(() => Promise.reject(new Error('boom')), new RegExp('.*')); // match anything — just assert it rejects
+ * @param {() => Promise<unknown>} fn - The function expected to reject
+ * @param {RegExp} error - Tested against `String(thrown)`
+ * @param {string} [message] - The assertion message
+ * @returns {Promise<void>}
+ */
+assert.rejects = (fn, error, message) => XTestFrame.rejects(suiteContext, assert.rejects, fn, error, message);
+
+/**
  * Load a new frame.
  * @example
  *   load('./test-sibling.html');
