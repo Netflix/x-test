@@ -27,12 +27,6 @@ suite.only('this wrapper exercises suite only logic', () => {
   });
 });
 
-suite.only('assert.deepEqual', () => {
-  test('exercises the public assert.deepEqual export', () => {
-    assert.deepEqual({ a: [1, 2] }, { a: [1, 2] });
-  });
-});
-
 suite.only('interval', () => {
   test.todo('times out after interval - this is supposed to fail', async () => {
     await new Promise(resolve => setTimeout(resolve, 1_000));

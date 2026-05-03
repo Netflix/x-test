@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `assert.throws(fn, error, message?)` and `assert.rejects(fn, error, message?)`
+  for asserting that a function throws or an async function rejects. The `error`
+  argument is a `RegExp` tested against `String(thrown)` (consistent with
+  `node:assert`) (#99).
+
 ## [2.0.0-rc.10] - 2026-04-28
 
 ### Changed
