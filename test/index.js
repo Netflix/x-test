@@ -6,5 +6,8 @@ load('./test-root.html');
 load('./test-tap.html');
 load('./test-common.html');
 load('./test-assert.html');
+load('./test-load.html');
+load('./test-suite.html');
+load('./test-test.html');
 load('./test-boot.html');
 load('./test-scratch.html');

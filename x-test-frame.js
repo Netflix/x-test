@@ -266,9 +266,6 @@ export class XTestFrame {
    */
   static #suiteInner(context, text, callback, directive, only) {
     if (context && !context.state.bailed && !context.state.ready) {
-      if (!(callback instanceof Function)) {
-        throw new Error(`Unexpected callback value "${callback}".`);
-      }
       const suiteId = context.uuid();
       const parents = [...context.state.parents];
       directive = directive ?? null;
@@ -328,15 +325,12 @@ export class XTestFrame {
    * @param {any} context
    * @param {any} text
    * @param {any} callback
-   * @param {any} interval
-   * @param {any} directive
-   * @param {any} only
+   * @param {any} [interval]
+   * @param {any} [directive]
+   * @param {any} [only]
    */
   static #testInner(context, text, callback, interval, directive, only) {
     if (context && !context.state.bailed && !context.state.ready) {
-      if (!(callback instanceof Function)) {
-        throw new Error(`Unexpected callback value "${callback}".`);
-      }
       const testId = context.uuid();
       const parents = [...context.state.parents];
       interval = interval ?? null;
@@ -354,7 +348,7 @@ export class XTestFrame {
    * @param {any} context
    * @param {any} text
    * @param {any} callback
-   * @param {any} interval
+   * @param {any} [interval]
    */
   static test(context, text, callback, interval) {
     XTestFrame.#testInner(context, text, callback, interval, null, null);
@@ -364,7 +358,7 @@ export class XTestFrame {
    * @param {any} context
    * @param {any} text
    * @param {any} callback
-   * @param {any} interval
+   * @param {any} [interval]
    */
   static testSkip(context, text, callback, interval) {
     XTestFrame.#testInner(context, text, callback, interval, 'SKIP', null);
@@ -374,7 +368,7 @@ export class XTestFrame {
    * @param {any} context
    * @param {any} text
    * @param {any} callback
-   * @param {any} interval
+   * @param {any} [interval]
    */
   static testOnly(context, text, callback, interval) {
     XTestFrame.#testInner(context, text, callback, interval, null, true);
@@ -384,7 +378,7 @@ export class XTestFrame {
    * @param {any} context
    * @param {any} text
    * @param {any} callback
-   * @param {any} interval
+   * @param {any} [interval]
    */
   static testTodo(context, text, callback, interval) {
     XTestFrame.#testInner(context, text, callback, interval, 'TODO', null);

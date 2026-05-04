@@ -362,19 +362,7 @@ suite('suite', () => {
     assert(context.publish.calls[1][1].error.message === 'test failure');
   });
 
-  test('throws if callback is not a function', () => {
-    const { context } = getContext();
-    const callback = null;
-    const expected = 'Unexpected callback value "null".';
-    let actual;
-    try {
-      XTestFrame.suite(context, 'description', callback);
-    } catch (error) {
-      actual = error.message;
-    }
-    assert(context.publish.calls.length === 0);
-    assert(actual === expected, actual);
-  });
+
 });
 
 suite('test', () => {
@@ -403,7 +391,7 @@ suite('test', () => {
     test('this will break', 'this is expected to fail');
   } catch (error) {
     message = error.message;
-    passed = error.message === 'Unexpected callback value "this is expected to fail".';
+    passed = error.message === 'unexpected fn, expected Function but got "this is expected to fail"';
   }
   test('throws if "test" is not given a function as a callback', () => {
     assert(passed, message);

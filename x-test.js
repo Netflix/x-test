@@ -146,75 +146,272 @@ assert.rejects = function rejects(fn, error, message) {
  * @param {string} href - The URL/path to the test file to run
  * @returns {void}
  */
-export const load = href => XTestFrame.load(suiteContext, href);
+export function load(href) {
+  switch (arguments.length) {
+    case 0:
+      throw new Error('expected href argument, but got none');
+    case 1:
+      if (typeof href !== 'string') {
+        throw new Error(`unexpected href, expected string but got "${href}"`);
+      }
+      XTestFrame.load(suiteContext, href);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+}
 
 /**
  * Register a grouping of tests. Alternatively, mark with flags (.skip, .only, .todo).
- * @param {string} text - The description of the test group
- * @param {() => void} callback - The callback function containing nested tests
+ * @param {string} name - The description of the test group
+ * @param {() => void} fn - The callback function containing nested tests
  * @returns {void}
  */
-export const suite = (text, callback) => XTestFrame.suite(suiteContext, text, callback);
+export function suite(name, fn) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.suite(suiteContext, name, fn);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+}
 
 /**
  * Register a test group that will be skipped during execution.
- * @param {string} text - The description of the test group
- * @param {() => void} callback - The callback function containing nested tests
+ * @param {string} name - The description of the test group
+ * @param {() => void} fn - The callback function containing nested tests
  * @returns {void}
  */
-suite.skip = (text, callback) => XTestFrame.suiteSkip(suiteContext, text, callback);
+suite.skip = function skip(name, fn) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.suiteSkip(suiteContext, name, fn);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Register a test group that will run exclusively (skips other non-only tests).
- * @param {string} text - The description of the test group
- * @param {() => void} callback - The callback function containing nested tests
+ * @param {string} name - The description of the test group
+ * @param {() => void} fn - The callback function containing nested tests
  * @returns {void}
  */
-suite.only = (text, callback) => XTestFrame.suiteOnly(suiteContext, text, callback);
+suite.only = function only(name, fn) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.suiteOnly(suiteContext, name, fn);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Register a placeholder test group for future implementation.
- * @param {string} text - The description of the test group
- * @param {() => void} callback - The callback function containing nested tests
+ * @param {string} name - The description of the test group
+ * @param {() => void} fn - The callback function containing nested tests
  * @returns {void}
  */
-suite.todo = (text, callback) => XTestFrame.suiteTodo(suiteContext, text, callback);
+suite.todo = function todo(name, fn) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.suiteTodo(suiteContext, name, fn);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
- * @param {string} text - The description of the test case
- * @param {() => void | Promise<void>} callback - The test callback function
- * @param {number} [interval] - Optional timeout in milliseconds
+ * @param {string} name - The description of the test case
+ * @param {() => void | Promise<void>} fn - The test callback function
+ * @param {number} [timeout] - Optional timeout in milliseconds
  * @returns {void}
  */
-export const test = (text, callback, interval) => XTestFrame.test(suiteContext, text, callback, interval);
+export function test(name, fn, timeout) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.test(suiteContext, name, fn);
+      break;
+    case 3:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (typeof timeout !== 'number') {
+        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
+      }
+      XTestFrame.test(suiteContext, name, fn, timeout);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+}
 
 /**
  * Register a test case that will be skipped during execution.
- * @param {string} text - The description of the test case
- * @param {() => void | Promise<void>} callback - The test callback function
- * @param {number} [interval] - Optional timeout in milliseconds
+ * @param {string} name - The description of the test case
+ * @param {() => void | Promise<void>} fn - The test callback function
+ * @param {number} [timeout] - Optional timeout in milliseconds
  * @returns {void}
  */
-test.skip = (text, callback, interval) => XTestFrame.testSkip(suiteContext, text, callback, interval);
+test.skip = function skip(name, fn, timeout) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.testSkip(suiteContext, name, fn);
+      break;
+    case 3:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (typeof timeout !== 'number') {
+        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
+      }
+      XTestFrame.testSkip(suiteContext, name, fn, timeout);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Register a test case that will run exclusively (skips other non-only tests).
- * @param {string} text - The description of the test case
- * @param {() => void | Promise<void>} callback - The test callback function
- * @param {number} [interval] - Optional timeout in milliseconds
+ * @param {string} name - The description of the test case
+ * @param {() => void | Promise<void>} fn - The test callback function
+ * @param {number} [timeout] - Optional timeout in milliseconds
  * @returns {void}
  */
-test.only = (text, callback, interval) => XTestFrame.testOnly(suiteContext, text, callback, interval);
+test.only = function only(name, fn, timeout) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.testOnly(suiteContext, name, fn);
+      break;
+    case 3:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (typeof timeout !== 'number') {
+        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
+      }
+      XTestFrame.testOnly(suiteContext, name, fn, timeout);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Register a placeholder test case for future implementation.
- * @param {string} text - The description of the test case
- * @param {() => void | Promise<void>} callback - The test callback function
- * @param {number} [interval] - Optional timeout in milliseconds
+ * @param {string} name - The description of the test case
+ * @param {() => void | Promise<void>} fn - The test callback function
+ * @param {number} [timeout] - Optional timeout in milliseconds
  * @returns {void}
  */
-test.todo = (text, callback, interval) => XTestFrame.testTodo(suiteContext, text, callback, interval);
+test.todo = function todo(name, fn, timeout) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected name and fn arguments, but got too few arguments');
+    case 2:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      XTestFrame.testTodo(suiteContext, name, fn);
+      break;
+    case 3:
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (typeof timeout !== 'number') {
+        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
+      }
+      XTestFrame.testTodo(suiteContext, name, fn, timeout);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 /**

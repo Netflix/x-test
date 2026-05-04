@@ -44,55 +44,75 @@ export namespace assert {
      */
     function rejects(fn: () => Promise<unknown>, error: RegExp, message?: string, ...args: any[]): Promise<void>;
 }
-export function load(href: string): void;
-export function suite(text: string, callback: () => void): void;
+/**
+ * Load a new frame.
+ * @example
+ *   load('./test-sibling.html');
+ * @param {string} href - The URL/path to the test file to run
+ * @returns {void}
+ */
+export function load(href: string, ...args: any[]): void;
+/**
+ * Register a grouping of tests. Alternatively, mark with flags (.skip, .only, .todo).
+ * @param {string} name - The description of the test group
+ * @param {() => void} fn - The callback function containing nested tests
+ * @returns {void}
+ */
+export function suite(name: string, fn: () => void, ...args: any[]): void;
 export namespace suite {
     /**
      * Register a test group that will be skipped during execution.
-     * @param {string} text - The description of the test group
-     * @param {() => void} callback - The callback function containing nested tests
+     * @param {string} name - The description of the test group
+     * @param {() => void} fn - The callback function containing nested tests
      * @returns {void}
      */
-    function skip(text: string, callback: () => void): void;
+    function skip(name: string, fn: () => void, ...args: any[]): void;
     /**
      * Register a test group that will run exclusively (skips other non-only tests).
-     * @param {string} text - The description of the test group
-     * @param {() => void} callback - The callback function containing nested tests
+     * @param {string} name - The description of the test group
+     * @param {() => void} fn - The callback function containing nested tests
      * @returns {void}
      */
-    function only(text: string, callback: () => void): void;
+    function only(name: string, fn: () => void, ...args: any[]): void;
     /**
      * Register a placeholder test group for future implementation.
-     * @param {string} text - The description of the test group
-     * @param {() => void} callback - The callback function containing nested tests
+     * @param {string} name - The description of the test group
+     * @param {() => void} fn - The callback function containing nested tests
      * @returns {void}
      */
-    function todo(text: string, callback: () => void): void;
+    function todo(name: string, fn: () => void, ...args: any[]): void;
 }
-export function test(text: string, callback: () => void | Promise<void>, interval?: number): void;
+/**
+ * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
+ * @param {string} name - The description of the test case
+ * @param {() => void | Promise<void>} fn - The test callback function
+ * @param {number} [timeout] - Optional timeout in milliseconds
+ * @returns {void}
+ */
+export function test(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
 export namespace test {
     /**
      * Register a test case that will be skipped during execution.
-     * @param {string} text - The description of the test case
-     * @param {() => void | Promise<void>} callback - The test callback function
-     * @param {number} [interval] - Optional timeout in milliseconds
+     * @param {string} name - The description of the test case
+     * @param {() => void | Promise<void>} fn - The test callback function
+     * @param {number} [timeout] - Optional timeout in milliseconds
      * @returns {void}
      */
-    function skip(text: string, callback: () => void | Promise<void>, interval?: number): void;
+    function skip(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
     /**
      * Register a test case that will run exclusively (skips other non-only tests).
-     * @param {string} text - The description of the test case
-     * @param {() => void | Promise<void>} callback - The test callback function
-     * @param {number} [interval] - Optional timeout in milliseconds
+     * @param {string} name - The description of the test case
+     * @param {() => void | Promise<void>} fn - The test callback function
+     * @param {number} [timeout] - Optional timeout in milliseconds
      * @returns {void}
      */
-    function only(text: string, callback: () => void | Promise<void>, interval?: number): void;
+    function only(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
     /**
      * Register a placeholder test case for future implementation.
-     * @param {string} text - The description of the test case
-     * @param {() => void | Promise<void>} callback - The test callback function
-     * @param {number} [interval] - Optional timeout in milliseconds
+     * @param {string} name - The description of the test case
+     * @param {() => void | Promise<void>} fn - The test callback function
+     * @param {number} [timeout] - Optional timeout in milliseconds
      * @returns {void}
      */
-    function todo(text: string, callback: () => void | Promise<void>, interval?: number): void;
+    function todo(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
 }
