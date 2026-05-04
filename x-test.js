@@ -413,15 +413,11 @@ test.todo = function todo(name, fn, timeout) {
   }
 };
 
-// https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 /**
  * @returns {string} A UUID string
  */
 function uuid() {
-  return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, c =>
-    // eslint-disable-next-line no-bitwise
-    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
-  );
+  return crypto.randomUUID();
 }
 
 // We need two channels since a messages on a channel are not reflected.
