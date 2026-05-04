@@ -1,18 +1,19 @@
 import { test, suite, assert } from '../x-test.js';
 
-for (const [label, fn] of [
+for (const [name, fn] of [
   ['test', test],
   ['test.skip', test.skip],
   ['test.only', test.only],
   ['test.todo', test.todo],
 ]) {
-  suite(label, () => {
-    test('accepts valid arguments', () => {
+  suite(name, () => {
+    test('accepts (name, fn)', () => {
       fn('valid test', () => {});
     });
 
-    test('accepts valid arguments with timeout', () => {
-      fn('valid test with timeout', () => {}, 1000);
+    test('accepts (name, options, fn)', () => {
+      fn('valid test with options', { timeout: 1000 }, () => {});
+      fn('valid test with empty options', {}, () => {});
     });
 
     test('throws with too few arguments', () => {
@@ -22,26 +23,30 @@ for (const [label, fn] of [
 
     test('throws if name is not a string', () => {
       assert.throws(() => fn(42, () => {}), /^Error: unexpected name, expected string but got "42"$/);
+      assert.throws(() => fn(42, {}, () => {}), /^Error: unexpected name, expected string but got "42"$/);
     });
 
     test('throws if fn is not a Function', () => {
       assert.throws(() => fn('name', 'not-a-function'), /^Error: unexpected fn, expected Function but got "not-a-function"$/);
+      assert.throws(() => fn('name', {}, 'not-a-function'), /^Error: unexpected fn, expected Function but got "not-a-function"$/);
     });
 
-    test('throws if name is not a string with timeout', () => {
-      assert.throws(() => fn(42, () => {}, 1000), /^Error: unexpected name, expected string but got "42"$/);
+    test('throws if options is not a plain object', () => {
+      assert.throws(() => fn('name', null, () => {}), /^Error: unexpected options, expected object but got "null"$/);
+      assert.throws(() => fn('name', 42, () => {}), /^Error: unexpected options, expected object but got "42"$/);
+      assert.throws(() => fn('name', [], () => {}), /^Error: unexpected options, expected object but got ""$/);
     });
 
-    test('throws if fn is not a Function with timeout', () => {
-      assert.throws(() => fn('name', 'not-a-function', 1000), /^Error: unexpected fn, expected Function but got "not-a-function"$/);
+    test('throws if options has unexpected keys', () => {
+      assert.throws(() => fn('name', { unknown: true }, () => {}), /^Error: unexpected options key "unknown"$/);
     });
 
-    test('throws if timeout is not a number', () => {
-      assert.throws(() => fn('name', () => {}, 'not-a-number'), /^Error: unexpected timeout, expected number but got "not-a-number"$/);
+    test('throws if options.timeout is not a number', () => {
+      assert.throws(() => fn('name', { timeout: 'bad' }, () => {}), /^Error: unexpected options\.timeout, expected number but got "bad"$/);
     });
 
     test('throws on extra arguments', () => {
-      assert.throws(() => fn('name', () => {}, 1000, 'extra'), /^Error: unexpected extra arguments$/);
+      assert.throws(() => fn('name', {}, () => {}, 'extra'), /^Error: unexpected extra arguments$/);
     });
   });
 }
