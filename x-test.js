@@ -8,9 +8,25 @@ import { XTestFrame } from './x-test-frame.js';
  *   assert('foo' === 'bar', 'foo does not equal bar');
  * @param {unknown} value - The condition to assert (truthy/falsy)
  * @param {string} [message] - The assertion message
- * @returns {asserts value} Throws if condition is falsy.
+ * @returns {asserts value} Throws if condition is falsy or arguments are invalid.
  */
-export const assert = (value, message) => XTestFrame.assert(suiteContext, assert, value, message);
+export function assert(value, message) {
+  switch (arguments.length) {
+    case 0:
+      throw new Error('expected value to assert, but got none');
+    case 1:
+      XTestFrame.assert(suiteContext, assert, value);
+      break;
+    case 2:
+      if (typeof message !== 'string') {
+        throw new Error(`unexpected message, expected string but got "${message}"`);
+      }
+      XTestFrame.assert(suiteContext, assert, value, message);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+}
 
 /**
  * Strict deep-equality assertion. Supports primitives, plain objects, and
@@ -22,9 +38,26 @@ export const assert = (value, message) => XTestFrame.assert(suiteContext, assert
  * @param {unknown} actual - The actual value
  * @param {T} expected - The expected value
  * @param {string} [message] - The assertion message
- * @returns {asserts actual is T} Throws if values are not deeply equal.
+ * @returns {asserts actual is T} Throws if values are not deeply equal or arguments are invalid.
  */
-assert.deepEqual = (actual, expected, message) => XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected, message);
+assert.deepEqual = function deepEqual(actual, expected, message) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected actual and expected values, but got too few arguments');
+    case 2:
+      XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected);
+      break;
+    case 3:
+      if (typeof message !== 'string') {
+        throw new Error(`unexpected message, expected string but got "${message}"`);
+      }
+      XTestFrame.deepEqual(suiteContext, assert.deepEqual, actual, expected, message);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Asserts that a function throws, testing the thrown value against a RegExp via `String(thrown)`.
@@ -34,9 +67,38 @@ assert.deepEqual = (actual, expected, message) => XTestFrame.deepEqual(suiteCont
  * @param {() => void} fn - The function expected to throw
  * @param {RegExp} error - Tested against `String(thrown)`
  * @param {string} [message] - The assertion message
- * @returns {void}
+ * @returns {void} Throws if the function does not throw, the thrown value does not match, or arguments are invalid.
  */
-assert.throws = (fn, error, message) => XTestFrame.throws(suiteContext, assert.throws, fn, error, message);
+assert.throws = function throws(fn, error, message) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected fn and error arguments, but got too few arguments');
+    case 2:
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (!(error instanceof RegExp)) {
+        throw new Error(`unexpected error, expected RegExp but got "${error}"`);
+      }
+      XTestFrame.throws(suiteContext, assert.throws, fn, error);
+      break;
+    case 3:
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (!(error instanceof RegExp)) {
+        throw new Error(`unexpected error, expected RegExp but got "${error}"`);
+      }
+      if (typeof message !== 'string') {
+        throw new Error(`unexpected message, expected string but got "${message}"`);
+      }
+      XTestFrame.throws(suiteContext, assert.throws, fn, error, message);
+      break;
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Asserts that an async function rejects, testing the rejection against a RegExp via `String(thrown)`.
@@ -46,9 +108,36 @@ assert.throws = (fn, error, message) => XTestFrame.throws(suiteContext, assert.t
  * @param {() => Promise<unknown>} fn - The function expected to reject
  * @param {RegExp} error - Tested against `String(thrown)`
  * @param {string} [message] - The assertion message
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Rejects if the function does not reject, the rejection value does not match, or arguments are invalid.
  */
-assert.rejects = (fn, error, message) => XTestFrame.rejects(suiteContext, assert.rejects, fn, error, message);
+assert.rejects = function rejects(fn, error, message) {
+  switch (arguments.length) {
+    case 0:
+    case 1:
+      throw new Error('expected fn and error arguments, but got too few arguments');
+    case 2:
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (!(error instanceof RegExp)) {
+        throw new Error(`unexpected error, expected RegExp but got "${error}"`);
+      }
+      return XTestFrame.rejects(suiteContext, assert.rejects, fn, error);
+    case 3:
+      if (!(fn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
+      }
+      if (!(error instanceof RegExp)) {
+        throw new Error(`unexpected error, expected RegExp but got "${error}"`);
+      }
+      if (typeof message !== 'string') {
+        throw new Error(`unexpected message, expected string but got "${message}"`);
+      }
+      return XTestFrame.rejects(suiteContext, assert.rejects, fn, error, message);
+    default:
+      throw new Error('unexpected extra arguments');
+  }
+};
 
 /**
  * Load a new frame.

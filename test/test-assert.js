@@ -16,6 +16,18 @@ suite('assert', () => {
   test('uses custom message on failure', () => {
     assert.throws(() => assert(false, 'custom'), /^Error: custom$/);
   });
+
+  test('throws if message is not a string', () => {
+    assert.throws(() => assert(false, 42), /^Error: unexpected message, expected string but got "42"$/);
+  });
+
+  test('throws with no arguments', () => {
+    assert.throws(() => assert(), /^Error: expected value to assert, but got none$/);
+  });
+
+  test('throws on extra arguments', () => {
+    assert.throws(() => assert(false, 'msg', 'extra'), /^Error: unexpected extra arguments$/);
+  });
 });
 
 suite('assert.deepEqual', () => {
@@ -41,20 +53,55 @@ suite('assert.deepEqual', () => {
     const sym = Symbol('x');
     assert.throws(() => assert.deepEqual({ [sym]: 1 }, {}), /^Error: deepEqual does not support symbol-keyed properties\.$/);
   });
+
+  test('throws with too few arguments', () => {
+    assert.throws(() => assert.deepEqual(), /^Error: expected actual and expected values, but got too few arguments$/);
+    assert.throws(() => assert.deepEqual(1), /^Error: expected actual and expected values, but got too few arguments$/);
+  });
+
+  test('throws if message is not a string', () => {
+    assert.throws(() => assert.deepEqual(1, 2, 42), /^Error: unexpected message, expected string but got "42"$/);
+  });
+
+  test('throws on extra arguments', () => {
+    assert.throws(() => assert.deepEqual(1, 1, 'msg', 'extra'), /^Error: unexpected extra arguments$/);
+  });
 });
 
 suite('assert.throws', () => {
   test('exercises the public assert.throws export', () => {
     assert.throws(() => { throw new Error('boom'); }, /boom/);
     assert.throws(() => { throw new Error('boom'); }, /^Error: boom$/);
+    assert.throws(() => { throw new Error('boom'); }, /boom/, 'with message');
+  });
+
+  test('throws with too few arguments', () => {
+    assert.throws(() => assert.throws(), /^Error: expected fn and error arguments, but got too few arguments$/);
+    assert.throws(() => assert.throws(() => {}), /^Error: expected fn and error arguments, but got too few arguments$/);
   });
 
   test('throws early if fn is not a function', () => {
-    assert.throws(() => assert.throws('not a function', /boom/), /^Error: unexpected fn value "not a function"$/);
+    assert.throws(() => assert.throws('not a function', /boom/), /^Error: unexpected fn, expected Function but got "not a function"$/);
   });
 
   test('throws early if error is not a RegExp', () => {
-    assert.throws(() => assert.throws(() => {}, 'not a regexp'), /^Error: unexpected error value "not a regexp"$/);
+    assert.throws(() => assert.throws(() => {}, 'not a regexp'), /^Error: unexpected error, expected RegExp but got "not a regexp"$/);
+  });
+
+  test('throws early if fn is not a function with message', () => {
+    assert.throws(() => assert.throws('not a function', /boom/, 'msg'), /^Error: unexpected fn, expected Function but got "not a function"$/);
+  });
+
+  test('throws early if error is not a RegExp with message', () => {
+    assert.throws(() => assert.throws(() => {}, 'not a regexp', 'msg'), /^Error: unexpected error, expected RegExp but got "not a regexp"$/);
+  });
+
+  test('throws if message is not a string', () => {
+    assert.throws(() => assert.throws(() => { throw new Error('boom'); }, /boom/, 42), /^Error: unexpected message, expected string but got "42"$/);
+  });
+
+  test('throws on extra arguments', () => {
+    assert.throws(() => assert.throws(() => {}, /boom/, 'msg', 'extra'), /^Error: unexpected extra arguments$/);
   });
 });
 
@@ -62,13 +109,35 @@ suite('assert.rejects', () => {
   test('exercises the public assert.rejects export', async () => {
     await assert.rejects(async () => { throw new Error('boom'); }, /boom/);
     await assert.rejects(async () => { throw new Error('boom'); }, /^Error: boom$/);
+    await assert.rejects(async () => { throw new Error('boom'); }, /boom/, 'with message');
+  });
+
+  test('throws with too few arguments', async () => {
+    await assert.rejects(() => assert.rejects(), /^Error: expected fn and error arguments, but got too few arguments$/);
+    await assert.rejects(() => assert.rejects(() => {}), /^Error: expected fn and error arguments, but got too few arguments$/);
   });
 
   test('throws early if fn is not a function', async () => {
-    await assert.rejects(() => assert.rejects('not a function', /boom/), /^Error: unexpected fn value "not a function"$/);
+    await assert.rejects(() => assert.rejects('not a function', /boom/), /^Error: unexpected fn, expected Function but got "not a function"$/);
   });
 
   test('throws early if error is not a RegExp', async () => {
-    await assert.rejects(() => assert.rejects(() => {}, 'not a regexp'), /^Error: unexpected error value "not a regexp"$/);
+    await assert.rejects(() => assert.rejects(() => {}, 'not a regexp'), /^Error: unexpected error, expected RegExp but got "not a regexp"$/);
+  });
+
+  test('throws early if fn is not a function with message', async () => {
+    await assert.rejects(() => assert.rejects('not a function', /boom/, 'msg'), /^Error: unexpected fn, expected Function but got "not a function"$/);
+  });
+
+  test('throws early if error is not a RegExp with message', async () => {
+    await assert.rejects(() => assert.rejects(() => {}, 'not a regexp', 'msg'), /^Error: unexpected error, expected RegExp but got "not a regexp"$/);
+  });
+
+  test('throws if message is not a string', async () => {
+    await assert.rejects(() => assert.rejects(async () => { throw new Error('boom'); }, /boom/, 42), /^Error: unexpected message, expected string but got "42"$/);
+  });
+
+  test('throws on extra arguments', async () => {
+    await assert.rejects(() => assert.rejects(async () => {}, /boom/, 'msg', 'extra'), /^Error: unexpected extra arguments$/);
   });
 });
