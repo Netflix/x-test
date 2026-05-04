@@ -1,12 +1,12 @@
 import { test, suite, assert } from '../x-test.js';
 
-for (const [label, fn] of [
+for (const [name, fn] of [
   ['suite', suite],
   ['suite.skip', suite.skip],
   ['suite.only', suite.only],
   ['suite.todo', suite.todo],
 ]) {
-  suite(label, () => {
+  suite(name, () => {
     test('accepts valid arguments', () => {
       fn('valid suite', () => {});
     });

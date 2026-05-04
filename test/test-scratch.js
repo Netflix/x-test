@@ -28,8 +28,8 @@ suite.only('this wrapper exercises suite only logic', () => {
 });
 
 suite.only('interval', () => {
-  test.todo('times out after interval - this is supposed to fail', async () => {
+  test.todo('times out after interval - this is supposed to fail', { timeout: 0 }, async () => {
     await new Promise(resolve => setTimeout(resolve, 1_000));
     assert(true);
-  }, 0);
+  });
 });

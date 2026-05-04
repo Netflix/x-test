@@ -262,152 +262,249 @@ suite.todo = function todo(name, fn) {
 };
 
 /**
- * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
- * @param {string} name - The description of the test case
- * @param {() => void | Promise<void>} fn - The test callback function
- * @param {number} [timeout] - Optional timeout in milliseconds
+ * @typedef {object} TestOptions
+ * @property {number} [timeout] - Timeout in milliseconds for this test case.
+ */
+
+/**
+ * @overload
+ * @param {string} name
+ * @param {() => void | Promise<void>} fn
  * @returns {void}
  */
-export function test(name, fn, timeout) {
+/**
+ * @overload
+ * @param {string} name
+ * @param {TestOptions} options
+ * @param {() => void | Promise<void>} fn
+ * @returns {void}
+ */
+/**
+ * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
+ * @param {string} name - The description of the test case
+ * @param {(() => void | Promise<void>) | TestOptions} options - The test callback function, or an options object
+ * @param {(() => void | Promise<void>) | undefined} [fn] - The test callback function, when options are provided
+ * @returns {void}
+ */
+export function test(name, options, fn) {
   switch (arguments.length) {
     case 0:
     case 1:
       throw new Error('expected name and fn arguments, but got too few arguments');
-    case 2:
+    case 2: {
+      const actualFn = options;
       if (typeof name !== 'string') {
         throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(actualFn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${actualFn}"`);
+      }
+      XTestFrame.test(suiteContext, name, actualFn);
+      break;
+    }
+    case 3: {
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+        throw new Error(`unexpected options, expected object but got "${options}"`);
+      }
+      const unknownKeys = Object.keys(options).filter(key => key !== 'timeout');
+      if (unknownKeys.length > 0) {
+        throw new Error(`unexpected options key "${unknownKeys[0]}"`);
+      }
+      if ('timeout' in options && typeof options.timeout !== 'number') {
+        throw new Error(`unexpected options.timeout, expected number but got "${options.timeout}"`);
       }
       if (!(fn instanceof Function)) {
         throw new Error(`unexpected fn, expected Function but got "${fn}"`);
       }
-      XTestFrame.test(suiteContext, name, fn);
+      XTestFrame.test(suiteContext, name, fn, options.timeout);
       break;
-    case 3:
-      if (typeof name !== 'string') {
-        throw new Error(`unexpected name, expected string but got "${name}"`);
-      }
-      if (!(fn instanceof Function)) {
-        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
-      }
-      if (typeof timeout !== 'number') {
-        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
-      }
-      XTestFrame.test(suiteContext, name, fn, timeout);
-      break;
+    }
     default:
       throw new Error('unexpected extra arguments');
   }
 }
 
 /**
- * Register a test case that will be skipped during execution.
- * @param {string} name - The description of the test case
- * @param {() => void | Promise<void>} fn - The test callback function
- * @param {number} [timeout] - Optional timeout in milliseconds
+ * @overload
+ * @param {string} name
+ * @param {() => void | Promise<void>} fn
  * @returns {void}
  */
-test.skip = function skip(name, fn, timeout) {
+/**
+ * @overload
+ * @param {string} name
+ * @param {TestOptions} options
+ * @param {() => void | Promise<void>} fn
+ * @returns {void}
+ */
+/**
+ * Register a test case that will be skipped during execution.
+ * @param {string} name - The description of the test case
+ * @param {(() => void | Promise<void>) | TestOptions} options - The test callback function, or an options object
+ * @param {(() => void | Promise<void>) | undefined} [fn] - The test callback function, when options are provided
+ * @returns {void}
+ */
+test.skip = function skip(name, options, fn) {
   switch (arguments.length) {
     case 0:
     case 1:
       throw new Error('expected name and fn arguments, but got too few arguments');
-    case 2:
+    case 2: {
+      const actualFn = options;
       if (typeof name !== 'string') {
         throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(actualFn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${actualFn}"`);
+      }
+      XTestFrame.testSkip(suiteContext, name, actualFn);
+      break;
+    }
+    case 3: {
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+        throw new Error(`unexpected options, expected object but got "${options}"`);
+      }
+      const unknownKeys = Object.keys(options).filter(key => key !== 'timeout');
+      if (unknownKeys.length > 0) {
+        throw new Error(`unexpected options key "${unknownKeys[0]}"`);
+      }
+      if ('timeout' in options && typeof options.timeout !== 'number') {
+        throw new Error(`unexpected options.timeout, expected number but got "${options.timeout}"`);
       }
       if (!(fn instanceof Function)) {
         throw new Error(`unexpected fn, expected Function but got "${fn}"`);
       }
-      XTestFrame.testSkip(suiteContext, name, fn);
+      XTestFrame.testSkip(suiteContext, name, fn, options.timeout);
       break;
-    case 3:
-      if (typeof name !== 'string') {
-        throw new Error(`unexpected name, expected string but got "${name}"`);
-      }
-      if (!(fn instanceof Function)) {
-        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
-      }
-      if (typeof timeout !== 'number') {
-        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
-      }
-      XTestFrame.testSkip(suiteContext, name, fn, timeout);
-      break;
+    }
     default:
       throw new Error('unexpected extra arguments');
   }
 };
 
+/**
+ * @overload
+ * @param {string} name
+ * @param {() => void | Promise<void>} fn
+ * @returns {void}
+ */
+/**
+ * @overload
+ * @param {string} name
+ * @param {TestOptions} options
+ * @param {() => void | Promise<void>} fn
+ * @returns {void}
+ */
 /**
  * Register a test case that will run exclusively (skips other non-only tests).
  * @param {string} name - The description of the test case
- * @param {() => void | Promise<void>} fn - The test callback function
- * @param {number} [timeout] - Optional timeout in milliseconds
+ * @param {(() => void | Promise<void>) | TestOptions} options - The test callback function, or an options object
+ * @param {(() => void | Promise<void>) | undefined} [fn] - The test callback function, when options are provided
  * @returns {void}
  */
-test.only = function only(name, fn, timeout) {
+test.only = function only(name, options, fn) {
   switch (arguments.length) {
     case 0:
     case 1:
       throw new Error('expected name and fn arguments, but got too few arguments');
-    case 2:
+    case 2: {
+      const actualFn = options;
       if (typeof name !== 'string') {
         throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(actualFn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${actualFn}"`);
+      }
+      XTestFrame.testOnly(suiteContext, name, actualFn);
+      break;
+    }
+    case 3: {
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+        throw new Error(`unexpected options, expected object but got "${options}"`);
+      }
+      const unknownKeys = Object.keys(options).filter(key => key !== 'timeout');
+      if (unknownKeys.length > 0) {
+        throw new Error(`unexpected options key "${unknownKeys[0]}"`);
+      }
+      if ('timeout' in options && typeof options.timeout !== 'number') {
+        throw new Error(`unexpected options.timeout, expected number but got "${options.timeout}"`);
       }
       if (!(fn instanceof Function)) {
         throw new Error(`unexpected fn, expected Function but got "${fn}"`);
       }
-      XTestFrame.testOnly(suiteContext, name, fn);
+      XTestFrame.testOnly(suiteContext, name, fn, options.timeout);
       break;
-    case 3:
-      if (typeof name !== 'string') {
-        throw new Error(`unexpected name, expected string but got "${name}"`);
-      }
-      if (!(fn instanceof Function)) {
-        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
-      }
-      if (typeof timeout !== 'number') {
-        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
-      }
-      XTestFrame.testOnly(suiteContext, name, fn, timeout);
-      break;
+    }
     default:
       throw new Error('unexpected extra arguments');
   }
 };
 
 /**
- * Register a placeholder test case for future implementation.
- * @param {string} name - The description of the test case
- * @param {() => void | Promise<void>} fn - The test callback function
- * @param {number} [timeout] - Optional timeout in milliseconds
+ * @overload
+ * @param {string} name
+ * @param {() => void | Promise<void>} fn
  * @returns {void}
  */
-test.todo = function todo(name, fn, timeout) {
+/**
+ * @overload
+ * @param {string} name
+ * @param {TestOptions} options
+ * @param {() => void | Promise<void>} fn
+ * @returns {void}
+ */
+/**
+ * Register a placeholder test case for future implementation.
+ * @param {string} name - The description of the test case
+ * @param {(() => void | Promise<void>) | TestOptions} options - The test callback function, or an options object
+ * @param {(() => void | Promise<void>) | undefined} [fn] - The test callback function, when options are provided
+ * @returns {void}
+ */
+test.todo = function todo(name, options, fn) {
   switch (arguments.length) {
     case 0:
     case 1:
       throw new Error('expected name and fn arguments, but got too few arguments');
-    case 2:
+    case 2: {
+      const actualFn = options;
       if (typeof name !== 'string') {
         throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (!(actualFn instanceof Function)) {
+        throw new Error(`unexpected fn, expected Function but got "${actualFn}"`);
+      }
+      XTestFrame.testTodo(suiteContext, name, actualFn);
+      break;
+    }
+    case 3: {
+      if (typeof name !== 'string') {
+        throw new Error(`unexpected name, expected string but got "${name}"`);
+      }
+      if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+        throw new Error(`unexpected options, expected object but got "${options}"`);
+      }
+      const unknownKeys = Object.keys(options).filter(key => key !== 'timeout');
+      if (unknownKeys.length > 0) {
+        throw new Error(`unexpected options key "${unknownKeys[0]}"`);
+      }
+      if ('timeout' in options && typeof options.timeout !== 'number') {
+        throw new Error(`unexpected options.timeout, expected number but got "${options.timeout}"`);
       }
       if (!(fn instanceof Function)) {
         throw new Error(`unexpected fn, expected Function but got "${fn}"`);
       }
-      XTestFrame.testTodo(suiteContext, name, fn);
+      XTestFrame.testTodo(suiteContext, name, fn, options.timeout);
       break;
-    case 3:
-      if (typeof name !== 'string') {
-        throw new Error(`unexpected name, expected string but got "${name}"`);
-      }
-      if (!(fn instanceof Function)) {
-        throw new Error(`unexpected fn, expected Function but got "${fn}"`);
-      }
-      if (typeof timeout !== 'number') {
-        throw new Error(`unexpected timeout, expected number but got "${timeout}"`);
-      }
-      XTestFrame.testTodo(suiteContext, name, fn, timeout);
-      break;
+    }
     default:
       throw new Error('unexpected extra arguments');
   }

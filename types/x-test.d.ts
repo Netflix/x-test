@@ -83,36 +83,70 @@ export namespace suite {
     function todo(name: string, fn: () => void, ...args: any[]): void;
 }
 /**
- * Register an individual test case. Alternatively, mark with flags (.skip, .only, .todo).
- * @param {string} name - The description of the test case
- * @param {() => void | Promise<void>} fn - The test callback function
- * @param {number} [timeout] - Optional timeout in milliseconds
+ * @overload
+ * @param {string} name
+ * @param {() => void | Promise<void>} fn
  * @returns {void}
  */
-export function test(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
+export function test(name: string, fn: () => void | Promise<void>): void;
+/**
+ * @overload
+ * @param {string} name
+ * @param {TestOptions} options
+ * @param {() => void | Promise<void>} fn
+ * @returns {void}
+ */
+export function test(name: string, options: TestOptions, fn: () => void | Promise<void>): void;
 export namespace test {
     /**
-     * Register a test case that will be skipped during execution.
-     * @param {string} name - The description of the test case
-     * @param {() => void | Promise<void>} fn - The test callback function
-     * @param {number} [timeout] - Optional timeout in milliseconds
+     * @overload
+     * @param {string} name
+     * @param {() => void | Promise<void>} fn
      * @returns {void}
      */
-    function skip(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
+    function skip(name: string, fn: () => void | Promise<void>): void;
     /**
-     * Register a test case that will run exclusively (skips other non-only tests).
-     * @param {string} name - The description of the test case
-     * @param {() => void | Promise<void>} fn - The test callback function
-     * @param {number} [timeout] - Optional timeout in milliseconds
+     * @overload
+     * @param {string} name
+     * @param {TestOptions} options
+     * @param {() => void | Promise<void>} fn
      * @returns {void}
      */
-    function only(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
+    function skip(name: string, options: TestOptions, fn: () => void | Promise<void>): void;
     /**
-     * Register a placeholder test case for future implementation.
-     * @param {string} name - The description of the test case
-     * @param {() => void | Promise<void>} fn - The test callback function
-     * @param {number} [timeout] - Optional timeout in milliseconds
+     * @overload
+     * @param {string} name
+     * @param {() => void | Promise<void>} fn
      * @returns {void}
      */
-    function todo(name: string, fn: () => void | Promise<void>, timeout?: number, ...args: any[]): void;
+    function only(name: string, fn: () => void | Promise<void>): void;
+    /**
+     * @overload
+     * @param {string} name
+     * @param {TestOptions} options
+     * @param {() => void | Promise<void>} fn
+     * @returns {void}
+     */
+    function only(name: string, options: TestOptions, fn: () => void | Promise<void>): void;
+    /**
+     * @overload
+     * @param {string} name
+     * @param {() => void | Promise<void>} fn
+     * @returns {void}
+     */
+    function todo(name: string, fn: () => void | Promise<void>): void;
+    /**
+     * @overload
+     * @param {string} name
+     * @param {TestOptions} options
+     * @param {() => void | Promise<void>} fn
+     * @returns {void}
+     */
+    function todo(name: string, options: TestOptions, fn: () => void | Promise<void>): void;
 }
+export type TestOptions = {
+    /**
+     * - Timeout in milliseconds for this test case.
+     */
+    timeout?: number | undefined;
+};

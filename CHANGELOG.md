@@ -8,9 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- All `assert.*` functions now validate their arguments strictly: wrong argument
-  count, wrong types, or a non-string `message` throw immediately with a
-  descriptive error pointing at the call site (#99).
+- `test` and `test.*` now accept an optional `options` object as the second
+  argument — `test(name, options, fn)` — matching `node:test` call signature.
+  The only supported option is `timeout` (number, in milliseconds). Every valid
+  x-test call is a valid `node:test` call (#99).
+- All public API functions (`assert`, `assert.deepEqual`, `assert.throws`,
+  `assert.rejects`, `load`, `suite`, `suite.*`, `test`, `test.*`) now validate
+  their arguments strictly: wrong argument count, wrong types, or invalid option
+  keys throw immediately with a descriptive error pointing at the call site.
 - `assert.throws(fn, error, message?)` and `assert.rejects(fn, error, message?)`
   for asserting that a function throws or an async function rejects. The `error`
   argument is a `RegExp` tested against `String(thrown)` (consistent with
