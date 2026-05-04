@@ -1,6 +1,6 @@
 {
   "name": "@netflix/x-test",
-  "version": "2.0.0-rc.10",
+  "version": "2.0.0",
   "exports": {
     "./x-test.js": "./x-test.js"
   }
