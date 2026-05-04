@@ -114,7 +114,7 @@ export class XTestFrame {
    * @param {any} context
    * @param {any} caller
    * @param {any} value
-   * @param {any} message
+   * @param {any} [message]
    */
   static assert(context, caller, value, message) {
     if (context && !context.state.bailed) {
@@ -134,12 +134,6 @@ export class XTestFrame {
    * @param {any} [message]
    */
   static throws(context, caller, fn, error, message) {
-    if (!(fn instanceof Function)) {
-      throw new Error(`unexpected fn value "${fn}"`);
-    }
-    if (!(error instanceof RegExp)) {
-      throw new Error(`unexpected error value "${error}"`);
-    }
     let threw = false;
     let thrownValue;
     try {
@@ -163,12 +157,6 @@ export class XTestFrame {
    * @param {any} [message]
    */
   static async rejects(context, caller, fn, error, message) {
-    if (!(fn instanceof Function)) {
-      throw new Error(`unexpected fn value "${fn}"`);
-    }
-    if (!(error instanceof RegExp)) {
-      throw new Error(`unexpected error value "${error}"`);
-    }
     let rejected = false;
     let rejectionValue;
     try {
