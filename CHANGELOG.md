@@ -20,37 +20,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for asserting that a function throws or an async function rejects. The `error`
   argument is a `RegExp` tested against `String(thrown)` (consistent with
   `node:assert`) (#99).
-
-## [2.0.0-rc.10] - 2026-04-28
-
-### Changed
-
-- The `# Failures:` summary block is removed from TAP output. It is now the
-  responsibility of `@netflix/x-test-cli` (#106).
-- Assertion failures now show only user code in the stack trace. Internal
-  x-test frames are stripped via `Error.captureStackTrace` (Chromium / V8), and
-  callbacks are deferred to a fresh micro task so that BroadcastChannel
-  machinery does not appear below user frames (#106).
-
-## [2.0.0-rc.8] - 2026-04-24
-
-### Added
-
 - `assert.deepEqual(actual, expected, message?)` for strict deep-equality
   comparison of primitives, plain objects, and arrays. Unsupported types
   (Map, Set, Date, RegExp, class instances, functions) throw rather than
   compare, so support can be broadened later without breaking callers (#99).
+- Adds TypeScript support for top-level exports from `x-test`. Previously, it
+  the integration with TypeScript applications was not smooth (#68, #75).
+- Adds “?x-test-name-pattern” query param to enable filtering of tests based on
+  the given pattern name. This is done internally so it will work in both a
+  browser and a CLI output (#58).
 
 ### Changed
 
+- Assertion failures now show only user code in the stack trace. Internal
+  x-test frames are stripped via `Error.captureStackTrace` (Chromium / V8), and
+  callbacks are deferred to a fresh micro task so that BroadcastChannel
+  machinery does not appear below user frames (#106).
 - Renamed `it` to `test` and `describe` to `suite` across the entire public API
   and all internal concepts. `import { test, suite, assert, load }` is now the
   canonical import.
 - Renamed `test(href)` load function to `load(href)`. Conceptually, when you
   call this function you “load a new frame with this href” (#99).
-- The `x-test-name` URL parameter has been renamed to `x-test-name-pattern`
-  to more clearly signal that it accepts a regex pattern rather than a
-  literal name and matches Node’s test CLI argument naming (#99).
+- Typed `assert` as a proper TypeScript assertion function (`asserts ok`) so
+  that type narrowing works automatically after assertions (#74).
+- Updated dependencies, including major bumps to ESLint (9.x → 10.x) and
+  TypeScript (5.x → 6.x). Added `globals` as an explicit dev dependency.
+- The “@netflix/x-test-cli” is now packaged separately and is imported here like
+  any other dev dependency.
+- Communications happen through a `BroadcastChannel` instead of `top`. This is
+  better since it doesn’t use globals. Instead, a more targeted `x-test` channel
+  is utilized for client <<>> root <<>> suite communications (#51).
 
 ### Removed
 
@@ -68,14 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The CLI now observes a run solely by consuming TAP output from the
   console (#99).
 
-## [2.0.0-rc.7] - 2026-04-22
-
-### Added
-
-- Summarize errors encountered during the test run as diagnostics under a
-  `# Failures:` header. This allows both humans and machines to “tail” the
-  output (versus having to understand the entire output at all times) (#89).
-
 ### Fixed
 
 - TAP version pragma now emits `TAP version 14` (lower-case `v`) to
@@ -91,52 +82,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   register tests into the same suite. Previously only the first
   script’s registrations survived; the rest were silently dropped (#81).
 
-## [2.0.0-rc.6] - 2026-03-23
+### Security
 
-### Changed
-
-- Typed `assert` as a proper TypeScript assertion function (`asserts ok`) so
-  that type narrowing works automatically after assertions (#74).
-- Updated dependencies, including major bumps to ESLint (9.x → 10.x) and
-  TypeScript (5.x → 6.x). Added `globals` as an explicit dev dependency.
-- Renamed `types` npm script to `type` for better consistency with the naming
-  in the related `x-element` repository (#75).
-
-## [2.0.0-rc.5] - 2026-01-09
-
-### Added
-
-- The “/test” and “/demo” files are restored in the published file set.
 - NPM token lives in a GH environment for publish action (more secure).
-
-## [2.0.0-rc.3] - 2025-11-06
-
-### Added
-
-- Adds TypeScript support for top-level exports from `x-test`. Previously, it
-  the integration with TypeScript applications was not smooth (#68).
-
-## [2.0.0-rc.2] - 2025-10-24
-
-### Changed
-
-- The “@netflix/x-test-cli” is now packaged separately and is imported here like
-  any other dev dependency.
-
-## [2.0.0-rc.1] - 2025-10-23
-
-### Added
-
-- Adds “x-test-name” query param to enable filtering of tests based on the given
-  pattern name. This is done internally so it will work in both a browser and
-  a CLI output (#58).
-
-### Changed
-
-- Communications happen through a `BroadcastChannel` instead of `top`. This is
-  better since it doesn’t use globals. Instead, a more targeted `x-test` channel
-  is utilized for client <<>> root <<>> suite communications (#51).
-- The “/test” and “/demo” files are removed from the published file set.
 
 ## [1.0.3] - 2025-03-18
 
